@@ -322,6 +322,33 @@ class Game {
 
     // ターン終了ボタン
     this.elEndTurnBtn.disabled = (this.battleEngine.phase !== 'player');
+
+    // ステータス更新
+    this.updateStatusUI(player, 'player-status-container');
+    this.updateStatusUI(enemy, 'enemy-status-container');
+  }
+
+  updateStatusUI(entity, containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    container.innerHTML = '';
+
+    entity.statusEffects.forEach(status => {
+      const iconEl = document.createElement('div');
+      iconEl.className = 'status-icon';
+
+      let iconChar = '❓';
+      if (status.type === 'vulnerable') iconChar = '💔';
+
+      iconEl.textContent = iconChar;
+
+      const valueEl = document.createElement('div');
+      valueEl.className = 'status-value';
+      valueEl.textContent = status.value;
+
+      iconEl.appendChild(valueEl);
+      container.appendChild(iconEl);
+    });
   }
 
   createCardElement(card, index) {

@@ -24,6 +24,11 @@ export class Entity {
       }
     }
 
+    // 脆弱状態ならダメージ1.5倍
+    if (this.hasStatus('vulnerable')) {
+      remainingDamage = Math.ceil(remainingDamage * 1.5);
+    }
+
     this.hp = Math.max(0, this.hp - remainingDamage);
     return remainingDamage;
   }
@@ -34,6 +39,29 @@ export class Entity {
 
   resetBlock() {
     this.block = 0;
+  }
+
+  // ステータス操作
+  addStatus(type, value) {
+    const existing = this.statusEffects.find(s => s.type === type);
+    if (existing) {
+      existing.value += value;
+    } else {
+      this.statusEffects.push({ type, value });
+    }
+  }
+
+  hasStatus(type) {
+    return this.statusEffects.some(s => s.type === type && s.value > 0);
+  }
+
+  updateStatus() {
+    // ターン終了時に呼び出し（値を減らす）
+    this.statusEffects.forEach(s => {
+      if (s.value > 0) s.value--;
+    });
+    // 値が0以下のものを削除
+    this.statusEffects = this.statusEffects.filter(s => s.value > 0);
   }
 
   isDead() {

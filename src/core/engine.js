@@ -1,13 +1,19 @@
 export class BattleEngine {
-    constructor(player, enemy, uiUpdateCallback) {
+    constructor(player, enemy, uiUpdateCallback, onBattleEnd) {
         this.player = player;
         this.enemy = enemy;
         this.uiUpdateCallback = uiUpdateCallback;
+        this.onBattleEnd = onBattleEnd;
         this.turn = 1;
         this.phase = 'player'; // 'player' or 'enemy'
     }
 
     start() {
+        // 状態のリセット
+        this.player.hand = [];
+        this.player.discard = [];
+        this.player.resetBlock(); // ブロックもリセット
+
         // デッキを準備（ストライクx5, ディフェンドx4, 強打x1）
         this.player.deck = [];
         for (let i = 0; i < 5; i++) this.player.deck.push(CardLibrary.STRIKE.clone());
@@ -94,11 +100,9 @@ export class BattleEngine {
 
     checkBattleEnd() {
         if (this.enemy.isDead()) {
-            alert('Victory!');
-            location.reload();
+            if (this.onBattleEnd) this.onBattleEnd('win');
         } else if (this.player.isDead()) {
-            alert('Game Over...');
-            location.reload();
+            if (this.onBattleEnd) this.onBattleEnd('lose');
         }
     }
 }

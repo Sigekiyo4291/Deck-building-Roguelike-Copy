@@ -6,10 +6,12 @@ import { BattleEngine } from './core/engine.js';
 const elPlayerHpText = document.getElementById('player-hp-text');
 const elPlayerHpFill = document.getElementById('player-hp-fill');
 const elPlayerBlock = document.getElementById('player-block');
+const elPlayerBlockText = document.getElementById('player-block-text'); // 追加
 
 const elEnemyHpText = document.getElementById('enemy-hp-text');
 const elEnemyHpFill = document.getElementById('enemy-hp-fill');
 const elEnemyBlock = document.getElementById('enemy-block');
+const elEnemyBlockText = document.getElementById('enemy-block-text'); // 追加
 const elEnemyIntent = document.getElementById('enemy-intent');
 
 const elHand = document.getElementById('hand');
@@ -28,10 +30,26 @@ function updateUI() {
   elPlayerHpFill.style.width = `${(player.hp / player.maxHp) * 100}%`;
   elPlayerBlock.style.width = `${Math.min(100, (player.block / player.maxHp) * 100)}%`;
 
+  // プレイヤーのブロック数値表示制御
+  if (player.block > 0) {
+    elPlayerBlockText.textContent = `🛡️${player.block}`;
+    elPlayerBlockText.style.display = 'flex';
+  } else {
+    elPlayerBlockText.style.display = 'none';
+  }
+
   // 敵情報更新
   elEnemyHpText.textContent = `${enemy.hp} / ${enemy.maxHp}`;
   elEnemyHpFill.style.width = `${(enemy.hp / enemy.maxHp) * 100}%`;
   elEnemyBlock.style.width = `${Math.min(100, (enemy.block / enemy.maxHp) * 100)}%`;
+
+  // 敵のブロック数値表示制御
+  if (enemy.block > 0) {
+    elEnemyBlockText.textContent = `🛡️${enemy.block}`;
+    elEnemyBlockText.style.display = 'flex';
+  } else {
+    elEnemyBlockText.style.display = 'none';
+  }
 
   if (enemy.nextMove) {
     elEnemyIntent.textContent = `🗡️${enemy.nextMove.value}`;

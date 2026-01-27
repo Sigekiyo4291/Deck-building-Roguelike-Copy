@@ -1,3 +1,5 @@
+import { CardLibrary } from './card.js';
+
 export class Entity {
   constructor(name, maxHp, sprite) {
     this.name = name;
@@ -47,6 +49,14 @@ export class Player extends Entity {
     this.deck = [];
     this.hand = [];
     this.discard = [];
+    this.gold = 0;
+    this.potions = [];
+
+    // マスターデッキ（所持カード）の初期化
+    this.masterDeck = [];
+    for (let i = 0; i < 5; i++) this.masterDeck.push(CardLibrary.STRIKE.clone());
+    for (let i = 0; i < 4; i++) this.masterDeck.push(CardLibrary.DEFEND.clone());
+    this.masterDeck.push(CardLibrary.BASH.clone());
   }
 
   resetEnergy() {

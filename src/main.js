@@ -1,6 +1,7 @@
 import './style.css';
 import { Player, Enemy } from './core/entity.js';
 import { BattleEngine } from './core/engine.js';
+import { CardLibrary } from './core/card.js';
 import { SceneManager } from './core/scene-manager.js';
 import { MapGenerator } from './core/map-generator.js';
 
@@ -155,10 +156,118 @@ class Game {
 
   onBattleWin() {
     alert('Victory!');
-    // マップに戻る
-    this.map.updateAvailableNodes();
-    this.renderMap(); // マップを再描画して状態を反映
-    this.sceneManager.showMap();
+    // リワード画面へ
+    this.showRewards();
+  }
+
+  showRewards() {
+    this.generateRewards();
+    this.sceneManager.showReward();
+    this.updateRewardUI();
+  }
+
+  generateRewards() {
+    this.rewards = [];
+
+    // ゴールド報酬 (10-25G)
+    const goldAmount = 10 + Math.floor(Math.random() * 16);
+    this.rewards.push({ type: 'gold', value: goldAmount, icon: '💰', label: `${goldAmount} ゴールド` });
+
+    // カード報酬
+    this.rewards.push({ type: 'card', icon: '🎴', label: 'カードをデッキに追加' });
+
+    // ポーション報酬 (40%の確率)
+    if (Math.random() < 0.4) {
+      this.rewards.push({ type: 'potion', icon: '🧪', label: 'ポーション（未実装）' });
+    }
+  }
+
+  updateRewardUI() {
+    const listEl = document.getElementById('reward-list');
+    listEl.innerHTML = '';
+
+    this.rewards.forEach((reward, index) => {
+      const itemEl = document.createElement('div');
+      itemEl.className = 'reward-item';
+      if (reward.taken) itemEl.classList.add('taken');
+
+      itemEl.innerHTML = `
+        <div class="reward-icon">${reward.icon}</div>
+        <div class="reward-content">${reward.label}</div>
+      `;
+
+      itemEl.onclick = () => {
+        if (!reward.taken) this.onRewardClick(reward, index);
+      };
+
+      listEl.appendChild(itemEl);
+    });
+
+    // 次へボタンの設定
+    const doneBtn = document.getElementById('reward-done-btn');
+    doneBtn.onclick = () => {
+      // マップに戻る
+      this.map.updateAvailableNodes();
+      this.renderMap();
+      this.sceneManager.showMap();
+    };
+  }
+
+  onRewardClick(reward, index) {
+    if (reward.type === 'gold') {
+      this.player.gold += reward.value;
+      alert(`${reward.value} ゴールドを獲得しました！ (所持金: ${this.player.gold}G)`);
+      reward.taken = true;
+      this.updateRewardUI();
+    } else if (reward.type === 'card') {
+      this.showCardSelection(reward);
+    } else if (reward.type === 'potion') {
+      alert('ポーションを獲得しました（未実装）');
+      reward.taken = true;
+      this.updateRewardUI();
+    }
+  }
+
+  showCardSelection(rewardItem) {
+    const overlay = document.getElementById('card-reward-overlay');
+    const container = document.getElementById('card-choices');
+    const skipBtn = document.getElementById('skip-card-btn');
+
+    container.innerHTML = '';
+
+    // ランダムなカード候補を3枚生成
+    // CardLibraryから全てのキーを取得してランダムに選ぶ
+    const keys = Object.keys(CardLibrary);
+    for (let i = 0; i < 3; i++) {
+      const randomKey = keys[Math.floor(Math.random() * keys.length)];
+      const card = CardLibrary[randomKey].clone();
+
+      const cardEl = document.createElement('div');
+      cardEl.className = 'card';
+      cardEl.innerHTML = `
+            <div class="card-cost">${card.cost}</div>
+            <div class="card-title">${card.name}</div>
+            <div class="card-desc">${card.description}</div>
+        `;
+
+      cardEl.onclick = () => {
+        this.player.masterDeck.push(card);
+        alert(`${card.name} をデッキに追加しました！`);
+        rewardItem.taken = true;
+        this.updateRewardUI();
+        overlay.style.display = 'none';
+      };
+
+      container.appendChild(cardEl);
+    }
+
+    overlay.style.display = 'flex';
+
+    skipBtn.onclick = () => {
+      rewardItem.taken = true; // スキップしたら獲得済み扱い（消える）
+      this.updateRewardUI();
+      overlay.style.display = 'none';
+    };
   }
 
   updateBattleUI() {

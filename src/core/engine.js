@@ -73,6 +73,9 @@ export class BattleEngine {
         this.player.discard.push(...this.player.hand);
         this.player.hand = [];
 
+        // ステータス更新（持続時間減少）
+        this.player.updateStatus();
+
         this.phase = 'enemy';
         this.uiUpdateCallback();
 
@@ -83,7 +86,13 @@ export class BattleEngine {
     enemyTurn() {
         this.enemy.resetBlock();
         // 簡易的な敵の行動
+        // TODO: 敵がステータス異常の影響を受ける場合（例: 弱体）のダメージ計算修正が必要だが、
+        // takeDamage側で処理しているので、ここでは与えるダメージの管理
+        // プレイヤーが「脆弱」なら敵の攻撃ダメージが増える処理も必要
+        // 今回はとりあえず敵の行動後にステータス更新
         this.player.takeDamage(this.enemy.nextMove.value);
+
+        this.enemy.updateStatus();
 
         this.turn++;
         this.checkBattleEnd();

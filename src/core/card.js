@@ -30,8 +30,8 @@ export const CardLibrary = {
     DEFEND: new Card('defend', 'ディフェンド', 1, 'skill', '5ブロックを得る', (s, t) => {
         s.addBlock(5);
     }),
-    BASH: new Card('bash', '強打', 2, 'attack', '10ダメージを与え、脆弱(2)を付与', (s, t) => {
-        t.takeDamage(10);
-        // TODO: 状態異常の実装
+    BASH: new Card('bash', '強打', 2, 'attack', '8ダメージを与え、脆弱(2)を付与', (s, t) => {
+        t.takeDamage(8);
+        t.addStatus('vulnerable', 2);
     })
 };

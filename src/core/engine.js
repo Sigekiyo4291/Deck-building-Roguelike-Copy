@@ -14,11 +14,11 @@ export class BattleEngine {
         this.player.discard = [];
         this.player.resetBlock(); // ブロックもリセット
 
-        // デッキを準備（ストライクx5, ディフェンドx4, 強打x1）
+        // デッキを準備（マスターデッキからコピー）
         this.player.deck = [];
-        for (let i = 0; i < 5; i++) this.player.deck.push(CardLibrary.STRIKE.clone());
-        for (let i = 0; i < 4; i++) this.player.deck.push(CardLibrary.DEFEND.clone());
-        this.player.deck.push(CardLibrary.BASH.clone());
+        this.player.masterDeck.forEach(card => {
+            this.player.deck.push(card.clone());
+        });
 
         this.shuffle(this.player.deck);
         this.startPlayerTurn();

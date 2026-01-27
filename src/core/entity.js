@@ -101,4 +101,33 @@ export class Enemy extends Entity {
   setNextMove(move) {
     this.nextMove = move;
   }
+
+  decideNextMove() {
+    // デフォルト行動（スライムなど）
+    const damage = 5 + Math.floor(Math.random() * 5);
+    this.setNextMove({ type: 'attack', value: damage });
+  }
+}
+
+export class Louse extends Enemy {
+  constructor(color) {
+    const name = color === 'red' ? '赤の寄生虫' : '緑の寄生虫';
+    const hp = 10 + Math.floor(Math.random() * 6); // HP 10-15
+    super(name, hp, '/src/assets/slime.png');
+    this.color = color;
+  }
+
+  decideNextMove() {
+    const roll = Math.random();
+    if (this.color === 'red') {
+      // 攻撃 or 筋力（未実装のため攻撃のみ）
+      // 簡易的に攻撃のダメージ幅を変える
+      const dmg = 5 + Math.floor(Math.random() * 3); // 5-7
+      this.setNextMove({ type: 'attack', value: dmg });
+    } else {
+      // 攻撃
+      const dmg = 4 + Math.floor(Math.random() * 3); // 4-6
+      this.setNextMove({ type: 'attack', value: dmg });
+    }
+  }
 }

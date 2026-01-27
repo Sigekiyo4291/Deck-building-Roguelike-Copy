@@ -1,0 +1,261 @@
+:root {
+  --color-bg: #0a0a0c;
+  --color-panel: #1a1a1f;
+  --color-accent: #c0392b;
+  --color-text: #dcdde1;
+  --color-gold: #f1c40f;
+  --font-main: 'Crimson Text', serif;
+  --card-width: 140px;
+  --card-height: 210px;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-main);
+  overflow: hidden;
+  user-select: none;
+}
+
+#app {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: radial-gradient(circle at center, #1c1c22 0%, #0a0a0c 100%);
+}
+
+/* バトルエリア */
+.battle-scene {
+  flex: 1;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  position: relative;
+  padding: 20px;
+}
+
+.entity {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: transform 0.3s ease;
+}
+
+.entity-sprite {
+  width: 250px;
+  height: 250px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 15px rgba(0, 0, 0, 0.8));
+}
+
+.entity-info {
+  margin-top: 10px;
+  text-align: center;
+}
+
+.hp-bar-container {
+  width: 150px;
+  height: 15px;
+  background: #333;
+  border: 1px solid #555;
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+}
+
+.hp-bar-fill {
+  height: 100%;
+  background: linear-gradient(to right, #e74c3c, #c0392b);
+  transition: width 0.5s ease;
+}
+
+.block-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: rgba(52, 152, 219, 0.7);
+  border-right: 2px solid #fff;
+  z-index: 2;
+}
+
+/* UIレイヤー */
+.ui-layer {
+  min-height: 350px;
+  background: linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.9));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  gap: 10px;
+}
+
+/* 手札とボタンのコンテナ */
+.hand-and-button-container {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  width: 100%;
+  max-width: 1000px;
+  justify-content: center;
+}
+
+/* 山札・エネルギー・捨て札の情報バー */
+.deck-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  max-width: 800px;
+  padding: 10px 20px;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 8px;
+  z-index: 1000;
+}
+
+.deck-pile,
+.discard-pile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.pile-label {
+  font-size: 0.9em;
+  color: #95a5a6;
+}
+
+.pile-count {
+  font-size: 1.5em;
+  font-weight: bold;
+  color: var(--color-gold);
+}
+
+.energy-display {
+  font-size: 1.3em;
+  font-weight: bold;
+  color: #3498db;
+  text-shadow: 0 0 10px rgba(52, 152, 219, 0.8);
+}
+
+/* 手札 */
+.hand {
+  display: flex;
+  justify-content: center;
+  gap: -20px;
+  /* カードを少し重ねる */
+  flex: 1;
+  max-width: 800px;
+  height: 180px;
+  flex-wrap: nowrap;
+}
+
+.card {
+  width: var(--card-width);
+  height: var(--card-height);
+  background: url('/src/assets/card_bg.png') no-repeat center/cover;
+  border-radius: 8px;
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.2s ease, z-index 0s;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+  box-sizing: border-box;
+}
+
+.card:hover {
+  transform: translateY(-40px) scale(1.1);
+  z-index: 10;
+}
+
+.card.dragging {
+  transition: transform 0s !important;
+  z-index: 100 !important;
+  opacity: 0.8;
+  pointer-events: none;
+  /* ドラッグ中は他の要素への干渉を防ぐ */
+}
+
+.card-cost {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  width: 28px;
+  height: 28px;
+  background: #2980b9;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  border: 1px solid #fff;
+}
+
+.card-title {
+  text-align: center;
+  font-size: 1.1em;
+  font-weight: bold;
+  margin-top: 15px;
+  color: #f1c40f;
+  text-shadow: 1px 1px 2px #000;
+}
+
+.card-desc {
+  font-size: 0.9em;
+  margin-top: auto;
+  margin-bottom: 20px;
+  text-align: center;
+  color: #bdc3c7;
+}
+
+/* 戦意（インテント） */
+.intent-icon {
+  width: 40px;
+  height: 40px;
+  position: absolute;
+  top: -60px;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 1px solid var(--color-gold);
+}
+
+/* ターン終了ボタン */
+.end-turn-btn {
+  padding: 15px 35px;
+  background: linear-gradient(to bottom, #e74c3c, #c0392b);
+  border: 2px solid #f39c12;
+  color: white;
+  font-family: inherit;
+  font-size: 1.3em;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+  align-self: center;
+  white-space: nowrap;
+}
+
+.end-turn-btn:hover {
+  background: linear-gradient(to bottom, #f39c12, #e67e22);
+  border-color: #f1c40f;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.7);
+}
+
+.end-turn-btn:disabled {
+  background: #555;
+  border-color: #777;
+  cursor: not-allowed;
+  opacity: 0.5;
+}

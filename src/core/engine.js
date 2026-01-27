@@ -1,7 +1,9 @@
+import { CardLibrary } from './card.js';
+
 export class BattleEngine {
-    constructor(player, enemy, uiUpdateCallback, onBattleEnd) {
+    constructor(player, enemies, uiUpdateCallback, onBattleEnd) {
         this.player = player;
-        this.enemy = enemy;
+        this.enemies = enemies; // 配列で保持
         this.uiUpdateCallback = uiUpdateCallback;
         this.onBattleEnd = onBattleEnd;
         this.turn = 1;
@@ -52,12 +54,26 @@ export class BattleEngine {
         }
     }
 
-    playCard(cardIndex) {
+    playCard(cardIndex, targetIndex = 0) {
         if (this.phase !== 'player') return;
 
         const card = this.player.hand[cardIndex];
+
+        // ターゲット取得
+        let target = this.enemies[targetIndex];
+
+        // もしターゲットが死んでいたら、生存している別の敵を探す
+        if (target && target.isDead()) {
+            target = this.enemies.find(e => !e.isDead());
+        }
+
+        // 敵がいない、またはカードがターゲットを必要としない場合（全体攻撃など）の制御も将来必要
+        // ここではターゲット必須とする
+        if (!target) return;
+
         if (this.player.energy >= card.cost) {
-            card.play(this.player, this.enemy);
+            // カード効果発動
+            card.play(this.player, target);
             this.player.hand.splice(cardIndex, 1);
             this.player.discard.push(card); // 捨て札に追加
 
@@ -84,15 +100,29 @@ export class BattleEngine {
     }
 
     enemyTurn() {
-        this.enemy.resetBlock();
-        // 簡易的な敵の行動
-        // TODO: 敵がステータス異常の影響を受ける場合（例: 弱体）のダメージ計算修正が必要だが、
-        // takeDamage側で処理しているので、ここでは与えるダメージの管理
-        // プレイヤーが「脆弱」なら敵の攻撃ダメージが増える処理も必要
-        // 今回はとりあえず敵の行動後にステータス更新
-        this.player.takeDamage(this.enemy.nextMove.value);
+        // 全ての生存している敵が行動
+        this.enemies.forEach(enemy => {
+            if (!enemy.isDead()) {
+                enemy.resetBlock();
 
-        this.enemy.updateStatus();
+                // 敵の行動実行
+                if (enemy.nextMove) {
+                    // TODO: Enemyクラスにact()メソッドを持たせて委譲するのが良い
+                    // 今回は簡易的にここで処理、あるいはnextMoveの内容に基づいて分岐
+                    if (enemy.nextMove.type === 'attack') {
+                        this.player.takeDamage(enemy.nextMove.value);
+                    } else if (enemy.nextMove.type === 'buff') {
+                        // バフ行動の場合の処理（例: 筋力アップ）
+                        // 現状はログだけだが、実装するなら enemy.addStatus...
+                        if (enemy.nextMove.effect) {
+                            enemy.nextMove.effect(enemy, this.player);
+                        }
+                    }
+                }
+
+                enemy.updateStatus();
+            }
+        });
 
         this.turn++;
         this.checkBattleEnd();
@@ -102,18 +132,30 @@ export class BattleEngine {
     }
 
     updateIntent() {
-        // 次のターンのダメージをランダムに決定
-        const damage = 5 + Math.floor(Math.random() * 5);
-        this.enemy.setNextMove({ type: 'attack', value: damage });
+        // 生存している全ての敵の意図を更新
+        this.enemies.forEach(enemy => {
+            if (!enemy.isDead()) {
+                // Enemyクラスに decideNextMove メソッドがあればそれを使う
+                if (enemy.decideNextMove) {
+                    enemy.decideNextMove();
+                } else {
+                    // 旧ロジック互換
+                    const damage = 5 + Math.floor(Math.random() * 5);
+                    enemy.setNextMove({ type: 'attack', value: damage });
+                }
+            } else {
+                enemy.nextMove = null;
+            }
+        });
     }
 
     checkBattleEnd() {
-        if (this.enemy.isDead()) {
+        const allEnemiesDead = this.enemies.every(e => e.isDead());
+
+        if (allEnemiesDead) {
             if (this.onBattleEnd) this.onBattleEnd('win');
         } else if (this.player.isDead()) {
             if (this.onBattleEnd) this.onBattleEnd('lose');
         }
     }
 }
-
-import { CardLibrary } from './card.js';

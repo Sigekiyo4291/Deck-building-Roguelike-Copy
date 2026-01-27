@@ -33,17 +33,26 @@ body {
   display: flex;
   justify-content: space-around;
   align-items: center;
+  /* 垂直方向中央寄せ */
   position: relative;
-  padding: 20px;
+  padding: 50px 20px 300px 20px;
+  /* 下部に300pxのスペースを確保 */
+  box-sizing: border-box;
 }
 
 .entity {
   display: flex;
-  flex-direction: column;
+  flex-direction: column-reverse;
+  /* infoを上に、画像を下に */
   align-items: center;
   transition: transform 0.3s ease;
   position: relative;
-  /* インテントアイコンの基準位置にするため */
+}
+
+.entity-info {
+  margin-bottom: 10px;
+  text-align: center;
+  width: 100%;
 }
 
 .entity-sprite {
@@ -51,12 +60,6 @@ body {
   height: 200px;
   object-fit: contain;
   filter: drop-shadow(0 0 15px rgba(0, 0, 0, 0.8));
-}
-
-.entity-info {
-  margin-top: 10px;
-  text-align: center;
-  width: 100%;
 }
 
 .status-text {
@@ -102,15 +105,58 @@ body {
   z-index: 2;
 }
 
+.status-container {
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+  margin-top: 5px;
+  flex-wrap: wrap;
+}
+
+.status-icon {
+  width: 24px;
+  height: 24px;
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid #777;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 0.8em;
+  position: relative;
+}
+
+.status-value {
+  position: absolute;
+  bottom: -5px;
+  right: -5px;
+  font-size: 0.8em;
+  color: #fff;
+  font-weight: bold;
+  text-shadow: 1px 1px 1px #000;
+}
+
+
 /* UIレイヤー */
 .ui-layer {
-  min-height: 350px;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 350px;
   background: linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.9));
   display: flex;
   flex-direction: column;
   align-items: center;
   padding: 20px;
   gap: 10px;
+  z-index: 100;
+  box-sizing: border-box;
+  pointer-events: none;
+}
+
+.ui-layer>* {
+  pointer-events: auto;
 }
 
 /* 手札とボタンのコンテナ */
@@ -195,11 +241,12 @@ body {
 }
 
 .card.dragging {
-  transition: transform 0s !important;
-  z-index: 100 !important;
-  opacity: 0.8;
-  pointer-events: none;
-  /* ドラッグ中は他の要素への干渉を防ぐ */
+  transition: none !important;
+  /* ドラッグ中は遅延なしで追従 */
+  z-index: 1000 !important;
+  opacity: 0.9;
+  cursor: grabbing;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
 }
 
 .card-cost {
@@ -278,6 +325,13 @@ body {
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.7);
 }
 
+.end-turn-btn:disabled {
+  background: #555;
+  border-color: #777;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
 /* リワードシーン */
 .reward-list {
   background: rgba(0, 0, 0, 0.6);
@@ -337,6 +391,62 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+/* 敵コンテナ */
+.enemies-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 20px;
+  min-height: 300px;
+  flex-grow: 1;
+}
+
+/* 敵単体（オーバーライド） */
+.entity.enemy {
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+
+.entity.enemy:hover {
+  transform: scale(1.05);
+}
+
+/* 選択中の敵スタイル */
+.entity.enemy.selected-target {
+  outline: 4px solid #e74c3c;
+  box-shadow: 0 0 15px #c0392b;
+  transform: scale(1.05);
+  /* 少し大きく */
+}
+
+/* レアリティスタイル */
+.card.basic {
+  border-color: #7f8c8d;
+}
+
+.card.common {
+  border-color: #bdc3c7;
+}
+
+.card.uncommon {
+  border-color: #3498db;
+  box-shadow: 0 4px 8px rgba(52, 152, 219, 0.5);
+}
+
+.card.rare {
+  border-color: #f1c40f;
+  box-shadow: 0 4px 12px rgba(241, 196, 15, 0.6);
+  background: linear-gradient(135deg, #444 0%, #555 100%);
+}
+
+.card.rare .card-title {
+  color: #f1c40f;
+}
+
+.card.uncommon .card-title {
+  color: #3498db;
 }
 
 .card-reward-container {
@@ -472,89 +582,5 @@ body {
   stroke: #777;
   stroke-width: 2;
   fill: none;
-  opacity: 0.5;
-}
-
-.map-layer {
-  display: flex;
-  justify-content: center;
-  gap: 40px;
-  position: relative;
-  z-index: 2;
-}
-
-.map-node {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  border: 2px solid #555;
-  background-color: #333;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  transition: all 0.2s;
-  color: #fff;
-  font-size: 1.2em;
-  position: relative;
-  z-index: 2;
-}
-
-.map-node:hover {
-  transform: scale(1.2);
-  box-shadow: 0 0 10px var(--color-gold);
-}
-
-.map-node.available {
-  border-color: var(--color-gold);
-  background-color: #555;
-  cursor: pointer;
-  animation: pulse 1s infinite alternate;
-}
-
-.map-node.cleared {
-  border-color: #2ecc71;
-  background-color: #27ae60;
-  opacity: 0.5;
-}
-
-.map-node.locked {
-  opacity: 0.3;
-  cursor: not-allowed;
-  pointer-events: none;
-}
-
-@keyframes pulse {
-  from {
-    box-shadow: 0 0 5px var(--color-gold);
-  }
-
-  to {
-    box-shadow: 0 0 15px var(--color-gold);
-  }
-}
-
-/* マップのパス（SVG） */
-.map-paths-svg {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 1;
-}
-
-.map-path-line {
-  stroke: #777;
-  stroke-width: 2;
-  fill: none;
-  opacity: 0.5;
-}
-
-.end-turn-btn:disabled {
-  background: #555;
-  border-color: #777;
-  cursor: not-allowed;
   opacity: 0.5;
 }

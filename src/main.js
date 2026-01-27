@@ -1,41 +1,34 @@
 import './style.css';
-import { Player, Enemy } from './core/entity.js';
-import { BattleEngine } from './core/engine.js';
-import { CardLibrary } from './core/card.js';
-import { SceneManager } from './core/scene-manager.js';
+import { GameMap } from './core/map-data.js';
 import { MapGenerator } from './core/map-generator.js';
+import { SceneManager } from './core/scene-manager.js';
+import { Player, Enemy, Louse } from './core/entity.js';
+import { CardLibrary } from './core/card.js';
+import { BattleEngine } from './core/engine.js';
 
 class Game {
   constructor() {
     this.player = new Player();
-    this.sceneManager = new SceneManager(this);
     this.map = null;
     this.battleEngine = null;
+    this.sceneManager = new SceneManager(this);
+    this.selectedEnemyIndex = 0; // デフォルトターゲット初期化
 
-    // UI要素
-    this.elMapContainer = document.getElementById('map-container');
-
-    // バトルUI要素
-    this.elPlayerHpText = document.getElementById('player-hp-text');
-    this.elPlayerHpFill = document.getElementById('player-hp-fill');
-    this.elPlayerBlock = document.getElementById('player-block');
-    this.elPlayerBlockText = document.getElementById('player-block-text');
-
-    this.elEnemyHpText = document.getElementById('enemy-hp-text');
-    this.elEnemyHpFill = document.getElementById('enemy-hp-fill');
-    this.elEnemyBlock = document.getElementById('enemy-block');
-    this.elEnemyBlockText = document.getElementById('enemy-block-text');
-    this.elEnemyIntent = document.getElementById('enemy-intent');
-
-    this.elHand = document.getElementById('hand');
-    this.elEnergyValue = document.getElementById('energy-value');
+    // UI Elements
     this.elDeckCount = document.getElementById('deck-count');
     this.elDiscardCount = document.getElementById('discard-count');
     this.elEndTurnBtn = document.getElementById('end-turn-btn');
+    this.elHand = document.getElementById('hand');
+
+    // 状態管理
+    this.selectedCardIndex = -1; // カード選択状態
 
     // イベントリスナー設定
     this.elEndTurnBtn.onclick = () => {
-      if (this.battleEngine) this.battleEngine.endTurn();
+      if (this.battleEngine) {
+        this.deselectCard();
+        this.battleEngine.endTurn();
+      }
     };
   }
 
@@ -52,59 +45,12 @@ class Game {
   }
 
   renderMap() {
-    this.elMapContainer.innerHTML = '';
-
-    // パス描画用のSVG
-    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svg.setAttribute('class', 'map-paths-svg');
-    this.elMapContainer.appendChild(svg);
-
-    // ノード描画（下の階層から順に）
-    this.map.layers.forEach((layer, layerIndex) => {
-      const layerEl = document.createElement('div');
-      layerEl.className = 'map-layer';
-
-      layer.forEach(node => {
-        const nodeEl = document.createElement('div');
-        nodeEl.className = `map-node ${node.type}`;
-        nodeEl.dataset.id = node.id;
-
-        // アイコン設定
-        let icon = '?';
-        if (node.type === 'enemy') icon = '⚔️';
-        else if (node.type === 'elite') icon = '👿';
-        else if (node.type === 'rest') icon = '🔥';
-        else if (node.type === 'shop') icon = '💰';
-        else if (node.type === 'treasure') icon = '💎';
-        else if (node.type === 'boss') icon = '👑';
-
-        nodeEl.textContent = icon;
-
-        // 状態クラス付与
-        if (node.isClear) nodeEl.classList.add('cleared');
-        else if (node.isAvailable) nodeEl.classList.add('available');
-        else nodeEl.classList.add('locked');
-
-        // クリックイベント
-        nodeEl.onclick = () => {
-          if (node.isAvailable && !node.isClear) {
-            this.onNodeSelect(node);
-          }
-        };
-
-        layerEl.appendChild(nodeEl);
-      });
-      this.elMapContainer.appendChild(layerEl);
-    });
-
-    // 簡易的なパス描画（座標計算が複雑なため、今回はモックとして線を表示しませんが、
-    // 将来的にはここでSVG lineを追加します。DOM要素の位置を取得する必要があるため
-    // requestAnimationFrameなどで描画後に実行する必要があります）
+    this.sceneManager.renderMap(this.map, (node) => this.onNodeSelect(node));
   }
 
   onNodeSelect(node) {
     this.map.currentNode = node;
-    node.isClear = true; // バトル開始前にクリア扱い（仮）本来は勝利後
+    node.isClear = true;
 
     if (node.type === 'enemy' || node.type === 'elite' || node.type === 'boss') {
       this.startBattle(node.type);
@@ -116,88 +62,89 @@ class Game {
   }
 
   startBattle(type) {
-    // 敵データ生成
-    let enemyName = 'スライム';
-    let enemyHp = 40;
-    let enemyImg = '/src/assets/slime.png';
+    // 敵データ生成（複数体）
+    let enemies = [];
 
     if (type === 'boss') {
-      enemyName = 'ボススライム';
-      enemyHp = 100;
-    } else if (type === 'elite') {
-      enemyName = 'エリートスライム';
-      enemyHp = 70;
+      enemies.push(new Enemy('ボススライム', 100, '/src/assets/slime.png'));
+    } else {
+      // 1-3体の敵をランダム生成
+      // 基本はLouse（寄生虫）またはSlime
+      const count = 1 + Math.floor(Math.random() * 2); // 1-2体（最初は控えめに）
+
+      for (let i = 0; i < count; i++) {
+        const roll = Math.random();
+        if (roll < 0.4) {
+          enemies.push(new Louse('red'));
+        } else if (roll < 0.8) {
+          enemies.push(new Louse('green'));
+        } else {
+          enemies.push(new Enemy('スライム', 30 + Math.floor(Math.random() * 10), '/src/assets/slime.png'));
+        }
+      }
     }
 
-    const enemy = new Enemy(enemyName, enemyHp, enemyImg);
-
     // バトルエンジン初期化
+    if (this.battleEngine) {
+      this.battleEngine = null; // 古いインスタンス破棄
+    }
     this.battleEngine = new BattleEngine(
       this.player,
-      enemy,
+      enemies,
       () => this.updateBattleUI(),
       (result) => {
         if (result === 'win') {
           this.onBattleWin();
         } else {
           alert('Game Over...');
-          location.reload(); // 敗北時はリロードで最初から
+          location.reload();
         }
       }
     );
 
     // シーン切り替え
     this.sceneManager.showBattle();
-
-    // バトル開始
     this.battleEngine.start();
     this.updateBattleUI();
   }
 
   onBattleWin() {
+    this.deselectCard();
     alert('Victory!');
-    // リワード画面へ
-    this.showRewards();
+
+    // リワード画面表示
+    this.showRewardScene();
   }
 
-  showRewards() {
-    this.generateRewards();
+  showRewardScene() {
     this.sceneManager.showReward();
-    this.updateRewardUI();
-  }
 
-  generateRewards() {
-    this.rewards = [];
-
-    // ゴールド報酬 (10-25G)
-    const goldAmount = 10 + Math.floor(Math.random() * 16);
-    this.rewards.push({ type: 'gold', value: goldAmount, icon: '💰', label: `${goldAmount} ゴールド` });
-
-    // カード報酬
-    this.rewards.push({ type: 'card', icon: '🎴', label: 'カードをデッキに追加' });
-
-    // ポーション報酬 (40%の確率)
-    if (Math.random() < 0.4) {
-      this.rewards.push({ type: 'potion', icon: '🧪', label: 'ポーション（未実装）' });
-    }
-  }
-
-  updateRewardUI() {
     const listEl = document.getElementById('reward-list');
     listEl.innerHTML = '';
 
-    this.rewards.forEach((reward, index) => {
+    // ランダム報酬生成
+    const rewards = [];
+    // ゴールド
+    rewards.push({ type: 'gold', value: 10 + Math.floor(Math.random() * 20), taken: false });
+    // カード
+    rewards.push({ type: 'card', taken: false });
+    // ポーション（30%）
+    if (Math.random() < 0.3) {
+      rewards.push({ type: 'potion', taken: false });
+    }
+
+    rewards.forEach((reward, index) => {
       const itemEl = document.createElement('div');
       itemEl.className = 'reward-item';
-      if (reward.taken) itemEl.classList.add('taken');
 
-      itemEl.innerHTML = `
-        <div class="reward-icon">${reward.icon}</div>
-        <div class="reward-content">${reward.label}</div>
-      `;
+      let text = '';
+      if (reward.type === 'gold') text = `💰 ゴールド (${reward.value})`;
+      if (reward.type === 'card') text = `🎴 カードを追加`;
+      if (reward.type === 'potion') text = `🧪 ポーション`;
 
+      itemEl.textContent = text;
       itemEl.onclick = () => {
-        if (!reward.taken) this.onRewardClick(reward, index);
+        if (!reward.taken) this.onRewardClick(reward, index, itemEl);
       };
 
       listEl.appendChild(itemEl);
@@ -213,22 +160,26 @@ class Game {
     };
   }
 
-  onRewardClick(reward, index) {
+  // onRewardClickの修正: itemElを受け取ってクリック後に無効化スタイル適用
+  onRewardClick(reward, index, itemEl) {
     if (reward.type === 'gold') {
       this.player.gold += reward.value;
       alert(`${reward.value} ゴールドを獲得しました！ (所持金: ${this.player.gold}G)`);
       reward.taken = true;
-      this.updateRewardUI();
+      itemEl.style.opacity = '0.5';
+      itemEl.style.textDecoration = 'line-through';
+      this.updatePlayerStatsUI(); // 所持金表示更新
     } else if (reward.type === 'card') {
-      this.showCardSelection(reward);
+      this.showCardSelection(reward, itemEl);
     } else if (reward.type === 'potion') {
       alert('ポーションを獲得しました（未実装）');
       reward.taken = true;
-      this.updateRewardUI();
+      itemEl.style.opacity = '0.5';
+      itemEl.style.textDecoration = 'line-through';
     }
   }
 
-  showCardSelection(rewardItem) {
+  showCardSelection(rewardItem, itemEl) {
     const overlay = document.getElementById('card-reward-overlay');
     const container = document.getElementById('card-choices');
     const skipBtn = document.getElementById('skip-card-btn');
@@ -236,96 +187,157 @@ class Game {
     container.innerHTML = '';
 
     // ランダムなカード候補を3枚生成
-    // CardLibraryから全てのキーを取得してランダムに選ぶ
     const keys = Object.keys(CardLibrary);
     for (let i = 0; i < 3; i++) {
+      // 全カード配列からランダム取得
+      // （レアリティ抽選ロジックは今回省略、完全ランダム）
       const randomKey = keys[Math.floor(Math.random() * keys.length)];
       const card = CardLibrary[randomKey].clone();
 
-      const cardEl = document.createElement('div');
-      cardEl.className = 'card';
-      cardEl.innerHTML = `
-            <div class="card-cost">${card.cost}</div>
-            <div class="card-title">${card.name}</div>
-            <div class="card-desc">${card.description}</div>
-        `;
-
+      const cardEl = this.createRewardCardElement(card);
       cardEl.onclick = () => {
         this.player.masterDeck.push(card);
         alert(`${card.name} をデッキに追加しました！`);
         rewardItem.taken = true;
-        this.updateRewardUI();
+        itemEl.style.opacity = '0.5';
+        itemEl.style.textDecoration = 'line-through';
         overlay.style.display = 'none';
       };
-
       container.appendChild(cardEl);
     }
 
     overlay.style.display = 'flex';
-
     skipBtn.onclick = () => {
-      rewardItem.taken = true; // スキップしたら獲得済み扱い（消える）
-      this.updateRewardUI();
       overlay.style.display = 'none';
+      rewardItem.taken = true; // スキップしたら取得済み扱い
+      itemEl.style.opacity = '0.5';
+      itemEl.style.textDecoration = 'line-through';
     };
   }
 
+  createRewardCardElement(card) {
+    const cardEl = document.createElement('div');
+    cardEl.className = `card ${card.rarity}`;
+    cardEl.innerHTML = `
+            <div class="card-cost">${card.cost}</div>
+            <div class="card-title">${card.name}</div>
+            <div class="card-desc">${card.description}</div>
+            <div class="card-type">${card.type}</div>
+      `;
+    return cardEl;
+  }
+
+  updatePlayerStatsUI() {
+    // プレイヤーのHP/Block/Energy/Deckなどの更新
+    // updateBattleUIの一部として呼ばれるが、単独でも呼べるように
+    // 今回はupdateBattleUIに集約するので空でもいいが、リワード時のGold更新用にあると便利
+    // しかしGold表示要素はまだないのでログのみ
+  }
+
   updateBattleUI() {
-    if (!this.battleEngine) return;
-    const player = this.battleEngine.player;
-    const enemy = this.battleEngine.enemy;
+    try {
+      const player = this.player;
 
-    // プレイヤー情報更新
-    this.elPlayerHpText.textContent = `${player.hp} / ${player.maxHp}`;
-    this.elPlayerHpFill.style.width = `${(player.hp / player.maxHp) * 100}%`;
-    this.elPlayerBlock.style.width = `${Math.min(100, (player.block / player.maxHp) * 100)}%`;
+      // --- Player UI Update ---
+      const playerHpFill = document.getElementById('player-hp-fill');
+      const playerHpText = document.getElementById('player-hp-text');
+      const playerBlock = document.getElementById('player-block');
+      const playerBlockText = document.getElementById('player-block-text');
 
-    if (player.block > 0) {
-      this.elPlayerBlockText.textContent = `🛡️${player.block}`;
-      this.elPlayerBlockText.style.display = 'flex';
-    } else {
-      this.elPlayerBlockText.style.display = 'none';
+      const playerHpPercent = (player.hp / player.maxHp) * 100;
+      playerHpFill.style.width = `${playerHpPercent}%`;
+      playerHpText.textContent = `${player.hp} / ${player.maxHp}`;
+
+      if (player.block > 0) {
+        playerBlock.style.width = `${playerHpPercent}%`; // ブロックバーの表示ロジックは簡易的にHPバーと同じ幅に重ねる？
+        // ブロックはHPの上に加算表示するUIが多いが、ここでは簡易実装
+        // Slay the SpireではHPバーの左に盾アイコンが出る。
+        playerBlock.style.width = '0%'; // バー表示はやめて数値のみにする
+        playerBlockText.textContent = `🛡️${player.block}`;
+        playerBlockText.style.display = 'inline';
+      } else {
+        playerBlock.style.width = '0%';
+        playerBlockText.style.display = 'none';
+      }
+
+      // プレイヤーのステータス
+      this.updateStatusUI(player, 'player-status-container');
+
+      // --- Enemy UI Update ---
+      const enemiesContainer = document.getElementById('enemies-container');
+      enemiesContainer.innerHTML = '';
+
+      this.battleEngine.enemies.forEach((enemy, index) => {
+        if (enemy.isDead()) return; // 死んだ敵は表示しない（あるいは死体表示）
+
+        const enemyEl = document.createElement('div');
+        enemyEl.className = 'entity enemy';
+
+        // 選択中の敵をハイライト
+        if (this.selectedEnemyIndex === index) {
+          enemyEl.classList.add('selected-target');
+        }
+
+        enemyEl.onclick = () => this.onEnemyClick(index);
+
+        // 意図アイコン
+        let intentHtml = '';
+        if (enemy.nextMove) {
+          if (enemy.nextMove.type === 'attack') {
+            intentHtml = `<div class="intent-icon">🗡️${enemy.nextMove.value}</div>`;
+          } else if (enemy.nextMove.type === 'buff') {
+            intentHtml = `<div class="intent-icon">💪</div>`;
+          }
+        }
+
+        // HPバー計算
+        const hpPercent = (enemy.hp / enemy.maxHp) * 100;
+        let blockHtml = '';
+        if (enemy.block > 0) {
+          blockHtml = `<span class="block-text">🛡️${enemy.block}</span>`;
+        }
+
+        // ステータス生成（innerHTMLでまとめて埋め込むのは難しいので後でappendする）
+
+        enemyEl.innerHTML = `
+            ${intentHtml}
+            <img src="${enemy.sprite}" alt="${enemy.name}" class="entity-sprite" />
+            <div class="entity-info">
+                <div class="hp-bar-container">
+                    <div class="hp-bar-fill" style="width: ${hpPercent}%;"></div>
+                </div>
+                <div class="status-text">
+                    <span>${enemy.hp} / ${enemy.maxHp}</span>
+                    ${blockHtml}
+                </div>
+                <div id="enemy-status-${index}" class="status-container"></div>
+            </div>
+        `;
+
+        enemiesContainer.appendChild(enemyEl);
+
+        // ステータスアイコン生成
+        this.updateStatusUI(enemy, `enemy-status-${index}`);
+      });
+
+      // --- Deck / Energy ---
+      document.getElementById('energy-value').textContent = player.energy;
+      document.getElementById('deck-count').textContent = player.deck.length;
+      document.getElementById('discard-count').textContent = player.discard.length;
+
+      // --- Hand ---
+      this.elHand.innerHTML = '';
+      player.hand.forEach((card, index) => {
+        const cardEl = this.createCardElement(card, index);
+        this.elHand.appendChild(cardEl);
+      });
+
+      // ターン終了ボタン
+      this.elEndTurnBtn.disabled = (this.battleEngine.phase !== 'player');
+    } catch (e) {
+      console.error('UpdateBattleUI Error:', e);
+      alert('UI Error: ' + e.message);
     }
-
-    // 敵情報更新
-    this.elEnemyHpText.textContent = `${enemy.hp} / ${enemy.maxHp}`;
-    this.elEnemyHpFill.style.width = `${(enemy.hp / enemy.maxHp) * 100}%`;
-    this.elEnemyBlock.style.width = `${Math.min(100, (enemy.block / enemy.maxHp) * 100)}%`;
-
-    if (enemy.block > 0) {
-      this.elEnemyBlockText.textContent = `🛡️${enemy.block}`;
-      this.elEnemyBlockText.style.display = 'flex';
-    } else {
-      this.elEnemyBlockText.style.display = 'none';
-    }
-
-    // インテント更新
-    if (enemy.nextMove) {
-      this.elEnemyIntent.textContent = `🗡️${enemy.nextMove.value}`;
-      this.elEnemyIntent.style.display = 'flex';
-    } else {
-      this.elEnemyIntent.style.display = 'none';
-    }
-
-    // エネルギー更新
-    this.elEnergyValue.textContent = player.energy;
-
-    // 山札・捨て札更新
-    this.elDeckCount.textContent = player.deck.length;
-    this.elDiscardCount.textContent = player.discard.length;
-
-    // 手札更新
-    this.elHand.innerHTML = '';
-    player.hand.forEach((card, index) => {
-      this.createCardElement(card, index);
-    });
-
-    // ターン終了ボタン
-    this.elEndTurnBtn.disabled = (this.battleEngine.phase !== 'player');
-
-    // ステータス更新
-    this.updateStatusUI(player, 'player-status-container');
-    this.updateStatusUI(enemy, 'enemy-status-container');
   }
 
   updateStatusUI(entity, containerId) {
@@ -339,6 +351,7 @@ class Game {
 
       let iconChar = '❓';
       if (status.type === 'vulnerable') iconChar = '💔';
+      if (status.type === 'strength') iconChar = '💪';
 
       iconEl.textContent = iconChar;
 
@@ -353,72 +366,123 @@ class Game {
 
   createCardElement(card, index) {
     const cardEl = document.createElement('div');
-    cardEl.className = 'card';
+    cardEl.className = `card ${card.rarity}`;
+
     cardEl.innerHTML = `
-            <div class="card-cost">${card.cost}</div>
-            <div class="card-title">${card.name}</div>
-            <div class="card-desc">${card.description}</div>
-        `;
+              <div class="card-cost">${card.cost}</div>
+              <div class="card-title">${card.name}</div>
+              <div class="card-desc">${card.description}</div>
+              <div class="card-type">${card.type}</div>
+      `;
 
-    // ドラッグ実装（簡易版: 以前のコードを統合）
-    // ... (ドラッグロジックは長いので、ここではonClickなどに簡略化するか、以前のコードをそのまま持ってくる)
-    // 今回は簡略化のため、クリックでプレイに変更（ドラッグロジックの移植が長くなるため）
-    // いや、ユーザーはドラッグを気に入っているはずなので、ドラッグロジックも入れます。
-
-    // ... (ドラッグロジック移植)
-    let startY = 0;
+    // ドラッグ処理変数の初期化
     let isDragging = false;
-    const threshold = -100;
-
-    cardEl.style.touchAction = 'none';
-    cardEl.style.cursor = 'grab';
+    let startX = 0;
+    let startY = 0;
 
     cardEl.onpointerdown = (e) => {
       if (this.battleEngine.phase !== 'player') return;
-      startY = e.clientY;
-      isDragging = true;
-      cardEl.classList.add('dragging');
-      cardEl.style.cursor = 'grabbing';
-      cardEl.setPointerCapture(e.pointerId);
       e.preventDefault();
+      e.stopPropagation();
+
+      isDragging = true;
+      startX = e.clientX;
+      startY = e.clientY;
+      cardEl.classList.add('dragging');
+      cardEl.setPointerCapture(e.pointerId);
     };
 
     cardEl.onpointermove = (e) => {
       if (!isDragging) return;
-      const deltaY = e.clientY - startY;
-      const translateY = Math.max(-400, Math.min(100, deltaY));
-      cardEl.style.transform = `translateY(${translateY}px) scale(1.1)`;
-
-      if (translateY < threshold) {
-        cardEl.style.filter = 'brightness(1.3) drop-shadow(0 0 15px gold)';
-      } else {
-        cardEl.style.filter = '';
-      }
       e.preventDefault();
+
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+      cardEl.style.transform = `translate(${dx}px, ${dy}px) scale(1.1) rotate(0deg)`;
     };
 
     cardEl.onpointerup = (e) => {
       if (!isDragging) return;
       isDragging = false;
       cardEl.classList.remove('dragging');
-      cardEl.style.cursor = 'grab';
+      cardEl.releasePointerCapture(e.pointerId);
 
-      const deltaY = e.clientY - startY;
-      if (deltaY < threshold) {
-        cardEl.releasePointerCapture(e.pointerId);
-        this.battleEngine.playCard(index);
+      const dy = e.clientY - startY;
+      const threshold = -150;
+
+      if (dy < threshold) {
+        this.tryPlayCard(index);
       } else {
-        cardEl.releasePointerCapture(e.pointerId);
         cardEl.style.transform = '';
-        cardEl.style.filter = '';
       }
-      e.preventDefault();
     };
 
-    this.elHand.appendChild(cardEl);
+    cardEl.onclick = (e) => {
+      e.stopPropagation();
+    };
+
+    return cardEl;
+  }
+
+  // ドラッグ完了時のカード使用処理
+  tryPlayCard(index) {
+    const card = this.player.hand[index];
+
+    // エネルギーチェック
+    if (this.player.energy < card.cost) {
+      alert('エネルギーが足りません！');
+      this.updateBattleUI(); // 位置リセットのために再描画
+      return;
+    }
+
+    if (card.targetType === 'single') {
+      // 選択中のターゲットを使用
+      let targetIdx = this.selectedEnemyIndex;
+      if (targetIdx === undefined || targetIdx === null) targetIdx = 0; // ガード
+      const target = this.battleEngine.enemies[targetIdx];
+
+      if (!target || target.isDead()) {
+        // 念のため再検索
+        const firstAlive = this.battleEngine.enemies.find(e => !e.isDead());
+        if (!firstAlive) return; // 敵がいない
+        // aliveな敵のインデックスを探す（findだけだとindex取れないので配列操作が必要だが、engine側でよしなにやってくれるならtarget objectを渡したいが、engineはindexベース）
+        // 簡易的に現状のselectedEnemyIndexを信じる、ダメなら最初の生存敵
+        if (this.battleEngine.enemies[targetIdx] && this.battleEngine.enemies[targetIdx].isDead()) {
+          targetIdx = this.battleEngine.enemies.findIndex(e => !e.isDead());
+        }
+      }
+      this.battleEngine.playCard(index, targetIdx);
+    } else {
+      // 全体・自己など
+      this.battleEngine.playCard(index);
+    }
+    // UI更新はengineからのコールバックで行われる
+  }
+
+  // onHandCardClickは不要になるので削除またはコメントアウト
+  onHandCardClick(index) {
+    // no-op
+  }
+
+  onEnemyClick(enemyIndex) {
+    // 敵を選択状態にするだけ（攻撃はしない）
+    if (this.battleEngine.phase !== 'player') return;
+
+    const enemy = this.battleEngine.enemies[enemyIndex];
+    if (enemy && !enemy.isDead()) {
+      console.log(`Enemy clicked: ${enemyIndex}`);
+      this.selectedEnemyIndex = enemyIndex;
+      this.updateBattleUI();
+    }
+  }
+
+  // deselectCard は不要になったので削除するか、空にしておく
+  deselectCard() {
+    // no-op
   }
 }
 
-// ゲーム開始
+// ゲーム起動
 const game = new Game();
+window.game = game; // デバッグ用
 game.start();

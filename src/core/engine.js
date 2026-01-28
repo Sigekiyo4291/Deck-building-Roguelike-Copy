@@ -23,11 +23,23 @@ export class BattleEngine {
         });
 
         this.shuffle(this.player.deck);
+
+        // レリック: onBattleStart
+        this.player.relics.forEach(relic => {
+            if (relic.onBattleStart) relic.onBattleStart(this.player, this);
+        });
+
         this.startPlayerTurn();
     }
 
     startPlayerTurn() {
         this.phase = 'player';
+
+        // レリック: onPlayerTurnStart (ターン1レリックなどはここ)
+        this.player.relics.forEach(relic => {
+            if (relic.onPlayerTurnStart) relic.onPlayerTurnStart(this.player, this);
+        });
+
         this.player.resetEnergy();
         this.player.resetBlock();
         this.drawCards(5);
@@ -87,6 +99,12 @@ export class BattleEngine {
 
         // 手札を全て捨てる
         this.player.discard.push(...this.player.hand);
+
+        // レリック: onTurnEnd
+        this.player.relics.forEach(relic => {
+            if (relic.onTurnEnd) relic.onTurnEnd(this.player, this);
+        });
+
         this.player.hand = [];
 
         // ステータス更新（持続時間減少）
@@ -153,7 +171,13 @@ export class BattleEngine {
         const allEnemiesDead = this.enemies.every(e => e.isDead());
 
         if (allEnemiesDead) {
-            if (this.onBattleEnd) this.onBattleEnd('win');
+            if (this.onBattleEnd) {
+                // レリック: onVictory
+                this.player.relics.forEach(relic => {
+                    if (relic.onVictory) relic.onVictory(this.player, this);
+                });
+                this.onBattleEnd('win');
+            }
         } else if (this.player.isDead()) {
             if (this.onBattleEnd) this.onBattleEnd('lose');
         }

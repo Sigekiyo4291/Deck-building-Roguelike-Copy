@@ -42,14 +42,28 @@ body {
 
 .entity {
   display: flex;
-  flex-direction: column-reverse;
-  /* infoを上に、画像を下に */
+  flex-direction: column;
+  /* intent(上), 画像(中), info(下) */
   align-items: center;
   transition: transform 0.3s ease;
   position: relative;
 }
 
+.intent-icon {
+  font-size: 24px;
+  margin-bottom: -10px;
+  /* 画像に少し被せる */
+  z-index: 10;
+  text-shadow: 0 0 5px black;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .entity-info {
+  margin-top: 5px;
+  /* 画像との間隔 */
   margin-bottom: 10px;
   text-align: center;
   width: 100%;

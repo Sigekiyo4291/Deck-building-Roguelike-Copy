@@ -73,7 +73,7 @@ export class BattleEngine {
 
         if (this.player.energy >= card.cost) {
             // カード効果発動
-            card.play(this.player, target);
+            card.play(this.player, target, this);
             this.player.hand.splice(cardIndex, 1);
             this.player.discard.push(card); // 捨て札に追加
 

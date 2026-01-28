@@ -16,10 +16,10 @@ export class Card {
         }
     }
 
-    play(source, target) {
+    play(source, target, engine) {
         if (source.energy >= this.cost) {
             source.energy -= this.cost;
-            this.effect(source, target);
+            this.effect(source, target, engine);
             return true;
         }
         return false;
@@ -59,14 +59,13 @@ export const CardLibrary = {
         t.takeDamage(5);
         t.takeDamage(5);
     }),
-    POMMEL_STRIKE: new Card('pommel_strike', 'ポンメルストライク', 1, 'attack', 'common', '9ダメージを与え、カードを1枚引く', (s, t) => {
+    POMMEL_STRIKE: new Card('pommel_strike', 'ポンメルストライク', 1, 'attack', 'common', '9ダメージを与え、カードを1枚引く', (s, t, e) => {
         t.takeDamage(9);
-        console.log('ドロー機能はEngineで処理が必要ですが、ここではコールバックできないため未実装');
-        // Engine側でeffectの返り値を拡張する等の対応が必要だが、今回はログのみ
+        if (e) e.drawCards(1);
     }),
-    SHRUG_IT_OFF: new Card('shrug_it_off', '受け流し', 1, 'skill', 'common', '8ブロックを得て、カードを1枚引く', (s, t) => {
+    SHRUG_IT_OFF: new Card('shrug_it_off', '受け流し', 1, 'skill', 'common', '8ブロックを得て、カードを1枚引く', (s, t, e) => {
         s.addBlock(8);
-        // ドロー未実装
+        if (e) e.drawCards(1);
     }),
 
     // Uncommon

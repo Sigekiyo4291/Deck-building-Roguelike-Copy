@@ -5,6 +5,7 @@ import { SceneManager } from './core/scene-manager.js';
 import { Player, Enemy, Louse } from './core/entity.js';
 import { CardLibrary } from './core/card.js';
 import { BattleEngine } from './core/engine.js';
+import { RelicLibrary } from './core/relic.js';
 
 class Game {
   constructor() {
@@ -53,6 +54,7 @@ class Game {
     node.isClear = true;
 
     if (node.type === 'enemy' || node.type === 'elite' || node.type === 'boss') {
+      this.isEliteBattle = (node.type === 'elite' || node.type === 'boss'); // エリート/ボスの判定
       this.startBattle(node.type);
     } else {
       alert(`${node.type} ノードに到達しました（イベント未実装）`);
@@ -106,6 +108,7 @@ class Game {
     this.sceneManager.showBattle();
     this.battleEngine.start();
     this.updateBattleUI();
+    this.updateRelicUI(); // 初期表示
   }
 
   onBattleWin() {
@@ -113,10 +116,10 @@ class Game {
     alert('Victory!');
 
     // リワード画面表示
-    this.showRewardScene();
+    this.showRewardScene(this.isEliteBattle);
   }
 
-  showRewardScene() {
+  showRewardScene(isElite) {
     this.sceneManager.showReward();
 
     const listEl = document.getElementById('reward-list');
@@ -125,12 +128,28 @@ class Game {
     // ランダム報酬生成
     const rewards = [];
     // ゴールド
-    rewards.push({ type: 'gold', value: 10 + Math.floor(Math.random() * 20), taken: false });
+    rewards.push({ type: 'gold', value: 10 + Math.floor(Math.random() * 20) + (isElite ? 20 : 0), taken: false });
+
     // カード
     rewards.push({ type: 'card', taken: false });
+
     // ポーション（30%）
     if (Math.random() < 0.3) {
       rewards.push({ type: 'potion', taken: false });
+    }
+
+    // レリック（エリート戦なら確定）
+    if (isElite) {
+      // 未所持のレリックからランダムに1つ選ぶ
+      const ownedIds = this.player.relics.map(r => r.id);
+      const candidates = Object.values(RelicLibrary).filter(r =>
+        !ownedIds.includes(r.id) && r.rarity !== 'starter' && r.rarity !== 'boss'
+      );
+
+      if (candidates.length > 0) {
+        const relic = candidates[Math.floor(Math.random() * candidates.length)];
+        rewards.push({ type: 'relic', data: relic, taken: false });
+      }
     }
 
     rewards.forEach((reward, index) => {
@@ -141,6 +160,7 @@ class Game {
       if (reward.type === 'gold') text = `💰 ゴールド (${reward.value})`;
       if (reward.type === 'card') text = `🎴 カードを追加`;
       if (reward.type === 'potion') text = `🧪 ポーション`;
+      if (reward.type === 'relic') text = `💍 レリック: ${reward.data.name}`;
 
       itemEl.textContent = text;
       itemEl.onclick = () => {
@@ -176,7 +196,31 @@ class Game {
       reward.taken = true;
       itemEl.style.opacity = '0.5';
       itemEl.style.textDecoration = 'line-through';
+    } else if (reward.type === 'relic') {
+      const relic = reward.data;
+      this.player.relics.push(relic);
+      if (relic.onObtain) relic.onObtain(this.player);
+
+      alert(`${relic.name} を獲得しました！\n効果: ${relic.description}`);
+      reward.taken = true;
+      itemEl.style.opacity = '0.5';
+      itemEl.style.textDecoration = 'line-through';
+      this.updateRelicUI(); // UI更新
     }
+  }
+
+  updateRelicUI() {
+    const container = document.getElementById('relic-container');
+    if (!container) return;
+    container.innerHTML = '';
+
+    this.player.relics.forEach(relic => {
+      const icon = document.createElement('div');
+      icon.className = 'relic-icon';
+      icon.textContent = relic.name.charAt(0);
+      icon.setAttribute('data-tooltip', `${relic.name}\n${relic.rarity}\n\n${relic.description}`);
+      container.appendChild(icon);
+    });
   }
 
   showCardSelection(rewardItem, itemEl) {

@@ -1,4 +1,5 @@
 import { CardLibrary } from './card.js';
+import { RelicLibrary } from './relic.js';
 
 export class Entity {
   constructor(name, maxHp, sprite) {
@@ -10,7 +11,11 @@ export class Entity {
     this.statusEffects = [];
   }
 
-  takeDamage(amount) {
+  heal(amount) {
+    this.hp = Math.min(this.maxHp, this.hp + amount);
+  }
+
+  takeDamage(amount, source) {
     let remainingDamage = amount;
 
     // ブロックでダメージを軽減
@@ -30,11 +35,25 @@ export class Entity {
     }
 
     this.hp = Math.max(0, this.hp - remainingDamage);
+
+    // トゲ(Thorns)処理
+    const thorns = this.getStatusValue('thorns');
+    if (thorns > 0 && source && remainingDamage < amount && source !== this) {
+      // ブロックで完全に防がれた場合はトゲ発動しない（Spireの仕様によるが、今回は「攻撃を受けたら」とするためブロック貫通でも発動とする）
+      // Spire wiki: "When attacked, deals damage back to the attacker." (Attacked = attack card played against)
+      // ここでは簡易的に「ダメージ計算が発生したら」返す
+      source.takeDamage(thorns, null);
+    } else if (thorns > 0 && source && source !== this) {
+      // ダメージを受けた、またはブロックで防いだ
+      source.takeDamage(thorns, null);
+    }
+
     return remainingDamage;
   }
 
   addBlock(amount) {
-    this.block += amount;
+    const dexterity = this.getStatusValue('dexterity');
+    this.block += Math.max(0, amount + dexterity);
   }
 
   resetBlock() {
@@ -96,12 +115,16 @@ export class Player extends Entity {
     this.discard = [];
     this.gold = 0;
     this.potions = [];
+    this.relics = []; // レリック所持リスト
 
     // マスターデッキ（所持カード）の初期化
     this.masterDeck = [];
     for (let i = 0; i < 5; i++) this.masterDeck.push(CardLibrary.STRIKE.clone());
     for (let i = 0; i < 4; i++) this.masterDeck.push(CardLibrary.DEFEND.clone());
     this.masterDeck.push(CardLibrary.BASH.clone());
+
+    // 初期レリック
+    this.relics.push(RelicLibrary.BURNING_BLOOD);
   }
 
   resetEnergy() {

@@ -41,6 +41,14 @@ export class Entity {
     this.block = 0;
   }
 
+  // ダメージ計算（筋力補正）
+  calculateDamage(baseDamage) {
+    let damage = baseDamage;
+    const strength = this.getStatusValue('strength');
+    damage += strength;
+    return Math.max(0, damage); // 負のダメージにはならない
+  }
+
   // ステータス操作
   addStatus(type, value) {
     const existing = this.statusEffects.find(s => s.type === type);
@@ -52,16 +60,25 @@ export class Entity {
   }
 
   hasStatus(type) {
-    return this.statusEffects.some(s => s.type === type && s.value > 0);
+    return this.statusEffects.some(s => s.type === type && s.value !== 0);
+  }
+
+  getStatusValue(type) {
+    const status = this.statusEffects.find(s => s.type === type);
+    return status ? status.value : 0;
   }
 
   updateStatus() {
-    // ターン終了時に呼び出し（値を減らす）
+    // ターン終了時の更新
     this.statusEffects.forEach(s => {
-      if (s.value > 0) s.value--;
+      // 筋力(strength)は自動減少しない
+      // 脆弱(vulnerable)などはターン経過で減少
+      if (['vulnerable', 'weak', 'frail'].includes(s.type)) {
+        if (s.value > 0) s.value--;
+      }
     });
-    // 値が0以下のものを削除
-    this.statusEffects = this.statusEffects.filter(s => s.value > 0);
+    // 値が0のものを削除（負の値は筋力ダウンなどであり得るので残す）
+    this.statusEffects = this.statusEffects.filter(s => s.value !== 0);
   }
 
   isDead() {

@@ -50,6 +50,18 @@ export class SceneManager {
         }
     }
 
+    showTreasure() {
+        this.elBattleScene.style.display = 'none';
+        this.elUiLayer.style.display = 'none';
+        if (this.elMapScene) this.elMapScene.style.display = 'none';
+        if (this.elRewardScene) this.elRewardScene.style.display = 'none';
+
+        if (!this.elTreasureScene) this.elTreasureScene = document.getElementById('treasure-scene');
+        if (this.elTreasureScene) {
+            this.elTreasureScene.style.display = 'flex';
+        }
+    }
+
     renderMap(map, onNodeSelect) {
         if (!this.elMapScene) return;
 

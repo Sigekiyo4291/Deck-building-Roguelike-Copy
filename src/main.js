@@ -56,11 +56,36 @@ class Game {
     if (node.type === 'enemy' || node.type === 'elite' || node.type === 'boss') {
       this.isEliteBattle = (node.type === 'elite' || node.type === 'boss'); // エリート/ボスの判定
       this.startBattle(node.type);
+    } else if (node.type === 'treasure') {
+      this.showTreasureScene();
     } else {
       alert(`${node.type} ノードに到達しました（イベント未実装）`);
       this.map.updateAvailableNodes();
       this.renderMap();
     }
+  }
+
+  showTreasureScene() {
+    this.sceneManager.showTreasure();
+    const openBtn = document.getElementById('open-treasure-btn');
+    const icon = document.getElementById('treasure-icon');
+
+    icon.textContent = '🎁';
+    openBtn.style.display = 'block';
+    openBtn.textContent = '開ける';
+
+    const handleOpen = () => {
+      icon.textContent = '🔓';
+      openBtn.textContent = '中身を確認';
+
+      openBtn.onclick = () => {
+        // 報酬画面を流用して中身を表示（レリック確定 + ゴールド）
+        this.showRewardScene(true); // エリート戦と同様の報酬（レリック確定）を付与
+      };
+    };
+
+    openBtn.onclick = handleOpen;
+    icon.onclick = handleOpen;
   }
 
   startBattle(type) {

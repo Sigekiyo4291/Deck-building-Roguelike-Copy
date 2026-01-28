@@ -50,8 +50,15 @@ export class MapGenerator {
                 }
             }
 
-            // 次の階層の全ノードが親を持つことを保証する処理が必要だが、
-            // 今回はプロトタイプなので省略（到達不能ノードが出る可能性あり）
+            // 次の階層の全ノードが親を持つことを保証する処理
+            for (const nextNode of nextLayer) {
+                const hasParent = currentLayer.some(node => node.nextNodes.includes(nextNode.id));
+                if (!hasParent) {
+                    // 親がいない場合、ランダムに1つ接続
+                    const parentNode = currentLayer[Math.floor(Math.random() * currentLayer.length)];
+                    parentNode.nextNodes.push(nextNode.id);
+                }
+            }
         }
 
         return map;

@@ -508,6 +508,25 @@ body {
   margin-bottom: 20px;
 }
 
+/* マップシーン */
+.map-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 90%;
+  max-width: 1000px;
+  margin-bottom: 20px;
+}
+
+.map-gold {
+  font-size: 24px;
+  color: var(--color-gold);
+  background: rgba(0, 0, 0, 0.5);
+  padding: 5px 15px;
+  border-radius: 20px;
+  border: 1px solid var(--color-gold);
+}
+
 .map-container {
   /* display: flex; flex-direction: column-reverse; は廃止(JSで制御) */
   gap: 30px;
@@ -652,3 +671,26 @@ body {
   pointer-events: none;
   border: 1px solid #7f8c8d;
 }
+/* --- 追加シーンスタイル --- */
+
+.treasure-container { display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.6); padding: 50px; border-radius: 15px; border: 2px solid var(--color-gold); }
+#treasure-icon { transition: transform 0.3s ease; }
+#treasure-icon:hover { transform: scale(1.1); }
+.shop-container { display: flex; flex-direction: column; align-items: center; width: 95%; max-width: 1200px; background: rgba(0, 0, 0, 0.85); padding: 30px; border-radius: 15px; border: 2px solid #8e44ad; }
+.shop-header { display: flex; justify-content: space-between; width: 100%; margin-bottom: 30px; border-bottom: 2px solid #444; padding-bottom: 15px; }
+.shop-gold-display { font-size: 28px; color: var(--color-gold); }
+.shop-sections { display: flex; flex-direction: row; gap: 30px; width: 100%; justify-content: space-around; align-items: flex-start; }
+.shop-section { flex: 1; background: rgba(255, 255, 255, 0.05); padding: 20px; border-radius: 10px; min-height: 400px; }
+.shop-section-title { font-size: 24px; color: #bdc3c7; margin-bottom: 15px; text-align: center; border-bottom: 1px solid #555; }
+.shop-item-list { display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; }
+.shop-item-wrapper { display: flex; flex-direction: column; align-items: center; gap: 5px; position: relative; }
+.shop-price { font-size: 18px; color: var(--color-gold); }
+.shop-item-wrapper .card { transform: scale(0.85); cursor: pointer; }
+.shop-item-wrapper .card:hover { transform: scale(0.9) translateY(-5px); }
+.shop-item-wrapper.sold-out { opacity: 0.3; filter: grayscale(0.8); pointer-events: none; }
+.shop-item-wrapper.sold-out::after { content: 'SOLD OUT'; position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%) rotate(-15deg); color: #e74c3c; font-size: 24px; font-weight: bold; border: 3px solid #e74c3c; padding: 2px 8px; background: rgba(0, 0, 0, 0.5); z-index: 5; }
+.rest-container { display: flex; flex-direction: column; align-items: center; background: rgba(0, 0, 0, 0.7); padding: 40px; border-radius: 15px; border: 2px solid #e67e22; }
+.rest-options { display: flex; gap: 30px; }
+.rest-option-btn { display: flex; flex-direction: column; align-items: center; padding: 20px; }
+.card-reward-container.large { max-width: 95%; width: 1100px; }
+.card-choices.scrollable { max-height: 500px; overflow-y: auto; display: flex; flex-wrap: wrap; justify-content: center; }

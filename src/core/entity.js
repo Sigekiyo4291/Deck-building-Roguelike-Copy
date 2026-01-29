@@ -60,11 +60,17 @@ export class Entity {
     this.block = 0;
   }
 
-  // ダメージ計算（筋力補正）
+  // ダメージ計算（筋力補正 + 脱力）
   calculateDamage(baseDamage) {
     let damage = baseDamage;
     const strength = this.getStatusValue('strength');
     damage += strength;
+
+    // 脱力(weak)状態ならダメージ25%減少
+    if (this.hasStatus('weak')) {
+      damage = Math.floor(damage * 0.75);
+    }
+
     return Math.max(0, damage); // 負のダメージにはならない
   }
 
@@ -98,6 +104,10 @@ export class Entity {
     });
     // 値が0のものを削除（負の値は筋力ダウンなどであり得るので残す）
     this.statusEffects = this.statusEffects.filter(s => s.value !== 0);
+  }
+
+  resetStatus() {
+    this.statusEffects = [];
   }
 
   isDead() {

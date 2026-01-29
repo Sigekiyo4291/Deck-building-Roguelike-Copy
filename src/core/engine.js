@@ -15,6 +15,7 @@ export class BattleEngine {
         this.player.hand = [];
         this.player.discard = [];
         this.player.resetBlock(); // ブロックもリセット
+        this.player.resetStatus(); // ステータスもリセット
 
         // デッキを準備（マスターデッキからコピー）
         this.player.deck = [];
@@ -35,10 +36,12 @@ export class BattleEngine {
     startPlayerTurn() {
         this.phase = 'player';
 
-        // レリック: onPlayerTurnStart (ターン1レリックなどはここ)
-        this.player.relics.forEach(relic => {
-            if (relic.onPlayerTurnStart) relic.onPlayerTurnStart(this.player, this);
-        });
+        // 悪魔化 (demon_form) の処理
+        const dfCount = this.player.getStatusValue('demon_form');
+        if (dfCount > 0) this.player.addStatus('strength', dfCount * 2);
+
+        const dfPlusCount = this.player.getStatusValue('demon_form_plus');
+        if (dfPlusCount > 0) this.player.addStatus('strength', dfPlusCount * 3);
 
         this.player.resetEnergy();
         this.player.resetBlock();
@@ -106,6 +109,10 @@ export class BattleEngine {
         });
 
         this.player.hand = [];
+
+        // 金属音 (metallicize) の処理
+        const metCount = this.player.getStatusValue('metallicize');
+        if (metCount > 0) this.player.addBlock(metCount);
 
         // ステータス更新（持続時間減少）
         this.player.updateStatus();

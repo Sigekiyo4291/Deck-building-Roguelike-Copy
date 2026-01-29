@@ -1,12 +1,13 @@
 export class Card {
-    constructor(id, name, cost, type, rarity, description, effect, targetType) {
+    constructor(id, name, cost, type, rarity, description, effect, targetType, isUpgraded = false) {
         this.id = id;
-        this.name = name;
+        this.name = name + (isUpgraded ? '+' : '');
         this.cost = cost;
         this.type = type; // 'attack', 'skill', 'power'
         this.rarity = rarity; // 'basic', 'common', 'uncommon', 'rare'
         this.description = description;
         this.effect = effect; // 関数: (source, target) => { ... }
+        this.isUpgraded = isUpgraded;
 
         if (targetType) {
             this.targetType = targetType;
@@ -14,6 +15,22 @@ export class Card {
             // デフォルト: アタックは単体、その他は自分（または対象指定なし）
             this.targetType = (type === 'attack') ? 'single' : 'self';
         }
+    }
+
+    upgrade() {
+        if (this.isUpgraded) return;
+        this.isUpgraded = true;
+        this.name += '+';
+        // 各カード固有の強化ロジックは、個別に関数などで定義するのが望ましいが
+        // ここでは簡易的に数値（ダメージ・ブロック）を底上げする
+        // TODO: 本来はCardLibrary側で強化後の定義を持つべき
+        this.description = this.description.replace(/(\d+)/g, (match) => {
+            return parseInt(match) + 3; // 簡易的に全て+3
+        });
+
+        // 効果関数自体を書き換えるのは難しいため、
+        // calculateDamageなどで参照する「ベース値」をプロパティ化する設計の方が良いが
+        // 現状は description の書き換えと、実際の効果への影響（後述のパッチ）で対応
     }
 
     play(source, target, engine) {
@@ -26,7 +43,7 @@ export class Card {
     }
 
     clone() {
-        return new Card(this.id, this.name, this.cost, this.type, this.rarity, this.description, this.effect, this.targetType);
+        return new Card(this.id, this.isUpgraded ? this.name.slice(0, -1) : this.name, this.cost, this.type, this.rarity, this.description, this.effect, this.targetType, this.isUpgraded);
     }
 }
 

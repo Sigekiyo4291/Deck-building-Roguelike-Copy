@@ -21,45 +21,77 @@ export class SceneManager {
     }
 
     showBattle() {
+        this.hideAllScenes();
         this.elBattleScene.style.display = 'flex';
         this.elUiLayer.style.display = 'flex';
-        if (this.elMapScene) this.elMapScene.style.display = 'none';
-        if (this.elRewardScene) this.elRewardScene.style.display = 'none';
     }
 
     showMap() {
-        this.elBattleScene.style.display = 'none';
+        this.hideAllScenes();
         this.elUiLayer.style.display = 'none'; // マップではUIを隠す
         if (this.elMapScene) {
             this.elMapScene.style.display = 'flex';
-            // this.game.renderMap(); // Game側で制御するため削除
         }
-        if (this.elRewardScene) this.elRewardScene.style.display = 'none';
     }
 
     showReward() {
-        this.elBattleScene.style.display = 'none';
-        this.elUiLayer.style.display = 'none';
-        if (this.elMapScene) this.elMapScene.style.display = 'none';
-
+        this.hideAllScenes();
         // リワードシーン要素を再取得（動的に追加される可能性があるため）
         if (!this.elRewardScene) this.elRewardScene = document.getElementById('reward-scene');
-
         if (this.elRewardScene) {
             this.elRewardScene.style.display = 'flex';
         }
     }
 
     showTreasure() {
-        this.elBattleScene.style.display = 'none';
-        this.elUiLayer.style.display = 'none';
-        if (this.elMapScene) this.elMapScene.style.display = 'none';
-        if (this.elRewardScene) this.elRewardScene.style.display = 'none';
-
+        this.hideAllScenes();
         if (!this.elTreasureScene) this.elTreasureScene = document.getElementById('treasure-scene');
         if (this.elTreasureScene) {
             this.elTreasureScene.style.display = 'flex';
         }
+    }
+
+    showShop() {
+        this.hideAllScenes();
+        if (!this.elShopScene) this.elShopScene = document.getElementById('shop-scene');
+        if (this.elShopScene) {
+            this.elShopScene.style.display = 'flex';
+        }
+    }
+
+    showRest() {
+        this.hideAllScenes();
+        if (!this.elRestScene) this.elRestScene = document.getElementById('rest-scene');
+        if (this.elRestScene) {
+            this.elRestScene.style.display = 'flex';
+        }
+    }
+
+    showEvent() {
+        this.hideAllScenes();
+        if (!this.elEventScene) this.elEventScene = document.getElementById('event-scene');
+        if (this.elEventScene) {
+            this.elEventScene.style.display = 'flex';
+        }
+    }
+
+    hideAllScenes() {
+        const scenes = [
+            this.elBattleScene,
+            this.elMapScene,
+            this.elRewardScene,
+            this.elTreasureScene,
+            this.elShopScene,
+            this.elRestScene,
+            this.elEventScene
+        ];
+
+        scenes.forEach(scene => {
+            if (scene) scene.style.display = 'none';
+        });
+
+        // UIレイヤーはバトル以外では隠すのが基本だが、個別に制御
+        if (this.elUiLayer) this.elUiLayer.style.display = 'none';
     }
 
     renderMap(map, onNodeSelect) {

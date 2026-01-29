@@ -46,6 +46,10 @@ class Game {
   }
 
   renderMap() {
+    // ゴールド表示の更新
+    const goldEl = document.getElementById('map-gold-value');
+    if (goldEl) goldEl.textContent = this.player.gold;
+
     this.sceneManager.renderMap(this.map, (node) => this.onNodeSelect(node));
   }
 
@@ -58,11 +62,161 @@ class Game {
       this.startBattle(node.type);
     } else if (node.type === 'treasure') {
       this.showTreasureScene();
+    } else if (node.type === 'shop') {
+      this.showShopScene();
+    } else if (node.type === 'rest') {
+      this.showRestScene();
     } else {
       alert(`${node.type} ノードに到達しました（イベント未実装）`);
       this.map.updateAvailableNodes();
       this.renderMap();
     }
+  }
+
+  showRestScene() {
+    this.sceneManager.showRest();
+
+    // 休む (HP回復)
+    document.getElementById('rest-heal-btn').onclick = () => {
+      const healAmount = Math.floor(this.player.maxHp * 0.3);
+      this.player.heal(healAmount);
+      alert(`HPが ${healAmount} 回復しました！`);
+      this.finishRest();
+    };
+
+    // 鍛える (カード強化)
+    document.getElementById('rest-upgrade-btn').onclick = () => {
+      this.showUpgradeSelection();
+    };
+  }
+
+  showUpgradeSelection() {
+    const overlay = document.getElementById('deck-selection-overlay');
+    const listEl = document.getElementById('deck-selection-list');
+    const titleEl = document.getElementById('deck-selection-title');
+    const closeBtn = document.getElementById('close-deck-selection-btn');
+
+    titleEl.textContent = '強化するカードを選択';
+    listEl.innerHTML = '';
+    overlay.style.display = 'flex';
+    closeBtn.style.display = 'block';
+
+    // アップグレード可能なカードのみ表示（既にアップグレード済みのものは除く）
+    this.player.masterDeck.forEach((card, index) => {
+      const cardEl = this.createRewardCardElement(card);
+      if (card.isUpgraded) {
+        cardEl.style.opacity = '0.5';
+        cardEl.style.cursor = 'default';
+      } else {
+        cardEl.onclick = () => {
+          card.upgrade();
+          alert(`${card.name} を強化しました！`);
+          overlay.style.display = 'none';
+          this.finishRest();
+        };
+      }
+      listEl.appendChild(cardEl);
+    });
+
+    closeBtn.onclick = () => {
+      overlay.style.display = 'none';
+    };
+  }
+
+  finishRest() {
+    this.map.updateAvailableNodes();
+    this.renderMap();
+    this.sceneManager.showMap();
+  }
+
+  showShopScene() {
+    this.sceneManager.showShop();
+    document.getElementById('shop-gold-value').textContent = this.player.gold;
+
+    const cardsContainer = document.getElementById('shop-cards');
+    const relicsContainer = document.getElementById('shop-relics');
+    cardsContainer.innerHTML = '';
+    relicsContainer.innerHTML = '';
+
+    // カード商品の生成 (5枚)
+    const cardKeys = Object.keys(CardLibrary);
+    for (let i = 0; i < 5; i++) {
+      const card = CardLibrary[cardKeys[Math.floor(Math.random() * cardKeys.length)]].clone();
+      const price = 50 + Math.floor(Math.random() * 30);
+
+      const wrapper = document.createElement('div');
+      wrapper.className = 'shop-item-wrapper';
+
+      const cardEl = this.createRewardCardElement(card);
+      const priceEl = document.createElement('div');
+      priceEl.className = 'shop-price';
+      priceEl.textContent = `${price}G`;
+
+      cardEl.onclick = () => {
+        if (this.player.gold >= price) {
+          this.player.gold -= price;
+          this.player.masterDeck.push(card);
+          document.getElementById('shop-gold-value').textContent = this.player.gold;
+          wrapper.classList.add('sold-out');
+          alert(`${card.name} を購入しました！`);
+        } else {
+          alert('ゴールドが足りません！');
+        }
+      };
+
+      wrapper.appendChild(cardEl);
+      wrapper.appendChild(priceEl);
+      cardsContainer.appendChild(wrapper);
+    }
+
+    // レリック商品の生成 (2個)
+    const ownedIds = this.player.relics.map(r => r.id);
+    const candidateRelics = Object.values(RelicLibrary).filter(r =>
+      !ownedIds.includes(r.id) && r.rarity !== 'starter' && r.rarity !== 'boss'
+    );
+
+    for (let i = 0; i < 2; i++) {
+      if (candidateRelics.length === 0) break;
+      const idx = Math.floor(Math.random() * candidateRelics.length);
+      const relic = candidateRelics.splice(idx, 1)[0];
+      const price = 150 + Math.floor(Math.random() * 100);
+
+      const wrapper = document.createElement('div');
+      wrapper.className = 'shop-item-wrapper';
+
+      const relicEl = document.createElement('div');
+      relicEl.className = 'relic-icon';
+      relicEl.textContent = relic.name.charAt(0);
+      relicEl.setAttribute('data-tooltip', `${relic.name}\n${relic.rarity}\n\n${relic.description}`);
+
+      const priceEl = document.createElement('div');
+      priceEl.className = 'shop-price';
+      priceEl.textContent = `${price}G`;
+
+      relicEl.onclick = () => {
+        if (this.player.gold >= price) {
+          this.player.gold -= price;
+          this.player.relics.push(relic);
+          if (relic.onObtain) relic.onObtain(this.player);
+          document.getElementById('shop-gold-value').textContent = this.player.gold;
+          this.updateRelicUI();
+          wrapper.classList.add('sold-out');
+          alert(`${relic.name} を購入しました！`);
+        } else {
+          alert('ゴールドが足りません！');
+        }
+      };
+
+      wrapper.appendChild(relicEl);
+      wrapper.appendChild(priceEl);
+      relicsContainer.appendChild(wrapper);
+    }
+
+    document.getElementById('shop-leave-btn').onclick = () => {
+      this.map.updateAvailableNodes();
+      this.renderMap();
+      this.sceneManager.showMap();
+    };
   }
 
   showTreasureScene() {

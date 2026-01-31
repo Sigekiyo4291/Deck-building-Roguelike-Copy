@@ -2,7 +2,7 @@ import './style.css';
 import { GameMap } from './core/map-data.js';
 import { MapGenerator } from './core/map-generator.js';
 import { SceneManager } from './core/scene-manager.js';
-import { Player, Enemy, Louse } from './core/entity.js';
+import { Player, Enemy, Louse, Cultist, JawWorm, AcidSlimeM, SpikeSlimeM, AcidSlimeS, SpikeSlimeS, FungiBeast, AcidSlimeL, SpikeSlimeL, BlueSlaver, RedSlaver, Looter, GremlinNob, Lagavulin, Sentry, SlimeBoss, Guardian, Hexaghost } from './core/entity.js';
 import { CardLibrary } from './core/card.js';
 import { BattleEngine } from './core/engine.js';
 import { RelicLibrary } from './core/relic.js';
@@ -394,47 +394,47 @@ class Game {
     if (type === 'boss') {
       // Act 1 ボスプール (Wiki準拠: 3パターン)
       const bossEncounters = [
-        () => [new Enemy('ガーディアン', 240, '/src/assets/slime.png')],
-        () => [new Enemy('ヘキサゴースト', 250, '/src/assets/slime.png')],
-        () => [new Enemy('スライムボス', 140, '/src/assets/slime.png')]
+        () => [new SlimeBoss()],
+        () => [new Guardian()],
+        () => [new Hexaghost()]
       ];
       const index = Math.floor(Math.random() * bossEncounters.length);
       enemies = bossEncounters[index]();
     } else if (type === 'elite') {
       // Act 1 エリートプール (Wiki準拠: 3パターン)
-      const eliteEncounters = [
-        () => [new Enemy('グレムリンノブ', 82, '/src/assets/slime.png')],
-        () => [new Enemy('ラガヴーリン', 109, '/src/assets/slime.png')],
-        () => [new Enemy('センチネル', 38, '/src/assets/slime.png'), new Enemy('センチネル', 44, '/src/assets/slime.png'), new Enemy('センチネル', 38, '/src/assets/slime.png')]
+      const elites = [
+        () => [new GremlinNob()],
+        () => [new Lagavulin()],
+        () => [new Sentry(0), new Sentry(1), new Sentry(2)]
       ];
-      const index = Math.floor(Math.random() * eliteEncounters.length);
-      enemies = eliteEncounters[index]();
+      const index = Math.floor(Math.random() * elites.length);
+      enemies = elites[index]();
     } else {
       // 通常戦闘（弱プール vs 強プール）
       if (this.battleCount < 3) {
         // 弱プール (1-3戦目, Wiki準拠: 5パターン)
         const encounters = [
-          () => [new Enemy('狂信者', 48, '/src/assets/slime.png')],
-          () => [new Enemy('あご虫', 40, '/src/assets/slime.png')],
+          () => [new Cultist()],
+          () => [new JawWorm()],
           () => [new Louse('red'), new Louse('green')],
-          () => [new Enemy('酸性スライム(M)', 28, '/src/assets/slime.png'), new Enemy('スパイクスライム(M)', 28, '/src/assets/slime.png')],
-          () => [new Enemy('酸性スライム(S)', 12, '/src/assets/slime.png'), new Enemy('スパイクスライム(S)', 12, '/src/assets/slime.png'), new Enemy('スパイクスライム(S)', 10, '/src/assets/slime.png')]
+          () => [new AcidSlimeM(), new SpikeSlimeM()],
+          () => [new AcidSlimeS(), new SpikeSlimeS(), new SpikeSlimeS()]
         ];
         const index = Math.floor(Math.random() * encounters.length);
         enemies = encounters[index]();
       } else {
         // 強プール (4戦目以降, Wiki準拠から主要なものを抜粋)
         const encounters = [
-          () => [new Enemy('大型酸性スライム', 65, '/src/assets/slime.png')],
-          () => [new Enemy('大型スパイクスライム', 64, '/src/assets/slime.png')],
-          () => [new Enemy('スレイバー(青)', 46, '/src/assets/slime.png')],
-          () => [new Enemy('略奪者', 44, '/src/assets/slime.png')],
+          () => [new AcidSlimeL()],
+          () => [new SpikeSlimeL()],
+          () => [new BlueSlaver()],
+          () => [new Looter()],
           () => [new Louse('red'), new Louse('green'), new Louse('red')],
-          () => [new Enemy('キノコビースト', 24, '/src/assets/slime.png'), new Enemy('キノコビースト', 24, '/src/assets/slime.png')],
-          () => [new Enemy('スレイバー(青)', 46, '/src/assets/slime.png'), new Enemy('スレイバー(赤)', 46, '/src/assets/slime.png')],
-          () => [new Enemy('略奪者', 44, '/src/assets/slime.png'), new Enemy('狂信者', 48, '/src/assets/slime.png')],
-          () => [new Enemy('キノコビースト', 24, '/src/assets/slime.png'), new Enemy('あご虫', 40, '/src/assets/slime.png')],
-          () => [new Louse('green'), new Enemy('酸性スライム(M)', 28, '/src/assets/slime.png'), new Enemy('スパイクスライム(M)', 28, '/src/assets/slime.png')]
+          () => [new FungiBeast(), new FungiBeast()],
+          () => [new BlueSlaver(), new RedSlaver()],
+          () => [new Looter(), new Cultist()],
+          () => [new FungiBeast(), new JawWorm()],
+          () => [new Louse('green'), new AcidSlimeM(), new SpikeSlimeM()]
         ];
         const index = Math.floor(Math.random() * encounters.length);
         enemies = encounters[index]();
@@ -689,10 +689,31 @@ class Game {
         // 意図アイコン
         let intentHtml = '';
         if (enemy.nextMove) {
-          if (enemy.nextMove.type === 'attack') {
-            intentHtml = `<div class="intent-icon">🗡️${enemy.nextMove.value}</div>`;
-          } else if (enemy.nextMove.type === 'buff') {
-            intentHtml = `<div class="intent-icon">💪</div>`;
+          const move = enemy.nextMove;
+          let icons = [];
+
+          if (move.type === 'attack') {
+            const damage = enemy.calculateDamage(move.value);
+            const times = move.times ? `x${move.times}` : '';
+            icons.push(`<span class="intent-attack">🗡️${damage}${times}</span>`);
+          }
+
+          if (move.type === 'buff' || (move.type === 'attack' && move.effect && !(move.id?.includes('rake')) && !(move.id?.includes('scrape')))) {
+            // 純粋なバフ、または攻撃後の自身の強化
+            icons.push('💪');
+          }
+
+          if (move.type === 'debuff' || (move.effect && (move.id?.includes('rake') || move.id?.includes('scrape') || move.name?.includes('舐める')))) {
+            icons.push('📉');
+          }
+
+          if (move.type === 'special') {
+            const name = move.name || '✨';
+            icons.push(`<span class="intent-special">${name}</span>`);
+          }
+
+          if (icons.length > 0) {
+            intentHtml = `<div class="intent-icon">${icons.join('')}</div>`;
           }
         }
 
@@ -765,6 +786,8 @@ class Game {
       if (status.type === 'metallicize') iconChar = '🔩';
       if (status.type === 'demon_form') iconChar = '😈';
       if (status.type === 'demon_form_plus') iconChar = '👹';
+      if (status.type === 'ritual') iconChar = '🐦';
+      if (status.type === 'entangled') iconChar = '🕸️';
 
 
       iconEl.textContent = iconChar;

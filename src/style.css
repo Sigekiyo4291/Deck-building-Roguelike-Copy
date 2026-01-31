@@ -297,12 +297,13 @@ body {
 
 /* 戦意（インテント） */
 .intent-icon {
-  width: 40px;
+  min-width: 40px;
   height: 40px;
+  padding: 0 8px;
   position: absolute;
   top: 0px;
-  background: rgba(0, 0, 0, 0.5);
-  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 20px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -311,7 +312,9 @@ body {
   color: #fff;
   font-weight: bold;
   text-shadow: 0 0 5px #000;
-  font-size: 1.2em;
+  font-size: 1.1em;
+  white-space: nowrap;
+  box-sizing: border-box;
 }
 
 /* ターン終了ボタン */

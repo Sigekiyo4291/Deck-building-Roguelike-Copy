@@ -136,15 +136,27 @@ export const CardLibrary = {
             if (e) e.drawCards(1);
         }
     }),
+    CLOTHESLINE: new Card('clothesline', '薙ぎ払い', 2, 'attack', 'common', '12ダメージを与え、脱力(2)を付与', (s, t) => {
+        t.takeDamage(s.calculateDamage(12), s);
+        t.addStatus('weak', 2);
+    }, 'single', false, {
+        description: '14ダメージを与え、脱力(3)を付与',
+        effect: (s, t) => {
+            t.takeDamage(s.calculateDamage(14), s);
+            t.addStatus('weak', 3);
+        }
+    }),
 
     // Uncommon
-    UPPERCUT: new Card('uppercut', 'アッパーカット', 2, 'attack', 'uncommon', '13ダメージを与え、脆弱(1)を与える', (s, t) => {
+    UPPERCUT: new Card('uppercut', 'アッパーカット', 2, 'attack', 'uncommon', '13ダメージを与え、脱力(1)と脆弱(1)を付与', (s, t) => {
         t.takeDamage(s.calculateDamage(13), s);
+        t.addStatus('weak', 1);
         t.addStatus('vulnerable', 1);
     }, 'single', false, {
-        description: '13ダメージを与え、脆弱(2)を与える',
+        description: '13ダメージを与え、脱力(2)と脆弱(2)を付与',
         effect: (s, t) => {
             t.takeDamage(s.calculateDamage(13), s);
+            t.addStatus('weak', 2);
             t.addStatus('vulnerable', 2);
         }
     }),

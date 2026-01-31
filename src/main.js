@@ -719,6 +719,14 @@ class Game {
       let iconChar = '❓';
       if (status.type === 'vulnerable') iconChar = '💔';
       if (status.type === 'strength') iconChar = '💪';
+      if (status.type === 'weak') iconChar = '📉';
+      if (status.type === 'frail') iconChar = '🥀';
+      if (status.type === 'dexterity') iconChar = '👟';
+      if (status.type === 'thorns') iconChar = '🌵';
+      if (status.type === 'metallicize') iconChar = '🔩';
+      if (status.type === 'demon_form') iconChar = '😈';
+      if (status.type === 'demon_form_plus') iconChar = '👹';
+
 
       iconEl.textContent = iconChar;
 

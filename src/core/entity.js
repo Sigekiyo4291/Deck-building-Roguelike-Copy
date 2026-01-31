@@ -53,7 +53,14 @@ export class Entity {
 
   addBlock(amount) {
     const dexterity = this.getStatusValue('dexterity');
-    this.block += Math.max(0, amount + dexterity);
+    let totalBlock = Math.max(0, amount + dexterity);
+
+    // 虚弱(frail)状態ならブロック獲得量25%減少
+    if (this.hasStatus('frail')) {
+      totalBlock = Math.floor(totalBlock * 0.75);
+    }
+
+    this.block += totalBlock;
   }
 
   resetBlock() {

@@ -32,8 +32,11 @@ export class Card {
     }
 
     play(source, target, engine) {
+        if (this.type === 'curse') return false;
+
         if (source.energy >= this.cost) {
             source.energy -= this.cost;
+
             this.effect(source, target, engine);
             return true;
         }
@@ -188,5 +191,20 @@ export const CardLibrary = {
     }, 'all', false, {
         description: '全体に5ダメージを与え、HP回復(仮)',
         effect: (s, t) => { t.takeDamage(s.calculateDamage(5), s); }
-    })
+    }),
+
+    // Curse (呪いカード)
+    INJURY: new Card('injury', '怪我', -1, 'curse', 'curse', '消耗。何もしない。', (s, t) => {
+        // 何もしない
+    }, 'self', false, null),
+    DOUBT: new Card('doubt', '疑念', -1, 'curse', 'curse', '何もしない。', (s, t) => {
+        // 何もしない
+    }, 'self', false, null),
+    REGRET: new Card('regret', '後悔', -1, 'curse', 'curse', '何もしない。', (s, t) => {
+        // 何もしない
+    }, 'self', false, null),
+    PARASITE: new Card('parasite', '寄生', -1, 'curse', 'curse', 'この呪いはデッキから削除できない。', (s, t) => {
+        // 特殊処理: 削除不可
+    }, 'self', false, null)
 };
+

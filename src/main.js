@@ -8,6 +8,22 @@ import { BattleEngine } from './core/engine.js';
 import { RelicLibrary } from './core/relic.js';
 import { getRandomEvent } from './core/event-data.js';
 
+const STATUS_INFO = {
+  vulnerable: { name: '脆弱', desc: '受けるダメージが50%増加する。' },
+  strength: { name: '筋力', desc: 'アタックのダメージが増加する。' },
+  weak: { name: '脱力', desc: 'アタックで与えるダメージが25%減少する。' },
+  frail: { name: '崩壊', desc: 'ブロックの効果が25%減少する。' },
+  dexterity: { name: '敏捷性', desc: 'ブロックの獲得量が増加する。' },
+  thorns: { name: '棘', desc: '攻撃を受けると、攻撃者にその数値分のダメージを与える。' },
+  metallicize: { name: '金属化', desc: 'ターン終了時、その数値分のブロックを得る。' },
+  demon_form: { name: '悪魔化', desc: 'ターン開始時、筋力を得る。' },
+  demon_form_plus: { name: '悪魔化+', desc: 'ターン開始時、筋力を得る。' },
+  ritual: { name: '儀式', desc: 'ターン終了時、筋力を得る。' },
+  entangled: { name: '絡みつき', desc: 'このターン、アタックカードを使用できない。' },
+  curl_up: { name: '丸まり', desc: '攻撃を受けた際、ブロックを得る。' },
+  malleable: { name: '柔軟', desc: '攻撃を受けるたび、ブロックを得る。' },
+};
+
 
 class Game {
   constructor() {
@@ -789,6 +805,13 @@ class Game {
       if (status.type === 'ritual') iconChar = '🐦';
       if (status.type === 'entangled') iconChar = '🕸️';
 
+      // ツールチップ設定
+      const info = STATUS_INFO[status.type];
+      if (info) {
+        iconEl.setAttribute('data-tooltip', `${info.name}\n${info.desc}`);
+      } else {
+        iconEl.setAttribute('data-tooltip', `${status.type}\nUnknown Effect`);
+      }
 
       iconEl.textContent = iconChar;
 

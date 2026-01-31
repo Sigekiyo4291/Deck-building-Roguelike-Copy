@@ -33,6 +33,7 @@ MY_CARD: new Card(
 ## 2. 新規ステータス（バフ・デバフ）の実装
 1.  `src/core/entity.js` の `takeDamage` や `calculateDamage` で効果を判定するロジックを追加。
 2.  `src/core/engine.js` の `startPlayerTurn` や `endTurn` で毎ターンの処理（毒ダメージ、筋力アップ等）を追加。
+3.  **`src/main.js` の `STATUS_INFO` に日本語名と説明文を追加し、`updateStatusUI` でアイコンを定義する（ツールチップ表示のため必須）。**
 
 ## 3. ショップ・報酬の制御
 - アイテム（カードやレリック）を購入した際は、`sold-out` クラスをラッパー要素に付与し、その買い物中のみ再購入不可にする。

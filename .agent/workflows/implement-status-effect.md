@@ -8,13 +8,24 @@ description: 状態異常（バフ・デバフ）の新規実装手順
 内部で使用するID（例: `poison`）と、UIで表示するアイコン（絵文字等）を決定します。
 
 ## 2. UI表示への反映
+## 2. UI表示への反映
 `src/main.js` の `updateStatusUI(entity, containerId)` メソッドに、新しいIDに対応するアイコンを追加します。
+
+また、**`src/main.js` ファイル上部にある `STATUS_INFO` 定数にも、そのステータスの日本語名と説明文を必ず追加してください。** これを追加しないと、戦闘画面でツールチップ（説明文）が表示されず、ユーザーが効果を理解できません。
 
 ```javascript
 // src/main.js
+
+const STATUS_INFO = {
+    // ...
+    new_status: { name: '新ステータス', desc: 'このステータスの効果説明文。' },
+};
+
+// ...
+
 updateStatusUI(entity, containerId) {
     // ...
-    if (status.type === 'poison') iconChar = '🧪';
+    if (status.type === 'new_status') iconChar = '✨';
     // ...
 }
 ```

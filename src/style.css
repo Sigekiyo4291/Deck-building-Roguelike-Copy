@@ -1012,3 +1012,30 @@ body {
   max-height: 80vh;
   padding: 20px;
 }
+
+/* ステータスアイコンのツールチップ */
+.status-icon {
+  position: relative;
+  cursor: help;
+}
+
+.status-icon:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 110%;
+  /* アイコンの上に表示 */
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.9);
+  color: #fff;
+  padding: 8px;
+  border-radius: 4px;
+  font-size: 14px;
+  white-space: pre-wrap;
+  width: 150px;
+  text-align: center;
+  z-index: 200;
+  pointer-events: none;
+  border: 1px solid #7f8c8d;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+}

@@ -5,6 +5,11 @@ on:
     branches:
       - main  # または公開したいブランチ名
 
+# 同時に複数のデプロイが走らないように制御
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
 permissions:
   contents: read
   pages: write

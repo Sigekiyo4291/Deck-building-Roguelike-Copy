@@ -90,6 +90,12 @@ export class BattleEngine {
         // ここではターゲット必須とする
         if (!target) return;
 
+        // 拘束(entangled)状態ならアタックカードを使用できない
+        if (this.player.hasStatus('entangled') && card.type === 'attack') {
+            console.log("アタック不能！拘束されています。");
+            return;
+        }
+
         if (this.player.energy >= card.cost) {
             // カード効果発動
             card.play(this.player, target, this);
@@ -128,6 +134,36 @@ export class BattleEngine {
         setTimeout(() => this.enemyTurn(), 1000);
     }
 
+    // 敵を削除（逃走など）
+    removeEnemy(enemy) {
+        const index = this.enemies.indexOf(enemy);
+        if (index !== -1) {
+            this.enemies.splice(index, 1);
+            console.log(`${enemy.name} escaped!`);
+            this.checkBattleEnd();
+            this.uiUpdateCallback();
+        }
+    }
+
+    // 敵を分裂させる
+    splitEnemy(parent, childClass1, childClass2) {
+        const index = this.enemies.indexOf(parent);
+        if (index !== -1) {
+            const hp = parent.hp;
+            // 親の残りHPを引き継ぐ2体を生成
+            const m1 = new childClass1();
+            const m2 = childClass2 ? new childClass2() : new childClass1();
+            m1.hp = m1.maxHp = hp;
+            m2.hp = m2.maxHp = hp;
+
+            // 親を削除し、同じ位置に2体挿入
+            this.enemies.splice(index, 1, m1, m2);
+            console.log(`${parent.name} split into two!`);
+            this.checkBattleEnd();
+            this.uiUpdateCallback();
+        }
+    }
+
     enemyTurn() {
         // 全ての生存している敵が行動
         this.enemies.forEach(enemy => {
@@ -136,16 +172,19 @@ export class BattleEngine {
 
                 // 敵の行動実行
                 if (enemy.nextMove) {
-                    // TODO: Enemyクラスにact()メソッドを持たせて委譲するのが良い
-                    // 今回は簡易的にここで処理、あるいはnextMoveの内容に基づいて分岐
-                    if (enemy.nextMove.type === 'attack') {
-                        this.player.takeDamage(enemy.nextMove.value);
-                    } else if (enemy.nextMove.type === 'buff') {
-                        // バフ行動の場合の処理（例: 筋力アップ）
-                        // 現状はログだけだが、実装するなら enemy.addStatus...
-                        if (enemy.nextMove.effect) {
-                            enemy.nextMove.effect(enemy, this.player);
+                    // 特殊アクション（分裂、逃走など）の場合は engine を渡す
+                    // 攻撃処理（ダメージがある場合）
+                    if (enemy.nextMove.value > 0) {
+                        const damage = enemy.calculateDamage(enemy.nextMove.value);
+                        const times = enemy.nextMove.times || 1;
+                        for (let i = 0; i < times; i++) {
+                            this.player.takeDamage(damage, enemy);
                         }
+                    }
+
+                    // 特殊効果（バフ、デバフ、ブロック、分裂など）
+                    if (enemy.nextMove.effect) {
+                        enemy.nextMove.effect(enemy, this.player, this);
                     }
                 }
 
@@ -166,7 +205,7 @@ export class BattleEngine {
             if (!enemy.isDead()) {
                 // Enemyクラスに decideNextMove メソッドがあればそれを使う
                 if (enemy.decideNextMove) {
-                    enemy.decideNextMove();
+                    enemy.decideNextMove(this.player);
                 } else {
                     // 旧ロジック互換
                     const damage = 5 + Math.floor(Math.random() * 5);

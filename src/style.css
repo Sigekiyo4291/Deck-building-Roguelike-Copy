@@ -671,26 +671,280 @@ body {
   pointer-events: none;
   border: 1px solid #7f8c8d;
 }
+
 /* --- 追加シーンスタイル --- */
 
-.treasure-container { display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.6); padding: 50px; border-radius: 15px; border: 2px solid var(--color-gold); }
-#treasure-icon { transition: transform 0.3s ease; }
-#treasure-icon:hover { transform: scale(1.1); }
-.shop-container { display: flex; flex-direction: column; align-items: center; width: 95%; max-width: 1200px; background: rgba(0, 0, 0, 0.85); padding: 30px; border-radius: 15px; border: 2px solid #8e44ad; }
-.shop-header { display: flex; justify-content: space-between; width: 100%; margin-bottom: 30px; border-bottom: 2px solid #444; padding-bottom: 15px; }
-.shop-gold-display { font-size: 28px; color: var(--color-gold); }
-.shop-sections { display: flex; flex-direction: row; gap: 30px; width: 100%; justify-content: space-around; align-items: flex-start; }
-.shop-section { flex: 1; background: rgba(255, 255, 255, 0.05); padding: 20px; border-radius: 10px; min-height: 400px; }
-.shop-section-title { font-size: 24px; color: #bdc3c7; margin-bottom: 15px; text-align: center; border-bottom: 1px solid #555; }
-.shop-item-list { display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; }
-.shop-item-wrapper { display: flex; flex-direction: column; align-items: center; gap: 5px; position: relative; }
-.shop-price { font-size: 18px; color: var(--color-gold); }
-.shop-item-wrapper .card { transform: scale(0.85); cursor: pointer; }
-.shop-item-wrapper .card:hover { transform: scale(0.9) translateY(-5px); }
-.shop-item-wrapper.sold-out { opacity: 0.3; filter: grayscale(0.8); pointer-events: none; }
-.shop-item-wrapper.sold-out::after { content: 'SOLD OUT'; position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%) rotate(-15deg); color: #e74c3c; font-size: 24px; font-weight: bold; border: 3px solid #e74c3c; padding: 2px 8px; background: rgba(0, 0, 0, 0.5); z-index: 5; }
-.rest-container { display: flex; flex-direction: column; align-items: center; background: rgba(0, 0, 0, 0.7); padding: 40px; border-radius: 15px; border: 2px solid #e67e22; }
-.rest-options { display: flex; gap: 30px; }
-.rest-option-btn { display: flex; flex-direction: column; align-items: center; padding: 20px; }
-.card-reward-container.large { max-width: 95%; width: 1100px; }
-.card-choices.scrollable { max-height: 500px; overflow-y: auto; display: flex; flex-wrap: wrap; justify-content: center; }
+.treasure-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 50px;
+  border-radius: 15px;
+  border: 2px solid var(--color-gold);
+}
+
+#treasure-icon {
+  transition: transform 0.3s ease;
+}
+
+#treasure-icon:hover {
+  transform: scale(1.1);
+}
+
+.shop-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 95%;
+  max-width: 1200px;
+  background: rgba(0, 0, 0, 0.85);
+  padding: 30px;
+  border-radius: 15px;
+  border: 2px solid #8e44ad;
+}
+
+.shop-header {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 30px;
+  border-bottom: 2px solid #444;
+  padding-bottom: 15px;
+}
+
+.shop-gold-display {
+  font-size: 28px;
+  color: var(--color-gold);
+}
+
+.shop-sections {
+  display: flex;
+  flex-direction: row;
+  gap: 30px;
+  width: 100%;
+  justify-content: space-around;
+  align-items: flex-start;
+}
+
+.shop-section {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 20px;
+  border-radius: 10px;
+  min-height: 400px;
+}
+
+.shop-section-title {
+  font-size: 24px;
+  color: #bdc3c7;
+  margin-bottom: 15px;
+  text-align: center;
+  border-bottom: 1px solid #555;
+}
+
+.shop-item-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  justify-content: center;
+}
+
+.shop-item-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  position: relative;
+}
+
+.shop-price {
+  font-size: 18px;
+  color: var(--color-gold);
+}
+
+.shop-item-wrapper .card {
+  transform: scale(0.85);
+  cursor: pointer;
+}
+
+.shop-item-wrapper .card:hover {
+  transform: scale(0.9) translateY(-5px);
+}
+
+.shop-item-wrapper.sold-out {
+  opacity: 0.3;
+  filter: grayscale(0.8);
+  pointer-events: none;
+}
+
+.shop-item-wrapper.sold-out::after {
+  content: 'SOLD OUT';
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-15deg);
+  color: #e74c3c;
+  font-size: 24px;
+  font-weight: bold;
+  border: 3px solid #e74c3c;
+  padding: 2px 8px;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 5;
+}
+
+.rest-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 40px;
+  border-radius: 15px;
+  border: 2px solid #e67e22;
+}
+
+.rest-options {
+  display: flex;
+  gap: 30px;
+}
+
+.rest-option-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+}
+
+.card-reward-container.large {
+  max-width: 95%;
+  width: 1100px;
+}
+
+.card-choices.scrollable {
+  max-height: 500px;
+  overflow-y: auto;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* イベントシーン */
+#event-scene {
+  background: radial-gradient(circle at center, #2c3e50 0%, #050505 100%);
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 2000;
+  /* 最前面に表示 */
+  align-items: center;
+  justify-content: center;
+}
+
+.event-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 30px;
+  width: 90%;
+  max-width: 900px;
+  background: rgba(0, 0, 0, 0.85);
+  padding: 50px;
+  border-radius: 12px;
+  border: 2px solid var(--color-gold);
+  /* 高級感 */
+  box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
+  position: relative;
+}
+
+.event-content {
+  display: flex;
+  gap: 40px;
+  align-items: center;
+  width: 100%;
+  border-bottom: 1px solid #444;
+  padding-bottom: 30px;
+  margin-bottom: 10px;
+}
+
+.event-image {
+  font-size: 100px;
+  background: rgba(255, 255, 255, 0.05);
+  width: 160px;
+  height: 160px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 8px;
+  border: 1px solid #555;
+  flex-shrink: 0;
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+.event-text-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.event-text-area h3 {
+  font-size: 2.2em;
+  color: var(--color-gold);
+  margin: 0;
+  text-shadow: 2px 2px 4px #000;
+}
+
+.event-text-area p {
+  font-size: 1.3em;
+  line-height: 1.6;
+  color: #ecf0f1;
+  margin: 0;
+}
+
+.event-options-vertical {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  width: 100%;
+}
+
+.event-options-vertical button {
+  width: 100%;
+  text-align: left;
+  padding: 20px 25px;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  transition: all 0.2s;
+  background: rgba(50, 50, 50, 0.8);
+  border: 1px solid #777;
+}
+
+.event-options-vertical button:hover {
+  background: linear-gradient(to right, #444, #555);
+  border-color: var(--color-gold);
+  transform: translateX(10px);
+  box-shadow: -5px 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* デッキ選択オーバーレイ */
+#deck-selection-overlay {
+  z-index: 3000 !important;
+  /* イベント画面より前面に */
+  background: rgba(0, 0, 0, 0.95);
+  flex-direction: column;
+  /* 縦並びに追加 */
+}
+
+
+.card-choices.scrollable {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  overflow-y: auto;
+  max-height: 80vh;
+  padding: 20px;
+}

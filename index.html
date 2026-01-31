@@ -163,7 +163,17 @@
       <button id="end-turn-btn" class="end-turn-btn">Turn End</button>
     </div>
   </div>
+
+  <!-- デッキ選択オーバーレイ (カード削除/強化/変化用) -->
+  <div id="deck-selection-overlay" class="overlay" style="display: none; flex-direction: column;">
+    <h2 id="deck-selection-title" class="scene-title">カードを選択</h2>
+    <div id="deck-selection-list" class="card-choices scrollable">
+      <!-- カードリスト -->
+    </div>
+    <button id="close-deck-selection-btn" class="end-turn-btn" style="margin-top: 20px;">閉じる</button>
   </div>
+  </div>
+
   <script type="module" src="/src/main.js"></script>
 </body>
 

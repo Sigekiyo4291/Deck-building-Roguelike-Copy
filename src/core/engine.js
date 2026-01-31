@@ -74,7 +74,11 @@ export class BattleEngine {
 
         const card = this.player.hand[cardIndex];
 
+        // 呪いカードは使用できない
+        if (card.type === 'curse') return;
+
         // ターゲット取得
+
         let target = this.enemies[targetIndex];
 
         // もしターゲットが死んでいたら、生存している別の敵を探す

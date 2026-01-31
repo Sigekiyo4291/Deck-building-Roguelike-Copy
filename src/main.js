@@ -6,6 +6,8 @@ import { Player, Enemy, Louse } from './core/entity.js';
 import { CardLibrary } from './core/card.js';
 import { BattleEngine } from './core/engine.js';
 import { RelicLibrary } from './core/relic.js';
+import { getRandomEvent } from './core/event-data.js';
+
 
 class Game {
   constructor() {
@@ -66,12 +68,15 @@ class Game {
       this.showShopScene();
     } else if (node.type === 'rest') {
       this.showRestScene();
+    } else if (node.type === 'event') {
+      this.showEventScene();
     } else {
-      alert(`${node.type} ノードに到達しました（イベント未実装）`);
+      alert(`${node.type} ノードに到達しました（未実装）`);
       this.map.updateAvailableNodes();
       this.renderMap();
     }
   }
+
 
   showRestScene() {
     this.sceneManager.showRest();
@@ -90,7 +95,7 @@ class Game {
     };
   }
 
-  showUpgradeSelection() {
+  showUpgradeSelection(onComplete) {
     const overlay = document.getElementById('deck-selection-overlay');
     const listEl = document.getElementById('deck-selection-list');
     const titleEl = document.getElementById('deck-selection-title');
@@ -112,7 +117,11 @@ class Game {
           card.upgrade();
           alert(`${card.name} を強化しました！`);
           overlay.style.display = 'none';
-          this.finishRest();
+          if (onComplete) {
+            onComplete();
+          } else {
+            this.finishRest();
+          }
         };
       }
       listEl.appendChild(cardEl);
@@ -120,14 +129,148 @@ class Game {
 
     closeBtn.onclick = () => {
       overlay.style.display = 'none';
+      if (onComplete) {
+        onComplete();
+      }
     };
   }
+
 
   finishRest() {
     this.map.updateAvailableNodes();
     this.renderMap();
     this.sceneManager.showMap();
   }
+
+  // ===== イベント関連メソッド =====
+
+  showEventScene() {
+    // ランダムなイベントを選択
+    const event = getRandomEvent();
+    this.currentEvent = event;
+    this.currentEventState = {};
+
+    this.sceneManager.showEvent();
+
+    // イベント情報のUI更新
+    document.getElementById('event-image').textContent = event.image;
+    document.getElementById('event-name').textContent = event.name;
+    document.getElementById('event-description').textContent = '';
+
+    this.updateEventChoices(event, this.currentEventState);
+  }
+
+  updateEventChoices(event, state) {
+    const optionsContainer = document.getElementById('event-options');
+    optionsContainer.innerHTML = '';
+
+    // 選択肢がサブ選択肢（phase: 'trap'など）の場合
+    if (state.choices) {
+      state.choices.forEach((choice) => {
+        const button = document.createElement('button');
+        button.className = 'end-turn-btn';
+        button.textContent = choice.text;
+        button.onclick = () => {
+          choice.action(this, (newState) => {
+            this.currentEventState = { ...this.currentEventState, ...newState };
+            this.updateEventChoices(event, this.currentEventState);
+          });
+        };
+        optionsContainer.appendChild(button);
+      });
+    } else {
+      // 通常の選択肢
+      const choices = event.getChoices(this, state);
+      choices.forEach((choice) => {
+        const button = document.createElement('button');
+        button.className = 'end-turn-btn';
+        button.textContent = choice.text;
+        button.onclick = () => {
+          choice.action(this, (newState) => {
+            this.currentEventState = { ...this.currentEventState, ...newState };
+            this.updateEventChoices(event, this.currentEventState);
+          });
+        };
+        optionsContainer.appendChild(button);
+      });
+    }
+  }
+
+  finishEvent() {
+    this.currentEvent = null;
+    this.currentEventState = null;
+    this.map.updateAvailableNodes();
+    this.renderMap();
+    this.sceneManager.showMap();
+  }
+
+  // カード削除選択UI
+  showCardRemovalSelection(onComplete) {
+    const overlay = document.getElementById('deck-selection-overlay');
+    const listEl = document.getElementById('deck-selection-list');
+    const titleEl = document.getElementById('deck-selection-title');
+    const closeBtn = document.getElementById('close-deck-selection-btn');
+
+    titleEl.textContent = '削除するカードを選択';
+    listEl.innerHTML = '';
+    overlay.style.display = 'flex';
+    closeBtn.style.display = 'block';
+
+    this.player.masterDeck.forEach((card, index) => {
+      const cardEl = this.createRewardCardElement(card);
+      cardEl.onclick = () => {
+        // 削除確認
+        if (confirm(`${card.name} を削除しますか？`)) {
+          this.player.masterDeck.splice(index, 1);
+          alert(`${card.name} をデッキから削除しました！`);
+          overlay.style.display = 'none';
+          if (onComplete) onComplete();
+        }
+      };
+      listEl.appendChild(cardEl);
+    });
+
+    closeBtn.onclick = () => {
+      overlay.style.display = 'none';
+      if (onComplete) onComplete();
+    };
+  }
+
+  // カード変化選択UI
+  showCardTransformSelection(onComplete) {
+    const overlay = document.getElementById('deck-selection-overlay');
+    const listEl = document.getElementById('deck-selection-list');
+    const titleEl = document.getElementById('deck-selection-title');
+    const closeBtn = document.getElementById('close-deck-selection-btn');
+
+    titleEl.textContent = '変化させるカードを選択';
+    listEl.innerHTML = '';
+    overlay.style.display = 'flex';
+    closeBtn.style.display = 'block';
+
+    this.player.masterDeck.forEach((card, index) => {
+      const cardEl = this.createRewardCardElement(card);
+      cardEl.onclick = () => {
+        // ランダムなカードに変化 (呪い以外)
+        const keys = Object.keys(CardLibrary).filter(k => CardLibrary[k].type !== 'curse');
+        const randomKey = keys[Math.floor(Math.random() * keys.length)];
+
+        const newCard = CardLibrary[randomKey].clone();
+
+        this.player.masterDeck[index] = newCard;
+        alert(`${card.name} が ${newCard.name} に変化しました！`);
+        overlay.style.display = 'none';
+        if (onComplete) onComplete();
+      };
+      listEl.appendChild(cardEl);
+    });
+
+    closeBtn.onclick = () => {
+      overlay.style.display = 'none';
+      if (onComplete) onComplete();
+    };
+  }
+
 
   showShopScene() {
     this.sceneManager.showShop();
@@ -410,7 +553,8 @@ class Game {
     container.innerHTML = '';
 
     // ランダムなカード候補を3枚生成
-    const keys = Object.keys(CardLibrary);
+    const keys = Object.keys(CardLibrary).filter(k => CardLibrary[k].type !== 'curse');
+
     for (let i = 0; i < 3; i++) {
       // 全カード配列からランダム取得
       // （レアリティ抽選ロジックは今回省略、完全ランダム）
@@ -651,8 +795,16 @@ class Game {
   tryPlayCard(index) {
     const card = this.player.hand[index];
 
+    // 呪いカードチェック
+    if (card.type === 'curse') {
+      alert('このカードは使用できません！');
+      this.updateBattleUI(); // 位置リセット
+      return;
+    }
+
     // エネルギーチェック
     if (this.player.energy < card.cost) {
+
       alert('エネルギーが足りません！');
       this.updateBattleUI(); // 位置リセットのために再描画
       return;

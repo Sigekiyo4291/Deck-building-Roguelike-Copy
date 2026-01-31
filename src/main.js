@@ -1,4 +1,4 @@
-import './style.css';
+// import './style.css'; // 静的配信でのMIMEタイプエラー回避のためHTML側で読み込み
 import { GameMap } from './core/map-data.js';
 import { MapGenerator } from './core/map-generator.js';
 import { SceneManager } from './core/scene-manager.js';

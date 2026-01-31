@@ -16,6 +16,7 @@ class Game {
     this.battleEngine = null;
     this.sceneManager = new SceneManager(this);
     this.selectedEnemyIndex = 0; // デフォルトターゲット初期化
+    this.battleCount = 0; // 通常戦闘の回数をカウント
 
     // UI Elements
     this.elDeckCount = document.getElementById('deck-count');
@@ -386,25 +387,57 @@ class Game {
   }
 
   startBattle(type) {
-    // 敵データ生成（複数体）
+    // 敵データ生成
     let enemies = [];
+    this.isEliteBattle = (type === 'elite');
 
     if (type === 'boss') {
-      enemies.push(new Enemy('ボススライム', 100, '/src/assets/slime.png'));
+      // Act 1 ボスプール (Wiki準拠: 3パターン)
+      const bossEncounters = [
+        () => [new Enemy('ガーディアン', 240, '/src/assets/slime.png')],
+        () => [new Enemy('ヘキサゴースト', 250, '/src/assets/slime.png')],
+        () => [new Enemy('スライムボス', 140, '/src/assets/slime.png')]
+      ];
+      const index = Math.floor(Math.random() * bossEncounters.length);
+      enemies = bossEncounters[index]();
+    } else if (type === 'elite') {
+      // Act 1 エリートプール (Wiki準拠: 3パターン)
+      const eliteEncounters = [
+        () => [new Enemy('グレムリンノブ', 82, '/src/assets/slime.png')],
+        () => [new Enemy('ラガヴーリン', 109, '/src/assets/slime.png')],
+        () => [new Enemy('センチネル', 38, '/src/assets/slime.png'), new Enemy('センチネル', 44, '/src/assets/slime.png'), new Enemy('センチネル', 38, '/src/assets/slime.png')]
+      ];
+      const index = Math.floor(Math.random() * eliteEncounters.length);
+      enemies = eliteEncounters[index]();
     } else {
-      // 1-3体の敵をランダム生成
-      // 基本はLouse（寄生虫）またはSlime
-      const count = 1 + Math.floor(Math.random() * 2); // 1-2体（最初は控えめに）
-
-      for (let i = 0; i < count; i++) {
-        const roll = Math.random();
-        if (roll < 0.4) {
-          enemies.push(new Louse('red'));
-        } else if (roll < 0.8) {
-          enemies.push(new Louse('green'));
-        } else {
-          enemies.push(new Enemy('スライム', 30 + Math.floor(Math.random() * 10), '/src/assets/slime.png'));
-        }
+      // 通常戦闘（弱プール vs 強プール）
+      if (this.battleCount < 3) {
+        // 弱プール (1-3戦目, Wiki準拠: 5パターン)
+        const encounters = [
+          () => [new Enemy('狂信者', 48, '/src/assets/slime.png')],
+          () => [new Enemy('あご虫', 40, '/src/assets/slime.png')],
+          () => [new Louse('red'), new Louse('green')],
+          () => [new Enemy('酸性スライム(M)', 28, '/src/assets/slime.png'), new Enemy('スパイクスライム(M)', 28, '/src/assets/slime.png')],
+          () => [new Enemy('酸性スライム(S)', 12, '/src/assets/slime.png'), new Enemy('スパイクスライム(S)', 12, '/src/assets/slime.png'), new Enemy('スパイクスライム(S)', 10, '/src/assets/slime.png')]
+        ];
+        const index = Math.floor(Math.random() * encounters.length);
+        enemies = encounters[index]();
+      } else {
+        // 強プール (4戦目以降, Wiki準拠から主要なものを抜粋)
+        const encounters = [
+          () => [new Enemy('大型酸性スライム', 65, '/src/assets/slime.png')],
+          () => [new Enemy('大型スパイクスライム', 64, '/src/assets/slime.png')],
+          () => [new Enemy('スレイバー(青)', 46, '/src/assets/slime.png')],
+          () => [new Enemy('略奪者', 44, '/src/assets/slime.png')],
+          () => [new Louse('red'), new Louse('green'), new Louse('red')],
+          () => [new Enemy('キノコビースト', 24, '/src/assets/slime.png'), new Enemy('キノコビースト', 24, '/src/assets/slime.png')],
+          () => [new Enemy('スレイバー(青)', 46, '/src/assets/slime.png'), new Enemy('スレイバー(赤)', 46, '/src/assets/slime.png')],
+          () => [new Enemy('略奪者', 44, '/src/assets/slime.png'), new Enemy('狂信者', 48, '/src/assets/slime.png')],
+          () => [new Enemy('キノコビースト', 24, '/src/assets/slime.png'), new Enemy('あご虫', 40, '/src/assets/slime.png')],
+          () => [new Louse('green'), new Enemy('酸性スライム(M)', 28, '/src/assets/slime.png'), new Enemy('スパイクスライム(M)', 28, '/src/assets/slime.png')]
+        ];
+        const index = Math.floor(Math.random() * encounters.length);
+        enemies = encounters[index]();
       }
     }
 
@@ -436,6 +469,12 @@ class Game {
   onBattleWin() {
     this.deselectCard();
     alert('Victory!');
+
+    // 通常戦闘の場合、カウントアップ
+    if (!this.isEliteBattle && this.map.currentNode && this.map.currentNode.type === 'enemy') {
+      this.battleCount++;
+      console.log(`Normal Battle Count: ${this.battleCount}`);
+    }
 
     // リワード画面表示
     this.showRewardScene(this.isEliteBattle);

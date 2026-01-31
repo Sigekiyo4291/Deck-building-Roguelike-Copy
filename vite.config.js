@@ -1,8 +1,9 @@
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-    // GitHub Pagesのリポジトリ名に合わせてパスを設定します。
-    base: '/Deck-building-Roguelike-Copy/',
+    // baseを './' に設定することで、デプロイ先のサブディレクトリ名に関わらず
+    // 相対パスで資産を読み込むようになります。
+    base: './',
     build: {
         outDir: 'dist',
     },

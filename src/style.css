@@ -237,7 +237,7 @@ body {
 .card {
   width: var(--card-width);
   height: var(--card-height);
-  background: url('/src/assets/card_bg.png') no-repeat center/cover;
+  background: url('src/assets/card_bg.png') no-repeat center/cover;
   border-radius: 8px;
   position: relative;
   cursor: pointer;

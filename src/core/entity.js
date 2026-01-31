@@ -151,7 +151,7 @@ export class Entity {
 
 export class Player extends Entity {
   constructor() {
-    super('Vanguard', 50, 'src/assets/player.png');
+    super('Vanguard', 50, '/src/assets/player.png');
     this.energy = 3;
     this.maxEnergy = 3;
     this.deck = [];
@@ -197,7 +197,7 @@ export class Louse extends Enemy {
   constructor(color) {
     const hp = 10 + Math.floor(Math.random() * 8); // 10-17
     const name = color === 'red' ? '赤の寄生虫' : '緑の寄生虫';
-    super(name, hp, 'src/assets/Louse.png');
+    super(name, hp, '/src/assets/Louse.png');
     this.color = color;
     this.curlUpValue = 3 + Math.floor(Math.random() * 5); // 3-7
     this.hasCurledUp = false;
@@ -244,7 +244,7 @@ export class Louse extends Enemy {
 
 export class AcidSlimeM extends Enemy {
   constructor() {
-    super('アシッドスライム(M)', 28 + Math.floor(Math.random() * 5), 'src/assets/AcidSlimeM.png');
+    super('アシッドスライム(M)', 28 + Math.floor(Math.random() * 5), '/src/assets/AcidSlimeM.png');
     this.history = [];
   }
 
@@ -279,7 +279,7 @@ export class AcidSlimeM extends Enemy {
 
 export class SpikeSlimeM extends Enemy {
   constructor() {
-    super('スパイクスライム(M)', 28 + Math.floor(Math.random() * 5), 'src/assets/SpikeSlimeM.png');
+    super('スパイクスライム(M)', 28 + Math.floor(Math.random() * 5), '/src/assets/SpikeSlimeM.png');
     this.history = [];
   }
 
@@ -310,7 +310,7 @@ export class SpikeSlimeM extends Enemy {
 
 export class AcidSlimeS extends Enemy {
   constructor() {
-    super('アシッドスライム(S)', 8 + Math.floor(Math.random() * 5), 'src/assets/AcidSlimeS.png');
+    super('アシッドスライム(S)', 8 + Math.floor(Math.random() * 5), '/src/assets/AcidSlimeS.png');
     this.isFirstTurn = true;
   }
 
@@ -330,7 +330,7 @@ export class AcidSlimeS extends Enemy {
 
 export class SpikeSlimeS extends Enemy {
   constructor() {
-    super('スパイクスライム(S)', 10 + Math.floor(Math.random() * 5), 'src/assets/SpikeSlimeS.png');
+    super('スパイクスライム(S)', 10 + Math.floor(Math.random() * 5), '/src/assets/SpikeSlimeS.png');
   }
 
   decideNextMove() {
@@ -340,7 +340,7 @@ export class SpikeSlimeS extends Enemy {
 
 export class FungiBeast extends Enemy {
   constructor() {
-    super('キノコビースト', 22 + Math.floor(Math.random() * 7), 'src/assets/FungiBeast.png');
+    super('キノコビースト', 22 + Math.floor(Math.random() * 7), '/src/assets/FungiBeast.png');
     this.history = [];
   }
 
@@ -371,7 +371,7 @@ export class FungiBeast extends Enemy {
 
 export class Cultist extends Enemy {
   constructor() {
-    super('狂信者', 48 + Math.floor(Math.random() * 7), 'src/assets/Cultist.png');
+    super('狂信者', 48 + Math.floor(Math.random() * 7), '/src/assets/Cultist.png');
     this.isFirstTurn = true;
   }
 
@@ -394,7 +394,7 @@ export class Cultist extends Enemy {
 
 export class JawWorm extends Enemy {
   constructor() {
-    super('あご虫', 40 + Math.floor(Math.random() * 5), 'src/assets/JawWorm.png');
+    super('あご虫', 40 + Math.floor(Math.random() * 5), '/src/assets/JawWorm.png');
     this.history = [];
   }
 
@@ -467,7 +467,7 @@ export class JawWorm extends Enemy {
 
 export class AcidSlimeL extends Enemy {
   constructor() {
-    super('大型酸性スライム', 65 + Math.floor(Math.random() * 5), 'src/assets/AcidSlimeL.png');
+    super('大型酸性スライム', 65 + Math.floor(Math.random() * 5), '/src/assets/AcidSlimeL.png');
     this.history = [];
   }
 
@@ -498,7 +498,7 @@ export class AcidSlimeL extends Enemy {
 
 export class SpikeSlimeL extends Enemy {
   constructor() {
-    super('大型スパイクスライム', 64 + Math.floor(Math.random() * 7), 'src/assets/SpikeSlimeL.png');
+    super('大型スパイクスライム', 64 + Math.floor(Math.random() * 7), '/src/assets/SpikeSlimeL.png');
     this.history = [];
   }
 
@@ -527,7 +527,7 @@ export class SpikeSlimeL extends Enemy {
 
 export class BlueSlaver extends Enemy {
   constructor() {
-    super('スレイバー(青)', 46 + Math.floor(Math.random() * 5), 'src/assets/BlueSlaver.png');
+    super('スレイバー(青)', 46 + Math.floor(Math.random() * 5), '/src/assets/BlueSlaver.png');
     this.history = [];
   }
 
@@ -546,7 +546,7 @@ export class BlueSlaver extends Enemy {
 
 export class RedSlaver extends Enemy {
   constructor() {
-    super('スレイバー(赤)', 46 + Math.floor(Math.random() * 5), 'src/assets/RedSlaver.png');
+    super('スレイバー(赤)', 46 + Math.floor(Math.random() * 5), '/src/assets/RedSlaver.png');
     this.history = [];
     this.hasEntangled = false;
   }
@@ -577,7 +577,7 @@ export class RedSlaver extends Enemy {
 
 export class Looter extends Enemy {
   constructor() {
-    super('略奪者', 44 + Math.floor(Math.random() * 5), 'src/assets/Looter.png');
+    super('略奪者', 44 + Math.floor(Math.random() * 5), '/src/assets/Looter.png');
     this.history = [];
     this.stolenGold = 0;
   }
@@ -628,7 +628,7 @@ export class Looter extends Enemy {
 
 export class GremlinNob extends Enemy {
   constructor() {
-    super('グレムリンノブ', 82 + Math.floor(Math.random() * 5), 'src/assets/GremlinNob.png');
+    super('グレムリンノブ', 82 + Math.floor(Math.random() * 5), '/src/assets/GremlinNob.png');
     this.history = [];
     this.isEnraged = false;
   }
@@ -666,7 +666,7 @@ export class GremlinNob extends Enemy {
 
 export class Lagavulin extends Enemy {
   constructor() {
-    super('ラガヴーリン', 109 + Math.floor(Math.random() * 3), 'src/assets/Lagavulin.png');
+    super('ラガヴーリン', 109 + Math.floor(Math.random() * 3), '/src/assets/Lagavulin.png');
     this.addStatus('metallicize', 8);
     this.isSleeping = true;
     this.idleTurns = 0;
@@ -724,7 +724,7 @@ export class Lagavulin extends Enemy {
 
 export class Sentry extends Enemy {
   constructor(position) {
-    super('センチネル', 38 + Math.floor(Math.random() * 5), 'src/assets/Sentry.png');
+    super('センチネル', 38 + Math.floor(Math.random() * 5), '/src/assets/Sentry.png');
     this.addStatus('artifact', 1);
     this.position = position; // 0: left, 1: middle, 2: right
     this.turnCount = 0;
@@ -749,7 +749,7 @@ export class Sentry extends Enemy {
 
 export class SlimeBoss extends Enemy {
   constructor() {
-    super('スライムボス', 140, 'src/assets/SlimeBoss.png');
+    super('スライムボス', 140, '/src/assets/SlimeBoss.png');
     this.history = [];
   }
 
@@ -779,7 +779,7 @@ export class SlimeBoss extends Enemy {
 
 export class Guardian extends Enemy {
   constructor() {
-    super('ガーディアン', 240, 'src/assets/Guardian.png');
+    super('ガーディアン', 240, '/src/assets/Guardian.png');
     this.mode = 'offensive'; // offensive or defensive
     this.damageTakenInMode = 0;
     this.modeShiftThreshold = 30;
@@ -849,7 +849,7 @@ export class Guardian extends Enemy {
 
 export class Hexaghost extends Enemy {
   constructor() {
-    super('ヘキサゴースト', 250, 'src/assets/Hexaghost.png');
+    super('ヘキサゴースト', 250, '/src/assets/Hexaghost.png');
     this.history = [];
   }
 

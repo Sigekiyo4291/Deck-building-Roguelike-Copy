@@ -586,6 +586,30 @@ body {
   margin-bottom: 20px;
 }
 
+.header-status {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.utility-btn {
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid #7f8c8d;
+  color: #ecf0f1;
+  padding: 5px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.9em;
+  transition: all 0.2s;
+}
+
+.utility-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: #bdc3c7;
+  transform: translateY(-2px);
+}
+
 .map-gold {
   font-size: 24px;
   color: var(--color-gold);

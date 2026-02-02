@@ -44,10 +44,26 @@
     <div id="map-scene" class="scene" style="display: none;">
       <div class="map-header">
         <h2 class="scene-title">マップ選択</h2>
-        <div class="map-gold">💰 <span id="map-gold-value">0</span>G</div>
+        <div class="header-status">
+          <button id="map-deck-btn" class="utility-btn">🎴 デッキ</button>
+          <div class="map-gold">💰 <span id="map-gold-value">0</span>G</div>
+        </div>
       </div>
       <div id="map-container" class="map-container">
         <!-- マップノードがここに生成されます -->
+      </div>
+    </div>
+
+    <!-- ... (中略) ... -->
+
+    <!-- デッキ閲覧オーバーレイ -->
+    <div id="deck-view-overlay" class="overlay" style="display: none;">
+      <div class="card-reward-container large">
+        <h2 class="scene-title" style="margin-bottom: 20px;">現在のデッキ</h2>
+        <div id="deck-view-content" class="card-choices scrollable">
+          <!-- カード一覧 -->
+        </div>
+        <button id="close-deck-btn" class="end-turn-btn" style="margin-top: 20px;">閉じる</button>
       </div>
     </div>
 

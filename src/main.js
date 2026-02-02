@@ -64,10 +64,68 @@ class Game {
     this.sceneManager.showMap();
   }
 
+  createRewardCardElement(card) {
+    // 既存のメソッドは変更なし、場所が変わるだけ
+    const cardEl = document.createElement('div');
+    cardEl.className = `card ${card.rarity}`;
+    cardEl.innerHTML = `
+            <div class="card-cost">${card.cost}</div>
+            <div class="card-title">${card.name}</div>
+            <div class="card-desc">${card.description}</div>
+            <div class="card-type">${card.type}</div>
+      `;
+    return cardEl;
+  }
+
+  showDeckView() {
+    const overlay = document.getElementById('deck-view-overlay');
+    const container = document.getElementById('deck-view-content');
+    const closeBtn = document.getElementById('close-deck-btn');
+
+    if (!overlay || !container) return;
+
+    container.innerHTML = '';
+
+    // マスターデッキの内容を表示（ソート済みが望ましいが、今回は登録順）
+    // 必要に応じてソートロジックを追加可能
+    const sortedDeck = [...this.player.masterDeck].sort((a, b) => {
+      // 種類順 (Attack > Skill > Power > Curse) などの簡易ソート
+      const typeOrder = { 'attack': 1, 'skill': 2, 'power': 3, 'curse': 4 };
+      if (typeOrder[a.type] !== typeOrder[b.type]) {
+        return (typeOrder[a.type] || 99) - (typeOrder[b.type] || 99);
+      }
+      return a.cost - b.cost;
+    });
+
+    sortedDeck.forEach(card => {
+      // 報酬カード生成メソッドを再利用（クリックイベントなし）
+      // クリックイベントを上書きして無効化、あるいは詳細表示などに利用可能
+      const cardEl = this.createRewardCardElement(card);
+      cardEl.style.cursor = 'default'; // クリックできないことを示す
+      cardEl.onclick = null; // クリックしても何も起きない
+
+      // ツールチップなどで詳細を出しても良いが、現状はカード自体に情報が載っている
+
+      container.appendChild(cardEl);
+    });
+
+    overlay.style.display = 'flex';
+
+    closeBtn.onclick = () => {
+      overlay.style.display = 'none';
+    };
+  }
+
   renderMap() {
     // ゴールド表示の更新
     const goldEl = document.getElementById('map-gold-value');
     if (goldEl) goldEl.textContent = this.player.gold;
+
+    // デッキボタンの設定
+    const deckBtn = document.getElementById('map-deck-btn');
+    if (deckBtn) {
+      deckBtn.onclick = () => this.showDeckView();
+    }
 
     this.sceneManager.renderMap(this.map, (node) => this.onNodeSelect(node));
   }

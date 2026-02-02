@@ -286,7 +286,7 @@ body {
 .card {
   width: var(--card-width);
   height: var(--card-height);
-  background: url('assets/card_bg.png') no-repeat center/cover;
+  background: url('assets/card_bg.png') no-repeat center/165% 115%;
   border-radius: 8px;
   position: relative;
   cursor: pointer;
@@ -297,7 +297,6 @@ body {
   padding: 12px;
   box-sizing: border-box;
   pointer-events: auto;
-  /* クリティカル: これがないとスワイプできない */
 }
 
 .card:hover {
@@ -335,7 +334,7 @@ body {
   font-weight: bold;
   margin-top: 15px;
   color: #f1c40f;
-  text-shadow: 1px 1px 2px #000;
+  text-shadow: 2px 2px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
 }
 
 .card-desc {
@@ -343,7 +342,10 @@ body {
   margin-top: auto;
   margin-bottom: 20px;
   text-align: center;
-  color: #bdc3c7;
+  color: #333;
+  font-weight: bold;
+  -webkit-text-stroke: 1px #fff;
+  paint-order: stroke fill;
 }
 
 /* 戦意（インテント） */

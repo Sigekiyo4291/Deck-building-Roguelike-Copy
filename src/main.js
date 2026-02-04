@@ -7,6 +7,7 @@ import { CardLibrary } from './core/card.js';
 import { BattleEngine } from './core/engine.js';
 import { RelicLibrary } from './core/relic.js';
 import { getRandomEvent } from './core/event-data.js';
+import { DebugManager } from './core/debug-manager.js';
 
 const STATUS_INFO = {
   vulnerable: { name: '脆弱', desc: '受けるダメージが50%増加する。' },
@@ -33,6 +34,9 @@ class Game {
     this.sceneManager = new SceneManager(this);
     this.selectedEnemyIndex = 0; // デフォルトターゲット初期化
     this.battleCount = 0; // 通常戦闘の回数をカウント
+
+    // Debug Manager
+    this.debugManager = new DebugManager(this);
 
     // UI Elements
     this.elDeckCount = document.getElementById('deck-count');
@@ -458,6 +462,39 @@ class Game {
 
     openBtn.onclick = handleOpen;
     icon.onclick = handleOpen;
+  }
+
+  startDebugBattle(enemies) {
+    if (this.battleEngine) {
+      this.battleEngine = null;
+    }
+    this.battleEngine = new BattleEngine(
+      this.player,
+      enemies,
+      () => this.updateBattleUI(),
+      (result) => {
+        if (result === 'win') {
+          this.onBattleWin();
+        } else {
+          alert('Game Over...');
+          location.reload();
+        }
+      }
+    );
+    this.sceneManager.showBattle();
+    this.battleEngine.start();
+    this.updateBattleUI();
+    this.updateRelicUI();
+  }
+
+  startDebugEvent(event) {
+    this.currentEvent = event;
+    this.currentEventState = {};
+    this.sceneManager.showEvent();
+    document.getElementById('event-image').textContent = event.image;
+    document.getElementById('event-name').textContent = event.name;
+    document.getElementById('event-description').textContent = '';
+    this.updateEventChoices(event, this.currentEventState);
   }
 
   startBattle(type) {

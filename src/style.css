@@ -1067,3 +1067,161 @@ body {
   border: 1px solid #7f8c8d;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
 }
+
+/* --- Debug UI --- */
+#debug-toggle-btn {
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.7);
+  color: #e74c3c;
+  border: 1px solid #e74c3c;
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-family: monospace;
+}
+
+#debug-toggle-btn:hover {
+  background: #e74c3c;
+  color: #fff;
+}
+
+#debug-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  /* slightly transparent to see game behind */
+  z-index: 10000;
+  /* Top of everything */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.debug-container {
+  width: 800px;
+  height: 600px;
+  background: #1a1a1f;
+  border: 2px solid #555;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+}
+
+.debug-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  background: #2c3e50;
+  border-bottom: 1px solid #555;
+}
+
+.debug-header h2 {
+  margin: 0;
+  font-size: 1.5em;
+  color: #ecf0f1;
+}
+
+.debug-tabs {
+  display: flex;
+  background: #34495e;
+}
+
+.debug-tab {
+  flex: 1;
+  padding: 10px;
+  background: transparent;
+  border: none;
+  color: #bdc3c7;
+  cursor: pointer;
+  font-size: 1.1em;
+  transition: background 0.2s;
+}
+
+.debug-tab:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.debug-tab.active {
+  background: #1a1a1f;
+  color: #ecf0f1;
+  border-bottom: 2px solid #3498db;
+}
+
+.debug-content {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.debug-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.debug-item-btn {
+  padding: 8px 12px;
+  background: #333;
+  border: 1px solid #555;
+  color: #ecf0f1;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.9em;
+}
+
+.debug-item-btn:hover {
+  background: #444;
+  border-color: #777;
+}
+
+.debug-item-btn.rare {
+  border-color: #f1c40f;
+  color: #f1c40f;
+}
+
+.debug-item-btn.uncommon {
+  border-color: #3498db;
+  color: #3498db;
+}
+
+.debug-item-btn.common {
+  border-color: #bdc3c7;
+}
+
+.debug-actions {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #555;
+}
+
+#debug-selected-enemies {
+  margin-bottom: 10px;
+  font-style: italic;
+  color: #bdc3c7;
+}
+
+.debug-action-btn {
+  width: 100%;
+  padding: 10px;
+  background: #27ae60;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1.1em;
+}
+
+.debug-action-btn:hover {
+  background: #2ecc71;
+}

@@ -356,6 +356,27 @@ export const CardLibrary = {
             if (e && e.uiUpdateCallback) e.uiUpdateCallback();
         }
     }, null, 16),
+    FEED: new Card('feed', '捕食', 1, 'attack', 'rare', '10ダメージ。これで敵を倒すと最大HPが+3される。廃棄。', (s, t, e) => {
+        if (t) {
+            t.takeDamage(s.calculateDamage(10), s);
+            if (t.isDead()) {
+                s.increaseMaxHp(3);
+                if (e && e.uiUpdateCallback) e.uiUpdateCallback();
+            }
+        }
+    }, 'single', false, {
+        description: '12ダメージ。これで敵を倒すと最大HPが+4される。廃棄。',
+        baseDamage: 12,
+        effect: (s, t, e) => {
+            if (t) {
+                t.takeDamage(s.calculateDamage(12), s);
+                if (t.isDead()) {
+                    s.increaseMaxHp(4);
+                    if (e && e.uiUpdateCallback) e.uiUpdateCallback();
+                }
+            }
+        }
+    }, null, 10, null, 0, null, false, true),
     CARNAGE: new Card('carnage', '大虐殺', 2, 'attack', 'uncommon', 'エセリアル。20ダメージを与える。', (s, t) => {
         t.takeDamage(s.calculateDamage(20), s);
     }, 'single', false, {

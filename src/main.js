@@ -72,7 +72,8 @@ class Game {
     // 既存のメソッドは変更なし、場所が変わるだけ
     const cardEl = document.createElement('div');
     cardEl.className = `card ${card.rarity}`;
-    const displayCost = card.cost === 'X' ? 'X' : (card.cost < 0 ? '' : card.cost);
+    const currentCost = card.getCost(this.player);
+    const displayCost = currentCost === 'X' ? 'X' : (currentCost < 0 ? '' : currentCost);
     cardEl.innerHTML = `
             <div class="card-cost">${displayCost}</div>
             <div class="card-title">${card.name}</div>
@@ -998,7 +999,8 @@ class Game {
       }
     }
 
-    const displayCost = card.cost === 'X' ? 'X' : (card.cost < 0 ? '' : card.cost);
+    const currentCost = card.getCost(this.player);
+    const displayCost = currentCost === 'X' ? 'X' : (currentCost < 0 ? '' : currentCost);
     cardEl.innerHTML = `
               <div class="card-cost">${displayCost}</div>
               <div class="card-title">${card.name}</div>
@@ -1067,8 +1069,9 @@ class Game {
     }
 
     // エネルギーチェック
-    const requiredEnergy = typeof card.cost === 'number' ? card.cost : 0;
-    if (card.cost !== 'X' && this.player.energy < requiredEnergy) {
+    const currentCost = card.getCost(this.player);
+    const requiredEnergy = typeof currentCost === 'number' ? currentCost : 0;
+    if (currentCost !== 'X' && this.player.energy < requiredEnergy) {
 
       alert('エネルギーが足りません！');
       this.updateBattleUI(); // 位置リセットのために再描画

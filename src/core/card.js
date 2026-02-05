@@ -341,6 +341,25 @@ export const CardLibrary = {
             }
         }
     }, null, 5),
+    RECKLESS_CHARGE: new Card('reckless_charge', '無謀なる突進', 0, 'attack', 'common', '7ダメージを与える。山札にめまいを1枚加える。', (s, t, e) => {
+        t.takeDamage(s.calculateDamage(7), s);
+        if (e) {
+            e.player.deck.push(CardLibrary.DAZED.clone());
+            e.shuffle(e.player.deck);
+            if (e.uiUpdateCallback) e.uiUpdateCallback();
+        }
+    }, 'single', false, {
+        description: '10ダメージを与える。山札にめまいを1枚加える。',
+        baseDamage: 10,
+        effect: (s, t, e) => {
+            t.takeDamage(s.calculateDamage(10), s);
+            if (e) {
+                e.player.deck.push(CardLibrary.DAZED.clone());
+                e.shuffle(e.player.deck);
+                if (e.uiUpdateCallback) e.uiUpdateCallback();
+            }
+        }
+    }, null, 7),
     HEADBUTT: new Card('headbutt', 'ヘッドバット', 1, 'attack', 'common', '9ダメージを与える。捨て札からカードを1枚選び、山札の一番上に置く。', (s, t, e) => {
         t.takeDamage(s.calculateDamage(9), s);
         if (e && e.onCardSelectionRequest && e.player.discard.length > 0) {
@@ -517,6 +536,9 @@ export const CardLibrary = {
     WOUND: new Card('wound', '負傷', -1, 'curse', 'common', '使用できないカード。', (s, t) => {
         // 使用不可
     }, 'self', false, null),
+    DAZED: new Card('dazed', 'めまい', -1, 'curse', 'common', '使用できない。エセリアル。', (s, t) => {
+        // 使用不可
+    }, 'self', false, null, null, 0, null, 0, null, true),
 
     // Curse (呪いカード)
     INJURY: new Card('injury', '怪我', -1, 'curse', 'curse', '消耗。何もしない。', (s, t) => {

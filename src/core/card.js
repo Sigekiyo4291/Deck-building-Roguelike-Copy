@@ -133,6 +133,16 @@ export const CardLibrary = {
         if (!e) return true;
         return e.player.hand.every(c => c.type === 'attack');
     }),
+    THUNDERCLAP: new Card('thunderclap', 'サンダークラップ', 1, 'attack', 'common', '全体に4ダメージを与え、脆弱(1)を付与。', (s, t) => {
+        t.takeDamage(s.calculateDamage(4), s);
+        t.addStatus('vulnerable', 1);
+    }, 'all', false, {
+        description: '全体に7ダメージを与え、脆弱(1)を付与。',
+        effect: (s, t) => {
+            t.takeDamage(s.calculateDamage(7), s);
+            t.addStatus('vulnerable', 1);
+        }
+    }),
     SWORD_BOOMERANG: new Card('sword_boomerang', 'ソードブーメラン', 1, 'attack', 'common', '3ダメージを3回与える(対象ランダム)', (s, t) => {
         t.takeDamage(s.calculateDamage(3), s);
         t.takeDamage(s.calculateDamage(3), s);

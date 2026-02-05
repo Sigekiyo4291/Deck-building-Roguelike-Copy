@@ -37,7 +37,16 @@ export class Card {
         if (source.energy >= this.cost) {
             source.energy -= this.cost;
 
-            this.effect(source, target, engine);
+            if (this.targetType === 'all' && engine) {
+                // 生存している全ての敵に効果を適用
+                engine.enemies.forEach(enemy => {
+                    if (!enemy.isDead()) {
+                        this.effect(source, enemy, engine);
+                    }
+                });
+            } else {
+                this.effect(source, target, engine);
+            }
             return true;
         }
         return false;
@@ -86,7 +95,7 @@ export const CardLibrary = {
     }),
 
     // Common
-    IRON_WAVE: new Card('iron_wave', '鉄の波', 1, 'attack', 'common', '5ダメージを与え、5ブロックを得る', (s, t) => {
+    IRON_WAVE: new Card('iron_wave', 'アイアンウェーブ', 1, 'attack', 'common', '5ダメージを与え、5ブロックを得る', (s, t) => {
         t.takeDamage(s.calculateDamage(5), s);
         s.addBlock(5);
     }, 'single', false, {
@@ -94,6 +103,14 @@ export const CardLibrary = {
         effect: (s, t) => {
             t.takeDamage(s.calculateDamage(7), s);
             s.addBlock(7);
+        }
+    }),
+    CLEAVE: new Card('cleave', 'なぎ払い', 1, 'attack', 'common', '全体に8ダメージを与える', (s, t) => {
+        t.takeDamage(s.calculateDamage(8), s);
+    }, 'all', false, {
+        description: '全体に11ダメージを与える',
+        effect: (s, t) => {
+            t.takeDamage(s.calculateDamage(11), s);
         }
     }),
     SWORD_BOOMERANG: new Card('sword_boomerang', 'ソードブーメラン', 1, 'attack', 'common', '3ダメージを3回与える(対象ランダム)', (s, t) => {
@@ -136,7 +153,7 @@ export const CardLibrary = {
             if (e) e.drawCards(1);
         }
     }),
-    CLOTHESLINE: new Card('clothesline', '薙ぎ払い', 2, 'attack', 'common', '12ダメージを与え、脱力(2)を付与', (s, t) => {
+    CLOTHESLINE: new Card('clothesline', 'ラリアット', 2, 'attack', 'common', '12ダメージを与え、脱力(2)を付与', (s, t) => {
         t.takeDamage(s.calculateDamage(12), s);
         t.addStatus('weak', 2);
     }, 'single', false, {

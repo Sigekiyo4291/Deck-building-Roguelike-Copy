@@ -132,66 +132,55 @@
       </div>
     </div>
 
-  </div>
-  </div>
-
-  <div id="event-scene" class="scene" style="display: none;">
-    <h2 class="scene-title">イベント</h2>
-    <div class="event-container">
-      <div id="event-content" class="event-content">
-        <div id="event-image" class="event-image">❓</div>
-        <div class="event-text-area">
-          <h3 id="event-name">未知との遭遇</h3>
-          <p id="event-description">道中に不思議な何かを見つけた...</p>
+    <div id="event-scene" class="scene" style="display: none;">
+      <h2 class="scene-title">イベント</h2>
+      <div class="event-container">
+        <div id="event-content" class="event-content">
+          <div id="event-image" class="event-image">❓</div>
+          <div class="event-text-area">
+            <h3 id="event-name">未知との遭遇</h3>
+            <p id="event-description">道中に不思議な何かを見つけた...</p>
+          </div>
+        </div>
+        <div id="event-options" class="event-options-vertical">
+          <!-- 選択肢ボタンがここに生成されます -->
         </div>
       </div>
-      <div id="event-options" class="event-options-vertical">
-        <!-- 選択肢ボタンがここに生成されます -->
-      </div>
     </div>
-  </div>
 
-  <div id="card-reward-overlay" class="overlay" style="display: none;">
-    <div class="card-reward-container">
-      <h2>カードを選択</h2>
-      <div id="card-choices" class="card-choices">
-        <!-- カード候補 -->
+    <div id="card-reward-overlay" class="overlay" style="display: none;">
+      <div class="card-reward-container">
+        <h2>カードを選択</h2>
+        <div id="card-choices" class="card-choices">
+          <!-- カード候補 -->
+        </div>
+        <button id="skip-card-btn" class="end-turn-btn" style="margin-top: 20px;">スキップ</button>
       </div>
-      <button id="skip-card-btn" class="end-turn-btn" style="margin-top: 20px;">スキップ</button>
     </div>
-  </div>
 
-  <div class="ui-layer">
-    <div class="deck-info">
-      <div class="deck-pile">
-        <span class="pile-label">山札</span>
-        <span id="deck-count" class="pile-count">10</span>
+    <div class="ui-layer">
+      <div class="deck-info">
+        <div class="deck-pile">
+          <span class="pile-label">山札</span>
+          <span id="deck-count" class="pile-count">10</span>
+        </div>
+        <div class="energy-display">エネルギー: <span id="energy-value">3</span> / 3</div>
+        <div class="discard-pile">
+          <span class="pile-label">捨て札</span>
+          <span id="discard-count" class="pile-count">0</span>
+        </div>
       </div>
-      <div class="energy-display">エネルギー: <span id="energy-value">3</span> / 3</div>
-      <div class="discard-pile">
-        <span class="pile-label">捨て札</span>
-        <span id="discard-count" class="pile-count">0</span>
+      <div class="hand-and-button-container">
+        <div id="hand" class="hand">
+          <!-- カードがここに動的に生成される -->
+        </div>
+        <button id="end-turn-btn" class="end-turn-btn">Turn End</button>
       </div>
     </div>
-    <div class="hand-and-button-container">
-      <div id="hand" class="hand">
-        <!-- カードがここに動的に生成される -->
-      </div>
-      <button id="end-turn-btn" class="end-turn-btn">Turn End</button>
-    </div>
-  </div>
 
-  <!-- デッキ選択オーバーレイ (カード削除/強化/変化用) -->
-  <div id="deck-selection-overlay" class="overlay" style="display: none; flex-direction: column;">
-    <h2 id="deck-selection-title" class="scene-title">カードを選択</h2>
-    <div id="deck-selection-list" class="card-choices scrollable">
-      <!-- カードリスト -->
-    </div>
-    <button id="close-deck-selection-btn" class="end-turn-btn" style="margin-top: 20px;">閉じる</button>
-  </div>
-  </div>
 
-  <script type="module" src="src/main.js"></script>
+
+    <script type="module" src="src/main.js"></script>
 </body>
 
 </html>

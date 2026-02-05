@@ -1,5 +1,5 @@
 export class Card {
-    constructor(id, name, cost, type, rarity, description, effect, targetType, isUpgraded = false, upgradeData = null, canPlayCheck = null, baseDamage = 0, damageCalculator = null, baseBlock = 0, blockCalculator = null) {
+    constructor(id, name, cost, type, rarity, description, effect, targetType, isUpgraded = false, upgradeData = null, canPlayCheck = null, baseDamage = 0, damageCalculator = null, baseBlock = 0, blockCalculator = null, isEthereal = false) {
         this.id = id;
         this.baseName = name;
         this.name = name + (isUpgraded ? '+' : '');
@@ -22,13 +22,17 @@ export class Card {
         this.damageCalculator = damageCalculator;
         this.baseBlock = baseBlock;
         this.blockCalculator = blockCalculator;
+        this.isEthereal = isEthereal;
+        this.miscValue = 0; // 戦闘中などの動的な値を保持するプロパティ（ランページ等で使用）
     }
 
     getDamage(source, engine) {
         let base = this.baseDamage;
         if (this.damageCalculator) {
-            base = this.damageCalculator(source, engine);
+            base = this.damageCalculator(source, engine, this);
         }
+        base += (this.miscValue || 0);
+
         if (base === 0 && this.type !== 'attack') return 0;
         return source.calculateDamage(base);
     }
@@ -110,8 +114,11 @@ export class Card {
             this.baseDamage,
             this.damageCalculator,
             this.baseBlock,
-            this.blockCalculator
+            this.blockCalculator,
+            this.isEthereal
         );
+        c.miscValue = this.miscValue;
+        return c;
     }
 }
 
@@ -274,6 +281,30 @@ export const CardLibrary = {
             if (e && e.uiUpdateCallback) e.uiUpdateCallback();
         }
     }, null, 15),
+    RAMPAGE: new Card('rampage', 'ランページ', 1, 'attack', 'uncommon', '8ダメージ。使うたびにこのカードのダメージが5増加する。', (s, t, e, c) => {
+        const damage = c.getFinalDamage(s, t, e);
+        t.takeDamage(damage, s);
+        c.miscValue += 5;
+        if (e && e.uiUpdateCallback) e.uiUpdateCallback();
+    }, 'single', false, {
+        description: '8ダメージ。使うたびにこのカード의ダメージが8増加する。',
+        baseDamage: 8,
+        effect: (s, t, e, c) => {
+            const damage = c.getFinalDamage(s, t, e);
+            t.takeDamage(damage, s);
+            c.miscValue += 8;
+            if (e && e.uiUpdateCallback) e.uiUpdateCallback();
+        }
+    }, null, 8),
+    CARNAGE: new Card('carnage', '大虐殺', 2, 'attack', 'uncommon', 'エセリアル。20ダメージを与える。', (s, t) => {
+        t.takeDamage(s.calculateDamage(20), s);
+    }, 'single', false, {
+        description: 'エセリアル。28ダメージを与える。',
+        baseDamage: 28,
+        effect: (s, t) => {
+            t.takeDamage(s.calculateDamage(28), s);
+        }
+    }, null, 20, null, 0, null, true),
     HEADBUTT: new Card('headbutt', 'ヘッドバット', 1, 'attack', 'common', '9ダメージを与える。捨て札からカードを1枚選び、山札の一番上に置く。', (s, t, e) => {
         t.takeDamage(s.calculateDamage(9), s);
         if (e && e.onCardSelectionRequest && e.player.discard.length > 0) {

@@ -15,6 +15,12 @@ export class Entity {
     this.hp = Math.min(this.maxHp, this.hp + amount);
   }
 
+  // 最大HPを増やし、現在HPも同量回復させる（捕食など）
+  increaseMaxHp(amount) {
+    this.maxHp += amount;
+    this.hp += amount;
+  }
+
   // ブロック無視のHP減少（自傷や毒など）
   loseHP(amount) {
     const prevHp = this.hp;

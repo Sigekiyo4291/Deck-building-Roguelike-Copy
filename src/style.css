@@ -350,6 +350,21 @@ body {
   paint-order: stroke fill;
 }
 
+.dynamic-value {
+  font-weight: bold;
+  font-size: 1.1em;
+}
+
+.damage-plus {
+  color: #27ae60 !important;
+  /* Green */
+}
+
+.damage-minus {
+  color: #c0392b !important;
+  /* Red */
+}
+
 /* 戦意（インテント） */
 .intent-icon {
   min-width: 40px;

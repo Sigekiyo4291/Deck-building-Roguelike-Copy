@@ -316,6 +316,18 @@ export const CardLibrary = {
             t.takeDamage(s.calculateDamage(28), s);
         }
     }, null, 20, null, 0, null, true),
+    PUMMEL: new Card('pummel', '猛撃', 1, 'attack', 'uncommon', '2ダメージを4回与える。廃棄。', (s, t) => {
+        for (let i = 0; i < 4; i++) {
+            t.takeDamage(s.calculateDamage(2), s);
+        }
+    }, 'single', false, {
+        description: '2ダメージを5回与える。廃棄。',
+        effect: (s, t) => {
+            for (let i = 0; i < 5; i++) {
+                t.takeDamage(s.calculateDamage(2), s);
+            }
+        }
+    }, null, 2, null, 0, null, false, true),
     WHIRLWIND: new Card('whirlwind', '旋風刃', 'X', 'attack', 'uncommon', 'コストX。敵全体に5ダメージをX回与える。', (s, t, e, c, x) => {
         for (let i = 0; i < x; i++) {
             t.takeDamage(s.calculateDamage(5), s);

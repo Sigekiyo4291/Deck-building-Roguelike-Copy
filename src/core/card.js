@@ -311,6 +311,23 @@ export const CardLibrary = {
             t.addStatus('vulnerable', 2);
         }
     }, null, 13),
+    HEAVY_BLADE: new Card('heavy_blade', 'ヘヴィブレード', 2, 'attack', 'uncommon', '14ダメージ。筋力の効果を3倍受ける。', (s, t) => {
+        const str = s.getStatusValue('strength');
+        t.takeDamage(s.calculateDamage(14 + str * 2), s);
+    }, 'single', false, {
+        description: '14ダメージ。筋力の効果を5倍受ける。',
+        damageCalculator: (s, e) => {
+            const str = s.getStatusValue('strength');
+            return 14 + str * 4;
+        },
+        effect: (s, t) => {
+            const str = s.getStatusValue('strength');
+            t.takeDamage(s.calculateDamage(14 + str * 4), s);
+        }
+    }, null, 14, (s, e) => {
+        const str = s.getStatusValue('strength');
+        return 14 + str * 2;
+    }),
     INFLAME: new Card('inflame', '炎症', 1, 'power', 'uncommon', '筋力を2得る', (s, t) => {
         s.addStatus('strength', 2);
     }, 'self', false, {

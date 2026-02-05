@@ -338,6 +338,23 @@ export const CardLibrary = {
         },
         damageCalculator: (s, e) => s.block
     }, null, 0, (s, e) => s.block),
+    WILD_STRIKE: new Card('wild_strike', 'ワイルドストライク', 1, 'attack', 'common', '12ダメージを与える。山札に「負傷」を1枚混ぜる。', (s, t, e) => {
+        t.takeDamage(s.calculateDamage(12), s);
+        if (e) {
+            e.player.deck.push(CardLibrary.WOUND.clone());
+            e.shuffle(e.player.deck);
+        }
+    }, 'single', false, {
+        description: '17ダメージを与える。山札に「負傷」を1枚混ぜる。',
+        baseDamage: 17,
+        effect: (s, t, e) => {
+            t.takeDamage(s.calculateDamage(17), s);
+            if (e) {
+                e.player.deck.push(CardLibrary.WOUND.clone());
+                e.shuffle(e.player.deck);
+            }
+        }
+    }, null, 12),
     INFLAME: new Card('inflame', '炎症', 1, 'power', 'uncommon', '筋力を2得る', (s, t) => {
         s.addStatus('strength', 2);
     }, 'self', false, {
@@ -386,6 +403,11 @@ export const CardLibrary = {
         baseDamage: 5,
         effect: (s, t) => { t.takeDamage(s.calculateDamage(5), s); }
     }, null, 4),
+
+    // Status (ステータスカード - 戦闘中のみ)
+    WOUND: new Card('wound', '負傷', -1, 'curse', 'common', '使用できないカード。', (s, t) => {
+        // 使用不可
+    }, 'self', false, null),
 
     // Curse (呪いカード)
     INJURY: new Card('injury', '怪我', -1, 'curse', 'curse', '消耗。何もしない。', (s, t) => {

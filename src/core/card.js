@@ -331,13 +331,10 @@ export const CardLibrary = {
         }
     }, null, 18, null, 0, null, false, false, (s) => Math.max(0, 4 - (s.hpLossCount || 0))),
     SEVER_SOUL: new Card('sever_soul', '霊魂切断', 2, 'attack', 'uncommon', '16ダメージ。アタック以外の手札を全廃棄。', (s, t, e) => {
-        // アタック以外のカードを特定
+        // アタック以外のカードを特定して廃棄
         const nonAttacks = s.hand.filter(c => c.type !== 'attack');
-        nonAttacks.forEach(c => {
-            // 廃棄札へ移動
-            s.exhaust.push(c);
-        });
-        // 手札から削除
+        nonAttacks.forEach(c => s.exhaust.push(c));
+        // 手札からアタック以外を削除
         s.hand = s.hand.filter(c => c.type === 'attack');
 
         // ダメージ
@@ -348,9 +345,7 @@ export const CardLibrary = {
         baseDamage: 22,
         effect: (s, t, e) => {
             const nonAttacks = s.hand.filter(c => c.type !== 'attack');
-            nonAttacks.forEach(c => {
-                s.exhaust.push(c);
-            });
+            nonAttacks.forEach(c => s.exhaust.push(c));
             s.hand = s.hand.filter(c => c.type === 'attack');
             if (t) t.takeDamage(s.calculateDamage(22), s);
             if (e && e.uiUpdateCallback) e.uiUpdateCallback();
@@ -407,6 +402,31 @@ export const CardLibrary = {
             }
         }
     }, null, 21),
+    FIEND_FIRE: new Card('fiend_fire', '鬼火', 2, 'attack', 'rare', '手札を全て廃棄し、1枚につき7ダメージを与える。廃棄。', (s, t, e) => {
+        const count = s.hand.length;
+        s.hand.forEach(c => s.exhaust.push(c));
+        s.hand.length = 0; // 手札を空にする
+        if (t) {
+            for (let i = 0; i < count; i++) {
+                t.takeDamage(s.calculateDamage(7), s);
+            }
+        }
+        if (e && e.uiUpdateCallback) e.uiUpdateCallback();
+    }, 'single', false, {
+        description: '手札を全て廃棄し、1枚につき10ダメージを与える。廃棄。',
+        baseDamage: 10,
+        effect: (s, t, e) => {
+            const count = s.hand.length;
+            s.hand.forEach(c => s.exhaust.push(c));
+            s.hand.length = 0; // 手札を空にする
+            if (t) {
+                for (let i = 0; i < count; i++) {
+                    t.takeDamage(s.calculateDamage(10), s);
+                }
+            }
+            if (e && e.uiUpdateCallback) e.uiUpdateCallback();
+        }
+    }, null, 7, null, 0, null, false, true),
     CARNAGE: new Card('carnage', '大虐殺', 2, 'attack', 'uncommon', 'エセリアル。20ダメージを与える。', (s, t) => {
         t.takeDamage(s.calculateDamage(20), s);
     }, 'single', false, {

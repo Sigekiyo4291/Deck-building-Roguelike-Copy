@@ -328,6 +328,16 @@ export const CardLibrary = {
         const str = s.getStatusValue('strength');
         return 14 + str * 2;
     }),
+    BODY_SLAM: new Card('body_slam', 'ボディスラム', 1, 'attack', 'uncommon', '0ダメージを与える。現在のブロック値に等しいダメージを与える。', (s, t) => {
+        t.takeDamage(s.calculateDamage(s.block), s);
+    }, 'single', false, {
+        cost: 0,
+        description: '0ダメージを与える。現在のブロック値に等しいダメージを与える。',
+        effect: (s, t) => {
+            t.takeDamage(s.calculateDamage(s.block), s);
+        },
+        damageCalculator: (s, e) => s.block
+    }, null, 0, (s, e) => s.block),
     INFLAME: new Card('inflame', '炎症', 1, 'power', 'uncommon', '筋力を2得る', (s, t) => {
         s.addStatus('strength', 2);
     }, 'self', false, {

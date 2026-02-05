@@ -16,7 +16,9 @@ export class Entity {
   }
 
   takeDamage(amount, source) {
-    let remainingDamage = amount;
+    // ターゲット側の補正（脆弱など）を適用
+    let totalDamage = this.applyTargetModifiers(amount);
+    let remainingDamage = totalDamage;
 
     // ブロックでダメージを軽減
     if (this.block > 0) {
@@ -27,11 +29,6 @@ export class Entity {
         remainingDamage -= this.block;
         this.block = 0;
       }
-    }
-
-    // 脆弱状態ならダメージ1.5倍
-    if (this.hasStatus('vulnerable')) {
-      remainingDamage = Math.ceil(remainingDamage * 1.5);
     }
 
     this.hp = Math.max(0, this.hp - remainingDamage);
@@ -79,6 +76,15 @@ export class Entity {
     }
 
     return Math.max(0, damage);
+  }
+
+  // ターゲット側の補正（脆弱など）を適用
+  applyTargetModifiers(damage) {
+    let finalDamage = damage;
+    if (this.hasStatus('vulnerable')) {
+      finalDamage = Math.floor(finalDamage * 1.5);
+    }
+    return finalDamage;
   }
 
   // 特定のステータスの種類を削除（例：デバフ解除）

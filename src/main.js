@@ -923,10 +923,29 @@ class Game {
     const cardEl = document.createElement('div');
     cardEl.className = `card ${card.rarity}`;
 
+    let description = card.description;
+    if (this.battleEngine && card.type === 'attack') {
+      const target = this.battleEngine.enemies[this.selectedEnemyIndex];
+      const finalDamage = card.getFinalDamage(this.player, target, this.battleEngine);
+
+      // 基準値（筋力などのバフなし状態での値）と比較して色分け
+      let colorClass = '';
+      // パーフェクトストライク等の計算機がある場合はその基礎値を、ない場合はbaseDamageを使用
+      const baseVal = (card.isUpgraded && card.upgradeData && card.upgradeData.baseDamage !== undefined)
+        ? card.upgradeData.baseDamage
+        : card.baseDamage;
+
+      if (finalDamage > baseVal) colorClass = 'damage-plus';
+      else if (finalDamage < baseVal) colorClass = 'damage-minus';
+
+      // 最初の数字を算出したダメージに置換
+      description = description.replace(/\d+/, `<span class="dynamic-value ${colorClass}">${finalDamage}</span>`);
+    }
+
     cardEl.innerHTML = `
               <div class="card-cost">${card.cost}</div>
               <div class="card-title">${card.name}</div>
-              <div class="card-desc">${card.description}</div>
+              <div class="card-desc">${description}</div>
               <div class="card-type">${card.type}</div>
       `;
 

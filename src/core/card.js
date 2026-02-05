@@ -1,5 +1,5 @@
 export class Card {
-    constructor(id, name, cost, type, rarity, description, effect, targetType, isUpgraded = false, upgradeData = null, canPlayCheck = null, baseDamage = 0, damageCalculator = null) {
+    constructor(id, name, cost, type, rarity, description, effect, targetType, isUpgraded = false, upgradeData = null, canPlayCheck = null, baseDamage = 0, damageCalculator = null, baseBlock = 0, blockCalculator = null) {
         this.id = id;
         this.baseName = name;
         this.name = name + (isUpgraded ? '+' : '');
@@ -20,6 +20,8 @@ export class Card {
         this.canPlayCheck = canPlayCheck;
         this.baseDamage = baseDamage;
         this.damageCalculator = damageCalculator;
+        this.baseBlock = baseBlock;
+        this.blockCalculator = blockCalculator;
     }
 
     getDamage(source, engine) {
@@ -37,6 +39,15 @@ export class Card {
             return target.applyTargetModifiers(damage);
         }
         return damage;
+    }
+
+    getBlock(source, engine) {
+        let base = this.baseBlock;
+        if (this.blockCalculator) {
+            base = this.blockCalculator(source, engine);
+        }
+        if (base === 0) return 0;
+        return source.calculateBlock(base);
     }
 
     canPlay(source, engine) {
@@ -58,6 +69,8 @@ export class Card {
         if (this.upgradeData.name) this.name = this.upgradeData.name;
         if (this.upgradeData.baseDamage !== undefined) this.baseDamage = this.upgradeData.baseDamage;
         if (this.upgradeData.damageCalculator) this.damageCalculator = this.upgradeData.damageCalculator;
+        if (this.upgradeData.baseBlock !== undefined) this.baseBlock = this.upgradeData.baseBlock;
+        if (this.upgradeData.blockCalculator) this.blockCalculator = this.upgradeData.blockCalculator;
     }
 
     play(source, target, engine) {
@@ -95,7 +108,9 @@ export class Card {
             this.upgradeData,
             this.canPlayCheck,
             this.baseDamage,
-            this.damageCalculator
+            this.damageCalculator,
+            this.baseBlock,
+            this.blockCalculator
         );
     }
 }
@@ -114,8 +129,9 @@ export const CardLibrary = {
         s.addBlock(5);
     }, 'self', false, {
         description: '8ブロックを得る',
+        baseBlock: 8,
         effect: (s, t) => { s.addBlock(8); }
-    }, null, 0),
+    }, null, 0, null, 5),
     BASH: new Card('bash', '強打', 2, 'attack', 'basic', '8ダメージを与え、脆弱(2)を付与', (s, t) => {
         t.takeDamage(s.calculateDamage(8), s);
         t.addStatus('vulnerable', 2);
@@ -135,11 +151,12 @@ export const CardLibrary = {
     }, 'single', false, {
         description: '7ダメージを与え、7ブロックを得る',
         baseDamage: 7,
+        baseBlock: 7,
         effect: (s, t) => {
             t.takeDamage(s.calculateDamage(7), s);
             s.addBlock(7);
         }
-    }, null, 5),
+    }, null, 5, null, 5),
     CLEAVE: new Card('cleave', 'なぎ払い', 1, 'attack', 'common', '全体に8ダメージを与える', (s, t) => {
         t.takeDamage(s.calculateDamage(8), s);
     }, 'all', false, {
@@ -235,11 +252,12 @@ export const CardLibrary = {
         if (e) e.drawCards(1);
     }, 'self', false, {
         description: '11ブロックを得て、カードを1枚引く',
+        baseBlock: 11,
         effect: (s, t, e) => {
             s.addBlock(11);
             if (e) e.drawCards(1);
         }
-    }),
+    }, null, 0, null, 8),
     CLOTHESLINE: new Card('clothesline', 'ラリアット', 2, 'attack', 'common', '12ダメージを与え、脱力(2)を付与', (s, t) => {
         t.takeDamage(s.calculateDamage(12), s);
         t.addStatus('weak', 2);
@@ -298,8 +316,9 @@ export const CardLibrary = {
         s.addBlock(30);
     }, 'self', false, {
         description: '40ブロックを得る',
+        baseBlock: 40,
         effect: (s, t) => { s.addBlock(40); }
-    }),
+    }, null, 0, null, 30),
     DEMON_FORM: new Card('demon_form', '悪魔化', 3, 'power', 'rare', 'ターン開始時に筋力を2得る', (s, t) => {
         s.addStatus('demon_form', 1); // 1スタック = 2筋力/ターンとする既存ロジック用
     }, 'self', false, {

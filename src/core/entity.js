@@ -48,7 +48,7 @@ export class Entity {
     return remainingDamage;
   }
 
-  addBlock(amount) {
+  calculateBlock(amount) {
     const dexterity = this.getStatusValue('dexterity');
     let totalBlock = Math.max(0, amount + dexterity);
 
@@ -56,8 +56,11 @@ export class Entity {
     if (this.hasStatus('frail')) {
       totalBlock = Math.floor(totalBlock * 0.75);
     }
+    return totalBlock;
+  }
 
-    this.block += totalBlock;
+  addBlock(amount) {
+    this.block += this.calculateBlock(amount);
   }
 
   resetBlock() {

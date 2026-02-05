@@ -1,11 +1,12 @@
 import { CardLibrary } from './card.js';
 
 export class BattleEngine {
-    constructor(player, enemies, uiUpdateCallback, onBattleEnd) {
+    constructor(player, enemies, uiUpdateCallback, onBattleEnd, onCardSelectionRequest) {
         this.player = player;
         this.enemies = enemies; // 配列で保持
         this.uiUpdateCallback = uiUpdateCallback;
         this.onBattleEnd = onBattleEnd;
+        this.onCardSelectionRequest = onCardSelectionRequest;
         this.turn = 1;
         this.phase = 'player'; // 'player' or 'enemy'
     }

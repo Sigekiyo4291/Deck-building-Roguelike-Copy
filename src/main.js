@@ -479,7 +479,8 @@ class Game {
           alert('Game Over...');
           location.reload();
         }
-      }
+      },
+      (title, pile, callback) => this.showCardSelectionFromPile(title, pile, callback)
     );
     this.sceneManager.showBattle();
     this.battleEngine.start();
@@ -567,7 +568,8 @@ class Game {
           alert('Game Over...');
           location.reload();
         }
-      }
+      },
+      (title, pile, callback) => this.showCardSelectionFromPile(title, pile, callback)
     );
 
     // シーン切り替え
@@ -692,6 +694,38 @@ class Game {
       icon.textContent = relic.name.charAt(0);
       icon.setAttribute('data-tooltip', `${relic.name}\n${relic.rarity}\n\n${relic.description}`);
       container.appendChild(icon);
+    });
+  }
+
+  showCardSelectionFromPile(title, pile, callback) {
+    const overlay = document.getElementById('deck-selection-overlay');
+    const container = document.getElementById('deck-selection-list');
+    const titleEl = document.getElementById('deck-selection-title');
+    const closeBtn = document.getElementById('close-deck-selection-btn');
+
+    if (!overlay || !container) return;
+
+    titleEl.textContent = title;
+    container.innerHTML = '';
+    overlay.style.display = 'flex';
+    closeBtn.style.display = 'none'; // 効果中は閉じられないようにする
+
+    if (pile.length === 0) {
+      setTimeout(() => {
+        overlay.style.display = 'none';
+        if (callback) callback(null);
+      }, 1000);
+      container.innerHTML = '<div style="color: white; font-size: 1.5em; text-align: center; width: 100%;">対象となるカードがありません</div>';
+      return;
+    }
+
+    pile.forEach((card, index) => {
+      const cardEl = this.createRewardCardElement(card);
+      cardEl.onclick = () => {
+        overlay.style.display = 'none';
+        if (callback) callback(card, index);
+      };
+      container.appendChild(cardEl);
     });
   }
 

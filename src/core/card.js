@@ -225,6 +225,33 @@ export const CardLibrary = {
         const count = allCards.filter(c => c.name.includes('ストライク') || c.baseName.includes('ストライク')).length;
         return 6 + count * 2;
     }),
+    HEADBUTT: new Card('headbutt', 'ヘッドバット', 1, 'attack', 'common', '9ダメージを与える。捨て札からカードを1枚選び、山札の一番上に置く。', (s, t, e) => {
+        t.takeDamage(s.calculateDamage(9), s);
+        if (e && e.onCardSelectionRequest && e.player.discard.length > 0) {
+            e.onCardSelectionRequest('捨て札からカードを選択 (山札の一番上に置く)', e.player.discard, (card, index) => {
+                if (card) {
+                    e.player.discard.splice(index, 1);
+                    e.player.deck.push(card);
+                    if (e.uiUpdateCallback) e.uiUpdateCallback();
+                }
+            });
+        }
+    }, 'single', false, {
+        description: '12ダメージを与える。捨て札からカードを1枚選び、山札の一番上に置く。',
+        baseDamage: 12,
+        effect: (s, t, e) => {
+            t.takeDamage(s.calculateDamage(12), s);
+            if (e && e.onCardSelectionRequest && e.player.discard.length > 0) {
+                e.onCardSelectionRequest('捨て札からカードを選択 (山札の一番上に置く)', e.player.discard, (card, index) => {
+                    if (card) {
+                        e.player.discard.splice(index, 1);
+                        e.player.deck.push(card);
+                        if (e.uiUpdateCallback) e.uiUpdateCallback();
+                    }
+                });
+            }
+        }
+    }, null, 9),
     TWIN_STRIKE: new Card('twin_strike', 'ツインストライク', 1, 'attack', 'common', '5ダメージを2回与える', (s, t) => {
         t.takeDamage(s.calculateDamage(5), s);
         t.takeDamage(s.calculateDamage(5), s);

@@ -377,6 +377,19 @@ export const CardLibrary = {
             }
         }
     }, null, 10, null, 0, null, false, true),
+    REAPER: new Card('reaper', '死神', 2, 'attack', 'rare', '全体に4ダメージ。与えたダメージの合計分回復する。廃棄。', (s, t, e) => {
+        const actualDamage = t.takeDamage(s.calculateDamage(4), s);
+        s.heal(actualDamage);
+        if (e && e.uiUpdateCallback) e.uiUpdateCallback();
+    }, 'all', false, {
+        description: '全体に5ダメージ。与えたダメージの合計分回復する。廃棄。',
+        baseDamage: 5,
+        effect: (s, t, e) => {
+            const actualDamage = t.takeDamage(s.calculateDamage(5), s);
+            s.heal(actualDamage);
+            if (e && e.uiUpdateCallback) e.uiUpdateCallback();
+        }
+    }, null, 4, null, 0, null, false, true),
     CARNAGE: new Card('carnage', '大虐殺', 2, 'attack', 'uncommon', 'エセリアル。20ダメージを与える。', (s, t) => {
         t.takeDamage(s.calculateDamage(20), s);
     }, 'single', false, {
@@ -593,13 +606,7 @@ export const CardLibrary = {
         description: 'ターン開始時に筋力を3得る',
         effect: (s, t) => { s.addStatus('demon_form_plus', 1); } // 強化版用フラグ
     }),
-    REAPER: new Card('reaper', '死神', 2, 'attack', 'rare', '全体に4ダメージを与え、HP回復(仮)', (s, t) => {
-        t.takeDamage(s.calculateDamage(4), s);
-    }, 'all', false, {
-        description: '全体に5ダメージを与え、HP回復(仮)',
-        baseDamage: 5,
-        effect: (s, t) => { t.takeDamage(s.calculateDamage(5), s); }
-    }, null, 4),
+
 
     // Status (ステータスカード - 戦闘中のみ)
     WOUND: new Card('wound', '負傷', -1, 'curse', 'common', '使用できないカード。', (s, t) => {

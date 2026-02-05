@@ -98,7 +98,7 @@ export class BattleEngine {
             return;
         }
 
-        if (this.player.energy >= card.cost) {
+        if (card.cost === 'X' || (typeof card.cost === 'number' && card.cost >= 0 && this.player.energy >= card.cost)) {
             // 使用条件チェック (クラッシュの手札制限など)
             if (!card.canPlay(this.player, this)) {
                 console.log("使用条件を満たしていません！");
@@ -108,7 +108,13 @@ export class BattleEngine {
             // カード効果発動
             card.play(this.player, target, this);
             this.player.hand.splice(cardIndex, 1);
-            this.player.discard.push(card); // 捨て札に追加
+
+            if (card.isExhaust) {
+                this.player.exhaust.push(card);
+                console.log(`${card.name} は廃棄されました。`);
+            } else {
+                this.player.discard.push(card); // 捨て札に追加
+            }
 
             this.checkBattleEnd();
             this.uiUpdateCallback();

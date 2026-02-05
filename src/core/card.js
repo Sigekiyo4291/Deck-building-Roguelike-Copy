@@ -1,5 +1,5 @@
 export class Card {
-    constructor(id, name, cost, type, rarity, description, effect, targetType, isUpgraded = false, upgradeData = null, canPlayCheck = null, baseDamage = 0, damageCalculator = null, baseBlock = 0, blockCalculator = null, isEthereal = false) {
+    constructor(id, name, cost, type, rarity, description, effect, targetType, isUpgraded = false, upgradeData = null, canPlayCheck = null, baseDamage = 0, damageCalculator = null, baseBlock = 0, blockCalculator = null, isEthereal = false, isExhaust = false) {
         this.id = id;
         this.baseName = name;
         this.name = name + (isUpgraded ? '+' : '');
@@ -23,6 +23,7 @@ export class Card {
         this.baseBlock = baseBlock;
         this.blockCalculator = blockCalculator;
         this.isEthereal = isEthereal;
+        this.isExhaust = isExhaust;
         this.miscValue = 0; // 戦闘中などの動的な値を保持するプロパティ（ランページ等で使用）
     }
 
@@ -80,26 +81,35 @@ export class Card {
     play(source, target, engine) {
         if (this.type === 'curse') return false;
 
-        if (source.energy >= this.cost) {
+        let xValue = 0;
+        if (this.cost === 'X') {
+            xValue = source.energy;
+            source.energy = 0;
+        } else if (typeof this.cost === 'number' && this.cost >= 0 && source.energy >= this.cost) {
             source.energy -= this.cost;
-
-            if (this.targetType === 'all' && engine) {
-                // 生存している全ての敵に効果を適用
-                engine.enemies.forEach(enemy => {
-                    if (!enemy.isDead()) {
-                        this.effect(source, enemy, engine, this);
-                    }
-                });
-            } else {
-                this.effect(source, target, engine, this);
-            }
-            return true;
+            xValue = this.cost;
+        } else if (typeof this.cost === 'number' && this.cost < 0) {
+            // 呪いなど使用不可
+            return false;
+        } else {
+            return false;
         }
-        return false;
+
+        if (this.targetType === 'all' && engine) {
+            // 生存している全ての敵に効果を適用
+            engine.enemies.forEach(enemy => {
+                if (!enemy.isDead()) {
+                    this.effect(source, enemy, engine, this, xValue);
+                }
+            });
+        } else {
+            this.effect(source, target, engine, this, xValue);
+        }
+        return true;
     }
 
     clone() {
-        return new Card(
+        const c = new Card(
             this.id,
             this.baseName,
             this.cost,
@@ -115,7 +125,8 @@ export class Card {
             this.damageCalculator,
             this.baseBlock,
             this.blockCalculator,
-            this.isEthereal
+            this.isEthereal,
+            this.isExhaust
         );
         c.miscValue = this.miscValue;
         return c;
@@ -305,6 +316,19 @@ export const CardLibrary = {
             t.takeDamage(s.calculateDamage(28), s);
         }
     }, null, 20, null, 0, null, true),
+    WHIRLWIND: new Card('whirlwind', '旋風刃', 'X', 'attack', 'uncommon', 'コストX。敵全体に5ダメージをX回与える。', (s, t, e, c, x) => {
+        for (let i = 0; i < x; i++) {
+            t.takeDamage(s.calculateDamage(5), s);
+        }
+    }, 'all', false, {
+        description: 'コストX。敵全体に8ダメージをX回与える。',
+        baseDamage: 8,
+        effect: (s, t, e, c, x) => {
+            for (let i = 0; i < x; i++) {
+                t.takeDamage(s.calculateDamage(8), s);
+            }
+        }
+    }, null, 5),
     HEADBUTT: new Card('headbutt', 'ヘッドバット', 1, 'attack', 'common', '9ダメージを与える。捨て札からカードを1枚選び、山札の一番上に置く。', (s, t, e) => {
         t.takeDamage(s.calculateDamage(9), s);
         if (e && e.onCardSelectionRequest && e.player.discard.length > 0) {
@@ -441,13 +465,6 @@ export const CardLibrary = {
         description: '筋力を3得る',
         effect: (s, t) => { s.addStatus('strength', 3); }
     }),
-    WHIRLWIND: new Card('whirlwind', '旋風刃', 2, 'attack', 'uncommon', '全ての敵に8ダメージ', (s, t) => {
-        t.takeDamage(s.calculateDamage(8), s);
-    }, 'all', false, {
-        description: '全ての敵に14ダメージ',
-        baseDamage: 14,
-        effect: (s, t) => { t.takeDamage(s.calculateDamage(14), s); }
-    }, null, 8),
     METALLICIZE: new Card('metallicize', '金属音', 1, 'power', 'uncommon', 'ターン終了時に3ブロックを得る', (s, t) => {
         s.addStatus('metallicize', 3);
     }, 'self', false, {

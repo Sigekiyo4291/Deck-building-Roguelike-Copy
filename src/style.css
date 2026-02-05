@@ -551,6 +551,8 @@ body {
   flex-direction: column;
   align-items: center;
   width: 100%;
+  max-height: 95vh;
+  box-sizing: border-box;
 }
 
 .card-choices {
@@ -929,11 +931,17 @@ body {
 }
 
 .card-choices.scrollable {
-  max-height: 500px;
+  flex: 1;
   overflow-y: auto;
+  width: 100%;
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
+  gap: 20px;
+  padding: 20px;
+  box-sizing: border-box;
+  max-height: 80vh;
+  /* 旧環境互換 */
 }
 
 /* イベントシーン */
@@ -1048,12 +1056,16 @@ body {
 
 
 .card-choices.scrollable {
+  flex: 1;
+  overflow-y: auto;
+  width: 100%;
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  overflow-y: auto;
-  max-height: 80vh;
-  padding: 20px;
+  gap: 20px;
+  padding: 40px 20px;
+  /* カードが拡大されるため上下に広めの余白 */
+  box-sizing: border-box;
 }
 
 /* ステータスアイコンのツールチップ */

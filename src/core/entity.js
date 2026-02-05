@@ -166,6 +166,7 @@ export class Player extends Entity {
     this.deck = [];
     this.hand = [];
     this.discard = [];
+    this.exhaust = [];
     this.gold = 100;
     this.potions = [];
     this.relics = []; // レリック所持リスト

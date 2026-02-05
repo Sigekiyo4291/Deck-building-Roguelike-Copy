@@ -15,6 +15,7 @@ export class BattleEngine {
         // 状態のリセット
         this.player.hand = [];
         this.player.discard = [];
+        this.player.exhaust = []; // 廃棄札もリセット
         this.player.resetBlock(); // ブロックもリセット
         this.player.resetStatus(); // ステータスもリセット
 
@@ -117,8 +118,20 @@ export class BattleEngine {
     endTurn() {
         if (this.phase !== 'player') return;
 
-        // 手札を全て捨てる
-        this.player.discard.push(...this.player.hand);
+        // 手札を全て捨てる（エセリアルは廃棄）
+        const etherealCards = this.player.hand.filter(c => c.isEthereal);
+        const nonEtherealCards = this.player.hand.filter(c => !c.isEthereal);
+
+        if (nonEtherealCards.length > 0) {
+            this.player.discard.push(...nonEtherealCards);
+        }
+
+        if (etherealCards.length > 0) {
+            etherealCards.forEach(c => {
+                this.player.exhaust.push(c);
+                console.log(`${c.name} (エセリアル) が廃棄されました。`);
+            });
+        }
 
         // レリック: onTurnEnd
         this.player.relics.forEach(relic => {

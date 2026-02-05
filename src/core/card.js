@@ -330,6 +330,32 @@ export const CardLibrary = {
             t.takeDamage(s.calculateDamage(22), s);
         }
     }, null, 18, null, 0, null, false, false, (s) => Math.max(0, 4 - (s.hpLossCount || 0))),
+    SEVER_SOUL: new Card('sever_soul', '霊魂切断', 2, 'attack', 'uncommon', '16ダメージ。アタック以外の手札を全廃棄。', (s, t, e) => {
+        // アタック以外のカードを特定
+        const nonAttacks = s.hand.filter(c => c.type !== 'attack');
+        nonAttacks.forEach(c => {
+            // 廃棄札へ移動
+            s.exhaust.push(c);
+        });
+        // 手札から削除
+        s.hand = s.hand.filter(c => c.type === 'attack');
+
+        // ダメージ
+        if (t) t.takeDamage(s.calculateDamage(16), s);
+        if (e && e.uiUpdateCallback) e.uiUpdateCallback();
+    }, 'single', false, {
+        description: '22ダメージ。アタック以外の手札を全廃棄。',
+        baseDamage: 22,
+        effect: (s, t, e) => {
+            const nonAttacks = s.hand.filter(c => c.type !== 'attack');
+            nonAttacks.forEach(c => {
+                s.exhaust.push(c);
+            });
+            s.hand = s.hand.filter(c => c.type === 'attack');
+            if (t) t.takeDamage(s.calculateDamage(22), s);
+            if (e && e.uiUpdateCallback) e.uiUpdateCallback();
+        }
+    }, null, 16),
     CARNAGE: new Card('carnage', '大虐殺', 2, 'attack', 'uncommon', 'エセリアル。20ダメージを与える。', (s, t) => {
         t.takeDamage(s.calculateDamage(20), s);
     }, 'single', false, {

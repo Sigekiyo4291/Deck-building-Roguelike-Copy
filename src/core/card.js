@@ -83,11 +83,11 @@ export class Card {
                 // 生存している全ての敵に効果を適用
                 engine.enemies.forEach(enemy => {
                     if (!enemy.isDead()) {
-                        this.effect(source, enemy, engine);
+                        this.effect(source, enemy, engine, this);
                     }
                 });
             } else {
-                this.effect(source, target, engine);
+                this.effect(source, target, engine, this);
             }
             return true;
         }
@@ -200,6 +200,23 @@ export const CardLibrary = {
             for (let i = 0; i < 4; i++) t.takeDamage(s.calculateDamage(3), s);
         }
     }, null, 3),
+    ANGER: new Card('anger', '怒り', 0, 'attack', 'common', '6ダメージ。自身の正確な複製を捨て札に1枚加える。', (s, t, e, c) => {
+        t.takeDamage(s.calculateDamage(6), s);
+        if (e) {
+            e.player.discard.push(c.clone());
+            if (e.uiUpdateCallback) e.uiUpdateCallback();
+        }
+    }, 'single', false, {
+        description: '8ダメージ。自身の正確な複製を捨て札に1枚加える。',
+        baseDamage: 8,
+        effect: (s, t, e, c) => {
+            t.takeDamage(s.calculateDamage(8), s);
+            if (e) {
+                e.player.discard.push(c.clone());
+                if (e.uiUpdateCallback) e.uiUpdateCallback();
+            }
+        }
+    }, null, 6),
     PERFECT_STRIKE: new Card('perfect_strike', 'パーフェクトストライク', 2, 'attack', 'common', '6ダメージ。デッキ内の「ストライク」1枚につき+2ダメージ。', (s, t, e) => {
         if (!e) return;
         const allCards = [...e.player.deck, ...e.player.hand, ...e.player.discard];

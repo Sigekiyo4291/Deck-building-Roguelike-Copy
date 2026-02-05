@@ -998,6 +998,13 @@ class Game {
       return;
     }
 
+    // 使用条件チェック (クラッシュなど)
+    if (!card.canPlay(this.player, this.battleEngine)) {
+      alert('このカードの使用条件を満たしていません！');
+      this.updateBattleUI();
+      return;
+    }
+
     if (card.targetType === 'single') {
       // 選択中のターゲットを使用
       let targetIdx = this.selectedEnemyIndex;

@@ -1,5 +1,5 @@
 export class Card {
-    constructor(id, name, cost, type, rarity, description, effect, targetType, isUpgraded = false, upgradeData = null) {
+    constructor(id, name, cost, type, rarity, description, effect, targetType, isUpgraded = false, upgradeData = null, canPlayCheck = null) {
         this.id = id;
         this.baseName = name;
         this.name = name + (isUpgraded ? '+' : '');
@@ -17,6 +17,14 @@ export class Card {
             // デフォルト: アタックは単体、その他は自分（または対象指定なし）
             this.targetType = (type === 'attack') ? 'single' : 'self';
         }
+        this.canPlayCheck = canPlayCheck;
+    }
+
+    canPlay(source, engine) {
+        if (this.canPlayCheck) {
+            return this.canPlayCheck(source, engine);
+        }
+        return true;
     }
 
     upgrade() {
@@ -63,7 +71,8 @@ export class Card {
             this.effect,
             this.targetType,
             this.isUpgraded,
-            this.upgradeData
+            this.upgradeData,
+            this.canPlayCheck
         );
     }
 }
@@ -112,6 +121,17 @@ export const CardLibrary = {
         effect: (s, t) => {
             t.takeDamage(s.calculateDamage(11), s);
         }
+    }),
+    CLASH: new Card('clash', 'クラッシュ', 0, 'attack', 'common', '14ダメージを与える。手札が全てアタック時のみ使用可能。', (s, t) => {
+        t.takeDamage(s.calculateDamage(14), s);
+    }, 'single', false, {
+        description: '18ダメージを与える。',
+        effect: (s, t) => {
+            t.takeDamage(s.calculateDamage(18), s);
+        }
+    }, (s, e) => {
+        if (!e) return true;
+        return e.player.hand.every(c => c.type === 'attack');
     }),
     SWORD_BOOMERANG: new Card('sword_boomerang', 'ソードブーメラン', 1, 'attack', 'common', '3ダメージを3回与える(対象ランダム)', (s, t) => {
         t.takeDamage(s.calculateDamage(3), s);

@@ -97,6 +97,12 @@ export class BattleEngine {
         }
 
         if (this.player.energy >= card.cost) {
+            // 使用条件チェック (クラッシュの手札制限など)
+            if (!card.canPlay(this.player, this)) {
+                console.log("使用条件を満たしていません！");
+                return;
+            }
+
             // カード効果発動
             card.play(this.player, target, this);
             this.player.hand.splice(cardIndex, 1);

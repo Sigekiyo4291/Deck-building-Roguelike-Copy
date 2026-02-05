@@ -242,6 +242,25 @@ export const CardLibrary = {
         const count = allCards.filter(c => c.name.includes('ストライク') || c.baseName.includes('ストライク')).length;
         return 6 + count * 2;
     }),
+    DROPKICK: new Card('dropkick', 'ドロップキック', 1, 'attack', 'uncommon', '5ダメージ。敵が脆弱なら1エナジー+1ドロー。', (s, t, e) => {
+        t.takeDamage(s.calculateDamage(5), s);
+        if (t.hasStatus('vulnerable') && e) {
+            e.player.energy = Math.min(e.player.maxEnergy, e.player.energy + 1);
+            e.drawCards(1);
+            if (e.uiUpdateCallback) e.uiUpdateCallback();
+        }
+    }, 'single', false, {
+        description: '8ダメージ。敵が脆弱なら1エナジー+1ドロー。',
+        baseDamage: 8,
+        effect: (s, t, e) => {
+            t.takeDamage(s.calculateDamage(8), s);
+            if (t.hasStatus('vulnerable') && e) {
+                e.player.energy = Math.min(e.player.maxEnergy, e.player.energy + 1);
+                e.drawCards(1);
+                if (e.uiUpdateCallback) e.uiUpdateCallback();
+            }
+        }
+    }, null, 5),
     HEADBUTT: new Card('headbutt', 'ヘッドバット', 1, 'attack', 'common', '9ダメージを与える。捨て札からカードを1枚選び、山札の一番上に置く。', (s, t, e) => {
         t.takeDamage(s.calculateDamage(9), s);
         if (e && e.onCardSelectionRequest && e.player.discard.length > 0) {

@@ -924,22 +924,43 @@ class Game {
     cardEl.className = `card ${card.rarity}`;
 
     let description = card.description;
-    if (this.battleEngine && card.type === 'attack') {
-      const target = this.battleEngine.enemies[this.selectedEnemyIndex];
-      const finalDamage = card.getFinalDamage(this.player, target, this.battleEngine);
+    if (this.battleEngine) {
+      // ダメージ表示の更新
+      if (card.type === 'attack' || card.baseDamage > 0) {
+        const target = this.battleEngine.enemies[this.selectedEnemyIndex];
+        const finalDamage = card.getFinalDamage(this.player, target, this.battleEngine);
 
-      // 基準値（筋力などのバフなし状態での値）と比較して色分け
-      let colorClass = '';
-      // パーフェクトストライク等の計算機がある場合はその基礎値を、ない場合はbaseDamageを使用
-      const baseVal = (card.isUpgraded && card.upgradeData && card.upgradeData.baseDamage !== undefined)
-        ? card.upgradeData.baseDamage
-        : card.baseDamage;
+        let colorClass = '';
+        const baseVal = (card.isUpgraded && card.upgradeData && card.upgradeData.baseDamage !== undefined)
+          ? card.upgradeData.baseDamage
+          : card.baseDamage;
 
-      if (finalDamage > baseVal) colorClass = 'damage-plus';
-      else if (finalDamage < baseVal) colorClass = 'damage-minus';
+        if (finalDamage > baseVal) colorClass = 'damage-plus';
+        else if (finalDamage < baseVal) colorClass = 'damage-minus';
 
-      // 最初の数字を算出したダメージに置換
-      description = description.replace(/\d+/, `<span class="dynamic-value ${colorClass}">${finalDamage}</span>`);
+        // descriptionの中の「数字 + ダメージ」のパターンを置換
+        description = description.replace(/(\d+)(ダメージ)/, `<span class="dynamic-value ${colorClass}">$1</span>$2`);
+        // 数値部分のみを最終ダメージに置換
+        description = description.replace(card.baseDamage.toString(), finalDamage.toString());
+        // 置換後の数値にクラス適用
+        description = description.replace(finalDamage.toString(), `<span class="dynamic-value ${colorClass}">${finalDamage}</span>`);
+      }
+
+      // ブブロック表示の更新
+      if (card.type === 'skill' || card.baseBlock > 0) {
+        const finalBlock = card.getBlock(this.player, this.battleEngine);
+
+        let colorClass = '';
+        const baseVal = (card.isUpgraded && card.upgradeData && card.upgradeData.baseBlock !== undefined)
+          ? card.upgradeData.baseBlock
+          : card.baseBlock;
+
+        if (finalBlock > baseVal) colorClass = 'damage-plus'; // 緑 (汎用利用)
+        else if (finalBlock < baseVal) colorClass = 'damage-minus'; // 赤 (汎用利用)
+
+        // descriptionの中の「数字 + ブロック」のパターンを置換
+        description = description.replace(/(\d+)(ブロック)/, `<span class="dynamic-value ${colorClass}">${finalBlock}</span>$2`);
+      }
     }
 
     cardEl.innerHTML = `

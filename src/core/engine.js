@@ -107,9 +107,11 @@ export class BattleEngine {
                 return;
             }
 
+            // カードを手札から取り出す（プレイ開始）
+            this.player.hand.splice(cardIndex, 1);
+
             // カード効果発動
             card.play(this.player, target, this);
-            this.player.hand.splice(cardIndex, 1);
 
             if (card.isExhaust) {
                 this.player.exhaust.push(card);

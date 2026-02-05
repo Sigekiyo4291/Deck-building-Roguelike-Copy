@@ -261,6 +261,19 @@ export const CardLibrary = {
             }
         }
     }, null, 5),
+    HEMOKINESIS: new Card('hemokinesis', 'ヘモキネシス', 1, 'attack', 'uncommon', '15ダメージ。HPを2失う。', (s, t, e) => {
+        s.hp = Math.max(0, s.hp - 2);
+        t.takeDamage(s.calculateDamage(15), s);
+        if (e && e.uiUpdateCallback) e.uiUpdateCallback();
+    }, 'single', false, {
+        description: '20ダメージ。HPを2失う。',
+        baseDamage: 20,
+        effect: (s, t, e) => {
+            s.hp = Math.max(0, s.hp - 2);
+            t.takeDamage(s.calculateDamage(20), s);
+            if (e && e.uiUpdateCallback) e.uiUpdateCallback();
+        }
+    }, null, 15),
     HEADBUTT: new Card('headbutt', 'ヘッドバット', 1, 'attack', 'common', '9ダメージを与える。捨て札からカードを1枚選び、山札の一番上に置く。', (s, t, e) => {
         t.takeDamage(s.calculateDamage(9), s);
         if (e && e.onCardSelectionRequest && e.player.discard.length > 0) {

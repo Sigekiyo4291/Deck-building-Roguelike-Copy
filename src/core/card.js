@@ -390,6 +390,23 @@ export const CardLibrary = {
             if (e && e.uiUpdateCallback) e.uiUpdateCallback();
         }
     }, null, 4, null, 0, null, false, true),
+    IMMOLATE: new Card('immolate', '焼身', 2, 'attack', 'rare', '全体に21ダメージ。捨て札に火傷を1枚加える。', (s, t, e) => {
+        if (t) t.takeDamage(s.calculateDamage(21), s);
+        if (e) {
+            e.player.discard.push(CardLibrary.BURN.clone());
+            if (e.uiUpdateCallback) e.uiUpdateCallback();
+        }
+    }, 'all', false, {
+        description: '全体に28ダメージ。捨て札に火傷を1枚加える。',
+        baseDamage: 28,
+        effect: (s, t, e) => {
+            if (t) t.takeDamage(s.calculateDamage(28), s);
+            if (e) {
+                e.player.discard.push(CardLibrary.BURN.clone());
+                if (e.uiUpdateCallback) e.uiUpdateCallback();
+            }
+        }
+    }, null, 21),
     CARNAGE: new Card('carnage', '大虐殺', 2, 'attack', 'uncommon', 'エセリアル。20ダメージを与える。', (s, t) => {
         t.takeDamage(s.calculateDamage(20), s);
     }, 'single', false, {
@@ -615,6 +632,9 @@ export const CardLibrary = {
     DAZED: new Card('dazed', 'めまい', -1, 'curse', 'common', '使用できない。エセリアル。', (s, t) => {
         // 使用不可
     }, 'self', false, null, null, 0, null, 0, null, true),
+    BURN: new Card('burn', '火傷', -1, 'curse', 'common', '使用できない。ターン終了時に手札にあると2ダメージ。', (s, t) => {
+        // 使用不可
+    }, 'self', false, null),
 
     // Curse (呪いカード)
     INJURY: new Card('injury', '怪我', -1, 'curse', 'curse', '消耗。何もしない。', (s, t) => {

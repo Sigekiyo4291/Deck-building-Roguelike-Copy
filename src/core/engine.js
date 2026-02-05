@@ -126,6 +126,15 @@ export class BattleEngine {
     endTurn() {
         if (this.phase !== 'player') return;
 
+        // 手札にある火傷 (BURN) カードの枚数を確認
+        const burnCount = this.player.hand.filter(c => c.id === 'burn').length;
+        if (burnCount > 0) {
+            console.log(`手札に火傷が ${burnCount} 枚あります。2x${burnCount} ダメージを受けます。`);
+            for (let i = 0; i < burnCount; i++) {
+                this.player.takeDamage(2, null); // 敵ではなくカードからのダメージ
+            }
+        }
+
         // 手札を全て捨てる（エセリアルは廃棄）
         const etherealCards = this.player.hand.filter(c => c.isEthereal);
         const nonEtherealCards = this.player.hand.filter(c => !c.isEthereal);

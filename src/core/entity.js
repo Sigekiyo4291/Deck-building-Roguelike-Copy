@@ -15,6 +15,16 @@ export class Entity {
     this.hp = Math.min(this.maxHp, this.hp + amount);
   }
 
+  // ブロック無視のHP減少（自傷や毒など）
+  loseHP(amount) {
+    const prevHp = this.hp;
+    this.hp = Math.max(0, this.hp - amount);
+    if (this.hp < prevHp && this instanceof Player) {
+      this.hpLossCount = (this.hpLossCount || 0) + 1;
+    }
+    return amount;
+  }
+
   takeDamage(amount, source) {
     // ターゲット側の補正（脆弱など）を適用
     let totalDamage = this.applyTargetModifiers(amount);
@@ -32,6 +42,11 @@ export class Entity {
     }
 
     this.hp = Math.max(0, this.hp - remainingDamage);
+
+    // 被ダメージ回数のカウントアップ（血には血を用）
+    if (remainingDamage > 0 && this instanceof Player) {
+      this.hpLossCount = (this.hpLossCount || 0) + 1;
+    }
 
     // トゲ(Thorns)処理
     const thorns = this.getStatusValue('thorns');
@@ -163,6 +178,7 @@ export class Player extends Entity {
     super('Vanguard', 50, 'src/assets/player.png');
     this.energy = 3;
     this.maxEnergy = 3;
+    this.hpLossCount = 0; // 今戦闘中にHPを失った回数
     this.deck = [];
     this.hand = [];
     this.discard = [];

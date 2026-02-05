@@ -18,6 +18,7 @@ export class BattleEngine {
         this.player.exhaust = []; // 廃棄札もリセット
         this.player.resetBlock(); // ブロックもリセット
         this.player.resetStatus(); // ステータスもリセット
+        this.player.hpLossCount = 0; // 被ダメージ回数をリセット
 
         // デッキを準備（マスターデッキからコピー）
         this.player.deck = [];
@@ -98,7 +99,8 @@ export class BattleEngine {
             return;
         }
 
-        if (card.cost === 'X' || (typeof card.cost === 'number' && card.cost >= 0 && this.player.energy >= card.cost)) {
+        const currentCost = card.getCost(this.player);
+        if (currentCost === 'X' || (typeof currentCost === 'number' && currentCost >= 0 && this.player.energy >= currentCost)) {
             // 使用条件チェック (クラッシュの手札制限など)
             if (!card.canPlay(this.player, this)) {
                 console.log("使用条件を満たしていません！");

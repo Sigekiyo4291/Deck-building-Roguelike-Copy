@@ -1,9 +1,10 @@
 export class Card {
-    constructor(id, name, cost, type, rarity, description, effect, targetType, isUpgraded = false, upgradeData = null, canPlayCheck = null, baseDamage = 0, damageCalculator = null, baseBlock = 0, blockCalculator = null, isEthereal = false, isExhaust = false) {
+    constructor(id, name, cost, type, rarity, description, effect, targetType, isUpgraded = false, upgradeData = null, canPlayCheck = null, baseDamage = 0, damageCalculator = null, baseBlock = 0, blockCalculator = null, isEthereal = false, isExhaust = false, costCalculator = null) {
         this.id = id;
         this.baseName = name;
         this.name = name + (isUpgraded ? '+' : '');
         this.cost = cost;
+        this.costCalculator = costCalculator;
         this.type = type; // 'attack', 'skill', 'power'
         this.rarity = rarity; // 'basic', 'common', 'uncommon', 'rare'
         this.description = description;
@@ -25,6 +26,13 @@ export class Card {
         this.isEthereal = isEthereal;
         this.isExhaust = isExhaust;
         this.miscValue = 0; // 戦闘中などの動的な値を保持するプロパティ（ランページ等で使用）
+    }
+
+    getCost(source) {
+        if (this.costCalculator) {
+            return this.costCalculator(source, this);
+        }
+        return this.cost;
     }
 
     getDamage(source, engine) {
@@ -69,6 +77,7 @@ export class Card {
         this.name = this.baseName + '+';
 
         if (this.upgradeData.cost !== undefined) this.cost = this.upgradeData.cost;
+        if (this.upgradeData.costCalculator) this.costCalculator = this.upgradeData.costCalculator;
         if (this.upgradeData.description) this.description = this.upgradeData.description;
         if (this.upgradeData.effect) this.effect = this.upgradeData.effect;
         if (this.upgradeData.name) this.name = this.upgradeData.name;
@@ -81,14 +90,16 @@ export class Card {
     play(source, target, engine) {
         if (this.type === 'curse') return false;
 
+        const currentCost = this.getCost(source);
+
         let xValue = 0;
-        if (this.cost === 'X') {
+        if (currentCost === 'X') {
             xValue = source.energy;
             source.energy = 0;
-        } else if (typeof this.cost === 'number' && this.cost >= 0 && source.energy >= this.cost) {
-            source.energy -= this.cost;
-            xValue = this.cost;
-        } else if (typeof this.cost === 'number' && this.cost < 0) {
+        } else if (typeof currentCost === 'number' && currentCost >= 0 && source.energy >= currentCost) {
+            source.energy -= currentCost;
+            xValue = currentCost;
+        } else if (typeof currentCost === 'number' && currentCost < 0) {
             // 呪いなど使用不可
             return false;
         } else {
@@ -126,7 +137,8 @@ export class Card {
             this.baseBlock,
             this.blockCalculator,
             this.isEthereal,
-            this.isExhaust
+            this.isExhaust,
+            this.costCalculator
         );
         c.miscValue = this.miscValue;
         return c;
@@ -280,14 +292,14 @@ export const CardLibrary = {
         }
     }, null, 5),
     HEMOKINESIS: new Card('hemokinesis', 'ヘモキネシス', 1, 'attack', 'uncommon', '15ダメージ。HPを2失う。', (s, t, e) => {
-        s.hp = Math.max(0, s.hp - 2);
+        s.loseHP(2);
         t.takeDamage(s.calculateDamage(15), s);
         if (e && e.uiUpdateCallback) e.uiUpdateCallback();
     }, 'single', false, {
         description: '20ダメージ。HPを2失う。',
         baseDamage: 20,
         effect: (s, t, e) => {
-            s.hp = Math.max(0, s.hp - 2);
+            s.loseHP(2);
             t.takeDamage(s.calculateDamage(20), s);
             if (e && e.uiUpdateCallback) e.uiUpdateCallback();
         }
@@ -307,6 +319,17 @@ export const CardLibrary = {
             if (e && e.uiUpdateCallback) e.uiUpdateCallback();
         }
     }, null, 8),
+    BLOOD_FOR_BLOOD: new Card('blood_for_blood', '血には血を', 4, 'attack', 'uncommon', 'コストは戦闘中にダメージを受けた回数分減少する。18ダメージを与える。', (s, t) => {
+        t.takeDamage(s.calculateDamage(18), s);
+    }, 'single', false, {
+        cost: 3,
+        description: 'コストは戦闘中にダメージを受けた回数分減少する。22ダメージを与える。',
+        baseDamage: 22,
+        costCalculator: (s) => Math.max(0, 3 - (s.hpLossCount || 0)),
+        effect: (s, t) => {
+            t.takeDamage(s.calculateDamage(22), s);
+        }
+    }, null, 18, null, 0, null, false, false, (s) => Math.max(0, 4 - (s.hpLossCount || 0))),
     CARNAGE: new Card('carnage', '大虐殺', 2, 'attack', 'uncommon', 'エセリアル。20ダメージを与える。', (s, t) => {
         t.takeDamage(s.calculateDamage(20), s);
     }, 'single', false, {
@@ -356,7 +379,6 @@ export const CardLibrary = {
             if (e) {
                 e.player.deck.push(CardLibrary.DAZED.clone());
                 e.shuffle(e.player.deck);
-                if (e.uiUpdateCallback) e.uiUpdateCallback();
             }
         }
     }, null, 7),

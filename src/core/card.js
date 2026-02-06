@@ -163,7 +163,7 @@ export const CardLibrary = {
         description: '8ブロックを得る',
         baseBlock: 8,
         effect: (s, t) => { s.addBlock(8); }
-    }, null, 0, null, 5),
+    }, null, 0, null, 5, null, false, false, null, 'src/assets/images/cards/Defend.png'),
     BASH: new Card('bash', '強打', 2, 'attack', 'basic', '8ダメージを与え、脆弱(2)を付与', (s, t) => {
         t.takeDamage(s.calculateDamage(8), s);
         t.addStatus('vulnerable', 2);
@@ -174,7 +174,7 @@ export const CardLibrary = {
             t.takeDamage(s.calculateDamage(10), s);
             t.addStatus('vulnerable', 3);
         }
-    }, null, 8),
+    }, null, 8, null, 0, null, false, false, null, 'src/assets/images/cards/Bash.png'),
 
     // Common
     IRON_WAVE: new Card('iron_wave', 'アイアンウェーブ', 1, 'attack', 'common', '5ダメージを与え、5ブロックを得る', (s, t) => {
@@ -188,7 +188,7 @@ export const CardLibrary = {
             t.takeDamage(s.calculateDamage(7), s);
             s.addBlock(7);
         }
-    }, null, 5, null, 5),
+    }, null, 5, null, 5, null, 0, null, false, false, null, 'src/assets/images/cards/IronWave.png'),
     CLEAVE: new Card('cleave', 'なぎ払い', 1, 'attack', 'common', '全体に8ダメージを与える', (s, t) => {
         t.takeDamage(s.calculateDamage(8), s);
     }, 'all', false, {
@@ -197,7 +197,7 @@ export const CardLibrary = {
         effect: (s, t) => {
             t.takeDamage(s.calculateDamage(11), s);
         }
-    }, null, 8),
+    }, null, 8, null, 0, null, false, false, null, 'src/assets/images/cards/Cleave.png'),
     CLASH: new Card('clash', 'クラッシュ', 0, 'attack', 'common', '14ダメージを与える。手札が全てアタック時のみ使用可能。', (s, t) => {
         t.takeDamage(s.calculateDamage(14), s);
     }, 'single', false, {
@@ -209,7 +209,7 @@ export const CardLibrary = {
     }, (s, e) => {
         if (!e) return true;
         return e.player.hand.every(c => c.type === 'attack');
-    }, 14),
+    }, 14, null, 0, null, false, false, null, 'src/assets/images/cards/Clash.png'),
     THUNDERCLAP: new Card('thunderclap', 'サンダークラップ', 1, 'attack', 'common', '全体に4ダメージを与え、脆弱(1)を付与。', (s, t) => {
         t.takeDamage(s.calculateDamage(4), s);
         t.addStatus('vulnerable', 1);
@@ -220,7 +220,7 @@ export const CardLibrary = {
             t.takeDamage(s.calculateDamage(7), s);
             t.addStatus('vulnerable', 1);
         }
-    }, null, 4),
+    }, null, 4, null, 0, null, false, false, null, 'src/assets/images/cards/Thunderclap.png'),
     SWORD_BOOMERANG: new Card('sword_boomerang', 'ソードブーメラン', 1, 'attack', 'common', '3ダメージを3回与える(対象ランダム)', (s, t) => {
         t.takeDamage(s.calculateDamage(3), s);
         t.takeDamage(s.calculateDamage(3), s);
@@ -231,7 +231,7 @@ export const CardLibrary = {
         effect: (s, t) => {
             for (let i = 0; i < 4; i++) t.takeDamage(s.calculateDamage(3), s);
         }
-    }, null, 3),
+    }, null, 3, null, 0, null, false, false, null, 'src/assets/images/cards/SwordBoomerang.png'),
     ANGER: new Card('anger', '怒り', 0, 'attack', 'common', '6ダメージ。自身の正確な複製を捨て札に1枚加える。', (s, t, e, c) => {
         t.takeDamage(s.calculateDamage(6), s);
         if (e) {
@@ -273,7 +273,7 @@ export const CardLibrary = {
         const allCards = [...e.player.deck, ...e.player.hand, ...e.player.discard];
         const count = allCards.filter(c => c.name.includes('ストライク') || c.baseName.includes('ストライク')).length;
         return 6 + count * 2;
-    }),
+    }, 'src/assets/images/cards/PerfectStrike.png'),
     DROPKICK: new Card('dropkick', 'ドロップキック', 1, 'attack', 'uncommon', '5ダメージ。敵が脆弱なら1エナジー+1ドロー。', (s, t, e) => {
         t.takeDamage(s.calculateDamage(5), s);
         if (t.hasStatus('vulnerable') && e) {
@@ -507,7 +507,7 @@ export const CardLibrary = {
                 });
             }
         }
-    }, null, 9),
+    }, null, 9, null, 0, null, false, false, null, 'src/assets/images/cards/Headbutt.png'),
     TWIN_STRIKE: new Card('twin_strike', 'ツインストライク', 1, 'attack', 'common', '5ダメージを2回与える', (s, t) => {
         t.takeDamage(s.calculateDamage(5), s);
         t.takeDamage(s.calculateDamage(5), s);
@@ -518,7 +518,7 @@ export const CardLibrary = {
             t.takeDamage(s.calculateDamage(7), s);
             t.takeDamage(s.calculateDamage(7), s);
         }
-    }, null, 5),
+    }, null, 5, null, 0, null, false, false, null, 'src/assets/images/cards/TwinStrike.png'),
     POMMEL_STRIKE: new Card('pommel_strike', 'ポンメルストライク', 1, 'attack', 'common', '9ダメージを与え、カードを1枚引く', (s, t, e) => {
         t.takeDamage(s.calculateDamage(9), s);
         if (e) e.drawCards(1);
@@ -529,7 +529,7 @@ export const CardLibrary = {
             t.takeDamage(s.calculateDamage(10), s);
             if (e) e.drawCards(2);
         }
-    }, null, 9),
+    }, null, 9, null, 0, null, false, false, null, 'src/assets/images/cards/PommelStrike.png'),
     SHRUG_IT_OFF: new Card('shrug_it_off', '受け流し', 1, 'skill', 'common', '8ブロックを得て、カードを1枚引く', (s, t, e) => {
         s.addBlock(8);
         if (e) e.drawCards(1);
@@ -540,7 +540,7 @@ export const CardLibrary = {
             s.addBlock(11);
             if (e) e.drawCards(1);
         }
-    }, null, 0, null, 8),
+    }, null, 0, null, 8, null, 0, null, false, false, null, 'src/assets/images/cards/ShrugItOff.png'),
     CLOTHESLINE: new Card('clothesline', 'ラリアット', 2, 'attack', 'common', '12ダメージを与え、脱力(2)を付与', (s, t) => {
         t.takeDamage(s.calculateDamage(12), s);
         t.addStatus('weak', 2);
@@ -593,7 +593,7 @@ export const CardLibrary = {
             t.takeDamage(s.calculateDamage(s.block), s);
         },
         damageCalculator: (s, e) => s.block
-    }, null, 0, (s, e) => s.block),
+    }, null, 0, (s, e) => s.block, 'src/assets/images/cards/BodySlam.png'),
     WILD_STRIKE: new Card('wild_strike', 'ワイルドストライク', 1, 'attack', 'common', '12ダメージを与える。山札に「負傷」を1枚混ぜる。', (s, t, e) => {
         t.takeDamage(s.calculateDamage(12), s);
         if (e) {
@@ -616,7 +616,7 @@ export const CardLibrary = {
     }, 'self', false, {
         description: '筋力を3得る',
         effect: (s, t) => { s.addStatus('strength', 3); }
-    }),
+    }, null, 0, null, 0, null, false, false, null, 'src/assets/images/cards/Inflame.png'),
     METALLICIZE: new Card('metallicize', '金属音', 1, 'power', 'uncommon', 'ターン終了時に3ブロックを得る', (s, t) => {
         s.addStatus('metallicize', 3);
     }, 'self', false, {
@@ -631,7 +631,7 @@ export const CardLibrary = {
         description: '42ダメージを与える',
         baseDamage: 42,
         effect: (s, t) => { t.takeDamage(s.calculateDamage(42), s); }
-    }, null, 32),
+    }, null, 32, null, 0, null, false, false, null, 'src/assets/images/cards/Bludgeon.png'),
     IMPERVIOUS: new Card('impervious', '不動', 2, 'skill', 'rare', '30ブロックを得る', (s, t) => {
         s.addBlock(30);
     }, 'self', false, {

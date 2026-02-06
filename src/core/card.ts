@@ -1200,7 +1200,7 @@ export const CardLibrary = {
         effect: (s, t) => { t.addStatus('strength', -3); }
     }, null, 0, null, 0, null, false, true),
     SEEING_RED: new Card('seeing_red', '激昂', 1, 'skill', 'uncommon', '2エナジーを得る。廃棄。', (s, t, e) => {
-        if (e) s.energy = Math.min(s.maxEnergy, s.energy + 2);
+        if (e) s.energy += 2;
     }, 'self', false, {
         cost: 0,
         description: '2エナジーを得る。廃棄。'
@@ -1208,7 +1208,7 @@ export const CardLibrary = {
     BLOODLETTING: new Card('bloodletting', '瀉血', 0, 'skill', 'uncommon', 'HPを3失い、2エナジーを得る。', (s, t, e) => {
         s.loseHP(3);
         if (e) {
-            s.energy = Math.min(s.maxEnergy, s.energy + 2);
+            s.energy += 2;
             if (e.uiUpdateCallback) e.uiUpdateCallback();
         }
     }, 'self', false, {
@@ -1216,7 +1216,7 @@ export const CardLibrary = {
         effect: (s, t, e) => {
             s.loseHP(3);
             if (e) {
-                s.energy = Math.min(s.maxEnergy, s.energy + 3);
+                s.energy += 3;
                 if (e.uiUpdateCallback) e.uiUpdateCallback();
             }
         }
@@ -1318,7 +1318,7 @@ export const CardLibrary = {
     OFFERING: new Card('offering', '供物', 0, 'skill', 'rare', 'HPを6失い、2エナジーを得て、カードを3枚引く。廃棄。', (s, t, e) => {
         s.loseHP(6);
         if (e) {
-            s.energy = Math.min(s.maxEnergy, s.energy + 2);
+            s.energy += 2;
             e.drawCards(3);
             if (e.uiUpdateCallback) e.uiUpdateCallback();
         }
@@ -1327,7 +1327,7 @@ export const CardLibrary = {
         effect: (s, t, e) => {
             s.loseHP(6);
             if (e) {
-                s.energy = Math.min(s.maxEnergy, s.energy + 2);
+                s.energy += 2;
                 e.drawCards(5);
                 if (e.uiUpdateCallback) e.uiUpdateCallback();
             }

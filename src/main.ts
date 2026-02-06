@@ -1,14 +1,14 @@
 // import './style.css'; // 静的配信でのMIMEタイプエラー回避のためHTML側で読み込み
-import { GameMap } from './core/map-data.ts';
-import { MapGenerator } from './core/map-generator.ts';
-import { SceneManager } from './core/scene-manager.ts';
-import { Player, Enemy, Louse, Cultist, JawWorm, AcidSlimeM, SpikeSlimeM, AcidSlimeS, SpikeSlimeS, FungiBeast, AcidSlimeL, SpikeSlimeL, BlueSlaver, RedSlaver, Looter, GremlinNob, Lagavulin, Sentry, SlimeBoss, Guardian, Hexaghost } from './core/entity.ts';
-import { CardLibrary } from './core/card.ts';
-import { BattleEngine } from './core/engine.ts';
-import { RelicLibrary } from './core/relic.ts';
-import { getRandomEvent } from './core/event-data.ts';
-import { DebugManager } from './core/debug-manager.ts';
-import { EffectManager } from './core/effect-manager.ts';
+import { GameMap } from './core/map-data';
+import { MapGenerator } from './core/map-generator';
+import { SceneManager } from './core/scene-manager';
+import { Player, Enemy, Louse, Cultist, JawWorm, AcidSlimeM, SpikeSlimeM, AcidSlimeS, SpikeSlimeS, FungiBeast, AcidSlimeL, SpikeSlimeL, BlueSlaver, RedSlaver, Looter, GremlinNob, Lagavulin, Sentry, SlimeBoss, Guardian, Hexaghost } from './core/entity';
+import { CardLibrary } from './core/card';
+import { BattleEngine } from './core/engine';
+import { RelicLibrary } from './core/relic';
+import { getRandomEvent } from './core/event-data';
+import { DebugManager } from './core/debug-manager';
+import { EffectManager } from './core/effect-manager';
 
 const STATUS_INFO = {
   vulnerable: { name: '脆弱', desc: '受けるダメージが50%増加する。' },

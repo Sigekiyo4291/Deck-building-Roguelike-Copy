@@ -8,6 +8,7 @@ import { BattleEngine } from './core/engine.js';
 import { RelicLibrary } from './core/relic.js';
 import { getRandomEvent } from './core/event-data.js';
 import { DebugManager } from './core/debug-manager.js';
+import { EffectManager } from './core/effect-manager.js';
 
 const STATUS_INFO = {
   vulnerable: { name: '脆弱', desc: '受けるダメージが50%増加する。' },
@@ -38,6 +39,9 @@ class Game {
     // Debug Manager
     this.debugManager = new DebugManager(this);
 
+    // Effect Manager
+    this.effectManager = new EffectManager();
+
     // UI Elements
     this.elDeckCount = document.getElementById('deck-count');
     this.elDiscardCount = document.getElementById('discard-count');
@@ -49,7 +53,7 @@ class Game {
 
     // イベントリスナー設定
     this.elEndTurnBtn.onclick = () => {
-      if (this.battleEngine) {
+      if (this.battleEngine && !this.battleEngine.isProcessing) {
         this.deselectCard();
         this.battleEngine.endTurn();
       }
@@ -484,7 +488,8 @@ class Game {
           location.reload();
         }
       },
-      (title, pile, callback) => this.showCardSelectionFromPile(title, pile, callback)
+      (title, pile, callback) => this.showCardSelectionFromPile(title, pile, callback),
+      this.effectManager // エフェクトマネージャーを渡す
     );
     this.sceneManager.showBattle();
     this.battleEngine.start();
@@ -573,7 +578,8 @@ class Game {
           location.reload();
         }
       },
-      (title, pile, callback) => this.showCardSelectionFromPile(title, pile, callback)
+      (title, pile, callback) => this.showCardSelectionFromPile(title, pile, callback),
+      this.effectManager // エフェクトマネージャーを渡す
     );
 
     // シーン切り替え
@@ -1065,6 +1071,9 @@ class Game {
 
   // ドラッグ完了時のカード使用処理
   tryPlayCard(index) {
+    // 処理中は操作不能
+    if (this.battleEngine && this.battleEngine.isProcessing) return;
+
     const card = this.player.hand[index];
 
     // 呪いカードチェック
@@ -1122,7 +1131,7 @@ class Game {
 
   onEnemyClick(enemyIndex) {
     // 敵を選択状態にするだけ（攻撃はしない）
-    if (this.battleEngine.phase !== 'player') return;
+    if (this.battleEngine.phase !== 'player' || this.battleEngine.isProcessing) return;
 
     const enemy = this.battleEngine.enemies[enemyIndex];
     if (enemy && !enemy.isDead()) {

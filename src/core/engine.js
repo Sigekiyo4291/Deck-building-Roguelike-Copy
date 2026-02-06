@@ -1,12 +1,13 @@
 import { CardLibrary } from './card.js';
 
 export class BattleEngine {
-    constructor(player, enemies, uiUpdateCallback, onBattleEnd, onCardSelectionRequest) {
+    constructor(player, enemies, uiUpdateCallback, onBattleEnd, onCardSelectionRequest, effectManager = null) {
         this.player = player;
         this.enemies = enemies; // 配列で保持
         this.uiUpdateCallback = uiUpdateCallback;
         this.onBattleEnd = onBattleEnd;
         this.onCardSelectionRequest = onCardSelectionRequest;
+        this.effectManager = effectManager; // エフェクト管理クラス
         this.turn = 1;
         this.phase = 'player'; // 'player' or 'enemy'
     }
@@ -72,57 +73,125 @@ export class BattleEngine {
         }
     }
 
-    playCard(cardIndex, targetIndex = 0) {
-        if (this.phase !== 'player') return;
+    async playCard(cardIndex, targetIndex = 0) {
+        if (this.phase !== 'player' || this.isProcessing) return;
 
-        const card = this.player.hand[cardIndex];
+        this.isProcessing = true;
+        try {
+            const card = this.player.hand[cardIndex];
 
-        // 呪いカードは使用できない
-        if (card.type === 'curse') return;
+            // 呪いカードは使用できない
+            if (card.type === 'curse') return;
 
-        // ターゲット取得
+            // ターゲット取得
 
-        let target = this.enemies[targetIndex];
+            let target = this.enemies[targetIndex];
 
-        // もしターゲットが死んでいたら、生存している別の敵を探す
-        if (target && target.isDead()) {
-            target = this.enemies.find(e => !e.isDead());
-        }
+            // もしターゲットが死んでいたら、生存している別の敵を探す
+            if (target && target.isDead()) {
+                target = this.enemies.find(e => !e.isDead());
+            }
 
-        // 敵がいない、またはカードがターゲットを必要としない場合（全体攻撃など）の制御も将来必要
-        // ここではターゲット必須とする
-        if (!target) return;
+            // 敵がいない、またはカードがターゲットを必要としない場合（全体攻撃など）の制御も将来必要
+            // ここではターゲット必須とする
+            if (!target) return;
 
-        // 拘束(entangled)状態ならアタックカードを使用できない
-        if (this.player.hasStatus('entangled') && card.type === 'attack') {
-            console.log("アタック不能！拘束されています。");
-            return;
-        }
-
-        const currentCost = card.getCost(this.player);
-        if (currentCost === 'X' || (typeof currentCost === 'number' && currentCost >= 0 && this.player.energy >= currentCost)) {
-            // 使用条件チェック (クラッシュの手札制限など)
-            if (!card.canPlay(this.player, this)) {
-                console.log("使用条件を満たしていません！");
+            // 拘束(entangled)状態ならアタックカードを使用できない
+            if (this.player.hasStatus('entangled') && card.type === 'attack') {
+                console.log("アタック不能！拘束されています。");
                 return;
             }
 
-            // カードを手札から取り出す（プレイ開始）
-            this.player.hand.splice(cardIndex, 1);
+            const currentCost = card.getCost(this.player);
+            if (currentCost === 'X' || (typeof currentCost === 'number' && currentCost >= 0 && this.player.energy >= currentCost)) {
+                // 使用条件チェック (クラッシュの手札制限など)
+                if (!card.canPlay(this.player, this)) {
+                    console.log("使用条件を満たしていません！");
+                    return;
+                }
 
-            // カード効果発動
-            card.play(this.player, target, this);
+                // カードを手札から取り出す（プレイ開始）
+                this.player.hand.splice(cardIndex, 1);
 
-            if (card.isExhaust) {
-                this.player.exhaust.push(card);
-                console.log(`${card.name} は廃棄されました。`);
-            } else {
-                this.player.discard.push(card); // 捨て札に追加
+                // カード効果を実行（非同期対応）
+                await card.play(this.player, target, this);
+
+                // 捨て札または廃棄へ
+                if (card.isExhaust) {
+                    this.player.exhaust.push(card);
+                    console.log(`${card.name} は廃棄されました。`);
+                } else {
+                    this.player.discard.push(card); // 捨て札に追加
+                }
+
+                this.checkBattleEnd();
+                this.uiUpdateCallback();
             }
-
-            this.checkBattleEnd();
-            this.uiUpdateCallback();
+        } finally {
+            this.isProcessing = false;
         }
+    }
+
+    // ターゲットにエフェクトを表示
+    showEffectForTarget(targetIndex, card, callback) {
+        const enemyElements = document.querySelectorAll('.entity.enemy');
+        if (enemyElements[targetIndex]) {
+            const effectType = card.effectType || 'slash';
+            this.effectManager.showAttackEffect(enemyElements[targetIndex], effectType, callback);
+        } else {
+            // エフェクト表示に失敗した場合はコールバックを即座に実行
+            callback();
+        }
+    }
+
+    // 全ての敵にエフェクトを順次表示
+    showEffectsForAllEnemies(card, callback) {
+        const aliveEnemies = this.enemies.map((enemy, index) => ({ enemy, index })).filter(e => !e.enemy.isDead());
+        let effectCount = 0;
+        const totalEffects = aliveEnemies.length;
+
+        if (totalEffects === 0) {
+            callback();
+            return;
+        }
+
+        aliveEnemies.forEach(({ index }, i) => {
+            setTimeout(() => {
+                this.showEffectForTarget(index, card, () => {
+                    effectCount++;
+                    if (effectCount === totalEffects) {
+                        callback();
+                    }
+                });
+            }, i * 100); // 各エフェクトを100ms間隔で表示
+        });
+    }
+
+    // エフェクト表示付きで攻撃を実行（複数回攻撃用ヘルパー）
+    async attackWithEffect(source, target, damage, targetIndex = null) {
+        if (!target || target.isDead()) return;
+
+        // ターゲットインデックスを取得
+        if (targetIndex === null) {
+            targetIndex = this.enemies.indexOf(target);
+        }
+
+        // エフェクトを表示
+        if (this.effectManager) {
+            const enemyElements = document.querySelectorAll('.entity.enemy');
+            if (enemyElements[targetIndex]) {
+                await this.effectManager.showAttackEffectAsync(enemyElements[targetIndex], 'slash');
+            }
+        }
+
+        // ダメージを与える
+        target.takeDamage(damage, source);
+    }
+
+    // ダメージ処理をエフェクト付きで実行（単体攻撃用の簡易ヘルパー）
+    async dealDamageWithEffect(source, target, damage) {
+        const targetIndex = this.enemies.indexOf(target);
+        await this.attackWithEffect(source, target, damage, targetIndex);
     }
 
     endTurn() {

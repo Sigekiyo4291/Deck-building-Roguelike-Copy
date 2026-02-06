@@ -1275,3 +1275,138 @@ body {
 .card-type {
   z-index: 5;
 }
+
+/* === 攻撃エフェクト === */
+.attack-effect {
+  position: fixed;
+  pointer-events: none;
+  z-index: 1000;
+  transform: translate(-50%, -50%);
+  width: 400px;
+  height: 400px;
+}
+
+/* 斬撃エフェクト */
+.slash-effect {
+  animation: slash-container 0.6s ease-out forwards;
+}
+
+/* 斬撃ライン */
+.slash-line {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 300px;
+  height: 8px;
+  background: linear-gradient(90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.3) 10%,
+      rgba(255, 255, 255, 1) 50%,
+      rgba(255, 255, 255, 0.3) 90%,
+      transparent 100%);
+  transform: translate(-50%, -50%) rotate(-45deg);
+  border-radius: 4px;
+  box-shadow:
+    0 0 10px rgba(255, 255, 255, 0.8),
+    0 0 20px rgba(255, 255, 255, 0.6),
+    0 0 30px rgba(255, 255, 255, 0.4);
+  animation: slash-line-animation 0.5s ease-out forwards;
+}
+
+.slash-line:nth-child(2) {
+  width: 240px;
+  height: 6px;
+  opacity: 0.7;
+  transform: translate(-50%, -50%) rotate(-40deg);
+}
+
+.slash-line:nth-child(3) {
+  width: 200px;
+  height: 4px;
+  opacity: 0.5;
+  transform: translate(-50%, -50%) rotate(-50deg);
+}
+
+/* 飛び散る光の粒子 */
+.slash-particle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 6px;
+  height: 40px;
+  background: linear-gradient(180deg,
+      rgba(255, 255, 255, 1) 0%,
+      rgba(255, 255, 255, 0.5) 50%,
+      transparent 100%);
+  border-radius: 4px;
+  transform-origin: center center;
+  animation: particle-animation 0.5s ease-out forwards;
+  box-shadow: 0 0 5px rgba(255, 255, 255, 0.8);
+}
+
+@keyframes slash-container {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.5);
+  }
+
+  20% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.2);
+  }
+}
+
+@keyframes slash-line-animation {
+  0% {
+    transform: translate(-50%, -50%) rotate(-45deg) scale(0.2);
+    opacity: 0;
+  }
+
+  30% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: translate(-50%, -50%) rotate(-45deg) scale(1.5);
+    opacity: 0;
+  }
+}
+
+@keyframes particle-animation {
+  0% {
+    transform: translate(-50%, -50%) rotate(var(--angle)) translateY(0) scale(1);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translate(-50%, -50%) rotate(var(--angle)) translateY(-100px) scale(0.3);
+    opacity: 0;
+  }
+}
+
+/* インパクトエフェクト（将来用） */
+.impact-effect {
+  font-size: 64px;
+  animation: impact-animation 0.4s ease-out;
+}
+
+@keyframes impact-animation {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(0.3);
+  }
+
+  50% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.8);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(2.5);
+  }
+}

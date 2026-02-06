@@ -1,4 +1,27 @@
 export class Card {
+    id: string;
+    baseName: string;
+    name: string;
+    cost: number | string;
+    costCalculator: any;
+    type: string;
+    rarity: string;
+    description: string;
+    effect: any;
+    isUpgraded: boolean;
+    upgradeData: any;
+    targetType: string;
+    canPlayCheck: any;
+    baseDamage: number;
+    damageCalculator: any;
+    baseBlock: number;
+    blockCalculator: any;
+    isEthereal: boolean;
+    isExhaust: boolean;
+    miscValue: number;
+    image: string | null;
+    effectType: string;
+
     constructor(id, name, cost, type, rarity, description, effect, targetType, isUpgraded = false, upgradeData = null, canPlayCheck = null, baseDamage = 0, damageCalculator = null, baseBlock = 0, blockCalculator = null, isEthereal = false, isExhaust = false, costCalculator = null, image = null, effectType = 'slash') {
         this.id = id;
         this.baseName = name;
@@ -216,7 +239,7 @@ export const CardLibrary = {
             }
             s.addBlock(7);
         }
-    }, null, 5, null, 5, null, 0, null, false, false, null, 'src/assets/images/cards/IronWave.png'),
+    }, null, 5, null, 5, null, false, false, null, 'src/assets/images/cards/IronWave.png'),
     CLEAVE: new Card('cleave', 'なぎ払い', 1, 'attack', 'common', '全体に8ダメージを与える', async (s, t, e) => {
         if (e && e.dealDamageWithEffect) {
             await e.dealDamageWithEffect(s, t, s.calculateDamage(8));
@@ -364,7 +387,7 @@ export const CardLibrary = {
         const allCards = [...e.player.deck, ...e.player.hand, ...e.player.discard];
         const count = allCards.filter(c => c.name.includes('ストライク') || c.baseName.includes('ストライク')).length;
         return 6 + count * 2;
-    }, 'src/assets/images/cards/PerfectStrike.png'),
+    }, 0, null, false, false, null, 'src/assets/images/cards/PerfectStrike.png'),
     DROPKICK: new Card('dropkick', 'ドロップキック', 1, 'attack', 'uncommon', '5ダメージ。敵が脆弱なら1エナジー+1ドロー。', async (s, t, e) => {
         if (e && e.dealDamageWithEffect) {
             await e.dealDamageWithEffect(s, t, s.calculateDamage(5));
@@ -834,7 +857,7 @@ export const CardLibrary = {
             s.addBlock(11);
             if (e) e.drawCards(1);
         }
-    }, null, 0, null, 8, null, 0, null, false, false, null, 'src/assets/images/cards/ShrugItOff.png'),
+    }, null, 0, null, 8, null, false, false, null, 'src/assets/images/cards/ShrugItOff.png'),
     CLOTHESLINE: new Card('clothesline', 'ラリアット', 2, 'attack', 'common', '12ダメージを与え、脱力(2)を付与', async (s, t, e) => {
         if (e && e.dealDamageWithEffect) {
             await e.dealDamageWithEffect(s, t, s.calculateDamage(12));
@@ -919,7 +942,7 @@ export const CardLibrary = {
             }
         },
         damageCalculator: (s, e) => s.block
-    }, null, 0, (s, e) => s.block, 'src/assets/images/cards/BodySlam.png'),
+    }, null, 0, (s, e) => (s as any).block, 0, null, false, false, null, 'src/assets/images/cards/BodySlam.png'),
     WILD_STRIKE: new Card('wild_strike', 'ワイルドストライク', 1, 'attack', 'common', '12ダメージを与える。山札に「負傷」を1枚混ぜる。', async (s, t, e) => {
         if (e && e.dealDamageWithEffect) {
             await e.dealDamageWithEffect(s, t, s.calculateDamage(12));

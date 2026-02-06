@@ -1,5 +1,5 @@
-import { CardLibrary } from './card.js';
-import { RelicLibrary } from './relic.js';
+import { CardLibrary } from './card.ts';
+import { RelicLibrary } from './relic.ts';
 
 /**
  * イベントライブラリ
@@ -238,7 +238,7 @@ export const EventLibrary = {
         id: 'scrap_ooze',
         name: 'スクラップスライム',
         image: '🟩',
-        getChoices: (game, state = {}) => {
+        getChoices: (game: any, state: any = {}) => {
             const hpCost = state.hpCost || 3;
             const chance = state.chance || 25;
 
@@ -379,7 +379,7 @@ export const EventLibrary = {
         id: 'dead_adventurer',
         name: '冒険者の屍',
         image: '💀',
-        getChoices: (game, state = {}) => {
+        getChoices: (game: any, state: any = {}) => {
             const searchCount = state.searchCount || 0;
             const encounterChance = 25 + searchCount * 25;
             const foundRelic = state.foundRelic || false;

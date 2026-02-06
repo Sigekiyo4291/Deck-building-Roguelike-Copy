@@ -1,14 +1,14 @@
 // import './style.css'; // 静的配信でのMIMEタイプエラー回避のためHTML側で読み込み
-import { GameMap } from './core/map-data.js';
-import { MapGenerator } from './core/map-generator.js';
-import { SceneManager } from './core/scene-manager.js';
-import { Player, Enemy, Louse, Cultist, JawWorm, AcidSlimeM, SpikeSlimeM, AcidSlimeS, SpikeSlimeS, FungiBeast, AcidSlimeL, SpikeSlimeL, BlueSlaver, RedSlaver, Looter, GremlinNob, Lagavulin, Sentry, SlimeBoss, Guardian, Hexaghost } from './core/entity.js';
-import { CardLibrary } from './core/card.js';
-import { BattleEngine } from './core/engine.js';
-import { RelicLibrary } from './core/relic.js';
-import { getRandomEvent } from './core/event-data.js';
-import { DebugManager } from './core/debug-manager.js';
-import { EffectManager } from './core/effect-manager.js';
+import { GameMap } from './core/map-data.ts';
+import { MapGenerator } from './core/map-generator.ts';
+import { SceneManager } from './core/scene-manager.ts';
+import { Player, Enemy, Louse, Cultist, JawWorm, AcidSlimeM, SpikeSlimeM, AcidSlimeS, SpikeSlimeS, FungiBeast, AcidSlimeL, SpikeSlimeL, BlueSlaver, RedSlaver, Looter, GremlinNob, Lagavulin, Sentry, SlimeBoss, Guardian, Hexaghost } from './core/entity.ts';
+import { CardLibrary } from './core/card.ts';
+import { BattleEngine } from './core/engine.ts';
+import { RelicLibrary } from './core/relic.ts';
+import { getRandomEvent } from './core/event-data.ts';
+import { DebugManager } from './core/debug-manager.ts';
+import { EffectManager } from './core/effect-manager.ts';
 
 const STATUS_INFO = {
   vulnerable: { name: '脆弱', desc: '受けるダメージが50%増加する。' },
@@ -28,6 +28,23 @@ const STATUS_INFO = {
 
 
 class Game {
+  player: Player;
+  map: GameMap | null;
+  battleEngine: BattleEngine | null;
+  sceneManager: SceneManager;
+  selectedEnemyIndex: number;
+  battleCount: number;
+  debugManager: DebugManager;
+  effectManager: EffectManager;
+  elDeckCount: HTMLElement | null;
+  elDiscardCount: HTMLElement | null;
+  elEndTurnBtn: HTMLElement | null;
+  elHand: HTMLElement | null;
+  selectedCardIndex: number;
+  isEliteBattle: boolean = false;
+  currentEvent: any;
+  currentEventState: any;
+
   constructor() {
     this.player = new Player();
     this.map = null;
@@ -52,12 +69,14 @@ class Game {
     this.selectedCardIndex = -1; // カード選択状態
 
     // イベントリスナー設定
-    this.elEndTurnBtn.onclick = () => {
-      if (this.battleEngine && !this.battleEngine.isProcessing) {
-        this.deselectCard();
-        this.battleEngine.endTurn();
-      }
-    };
+    if (this.elEndTurnBtn) {
+      this.elEndTurnBtn.onclick = () => {
+        if (this.battleEngine && !this.battleEngine.isProcessing) {
+          this.deselectCard();
+          this.battleEngine.endTurn();
+        }
+      };
+    }
   }
 
   start() {
@@ -72,21 +91,9 @@ class Game {
     this.sceneManager.showMap();
   }
 
-  createRewardCardElement(card) {
-    // 既存のメソッドは変更なし、場所が変わるだけ
-    const cardEl = document.createElement('div');
-    cardEl.className = `card ${card.rarity}`;
-    const currentCost = card.getCost(this.player);
-    const displayCost = currentCost === 'X' ? 'X' : (currentCost < 0 ? '' : currentCost);
-    const imageHtml = card.image ? `<img src="${card.image}" class="card-illustration" />` : '';
-    cardEl.innerHTML = `
-            ${imageHtml}
-            <div class="card-cost">${displayCost}</div>
-            <div class="card-title">${card.name}</div>
-            <div class="card-desc">${card.description}</div>
-            <div class="card-type">${card.type}</div>
-      `;
-    return cardEl;
+  deselectCard() {
+    this.selectedCardIndex = -1;
+    this.updateBattleUI();
   }
 
   showDeckView() {
@@ -94,30 +101,22 @@ class Game {
     const container = document.getElementById('deck-view-content');
     const closeBtn = document.getElementById('close-deck-btn');
 
-    if (!overlay || !container) return;
+    if (!overlay || !container || !closeBtn) return;
 
     container.innerHTML = '';
 
-    // マスターデッキの内容を表示（ソート済みが望ましいが、今回は登録順）
-    // 必要に応じてソートロジックを追加可能
     const sortedDeck = [...this.player.masterDeck].sort((a, b) => {
-      // 種類順 (Attack > Skill > Power > Curse) などの簡易ソート
       const typeOrder = { 'attack': 1, 'skill': 2, 'power': 3, 'curse': 4 };
       if (typeOrder[a.type] !== typeOrder[b.type]) {
         return (typeOrder[a.type] || 99) - (typeOrder[b.type] || 99);
       }
-      return a.cost - b.cost;
+      return Number(a.cost || 0) - Number(b.cost || 0);
     });
 
     sortedDeck.forEach(card => {
-      // 報酬カード生成メソッドを再利用（クリックイベントなし）
-      // クリックイベントを上書きして無効化、あるいは詳細表示などに利用可能
       const cardEl = this.createRewardCardElement(card);
-      cardEl.style.cursor = 'default'; // クリックできないことを示す
-      cardEl.onclick = null; // クリックしても何も起きない
-
-      // ツールチップなどで詳細を出しても良いが、現状はカード自体に情報が載っている
-
+      cardEl.style.cursor = 'default';
+      cardEl.onclick = null;
       container.appendChild(cardEl);
     });
 
@@ -129,17 +128,17 @@ class Game {
   }
 
   renderMap() {
-    // ゴールド表示の更新
     const goldEl = document.getElementById('map-gold-value');
-    if (goldEl) goldEl.textContent = this.player.gold;
+    if (goldEl) goldEl.textContent = String(this.player.gold);
 
-    // デッキボタンの設定
     const deckBtn = document.getElementById('map-deck-btn');
     if (deckBtn) {
       deckBtn.onclick = () => this.showDeckView();
     }
 
-    this.sceneManager.renderMap(this.map, (node) => this.onNodeSelect(node));
+    if (this.map && this.sceneManager) {
+      this.sceneManager.renderMap(this.map, (node) => this.onNodeSelect(node));
+    }
   }
 
   onNodeSelect(node) {
@@ -182,11 +181,13 @@ class Game {
     };
   }
 
-  showUpgradeSelection(onComplete) {
+  showUpgradeSelection(onComplete?: () => void) {
     const overlay = document.getElementById('deck-selection-overlay');
     const listEl = document.getElementById('deck-selection-list');
     const titleEl = document.getElementById('deck-selection-title');
     const closeBtn = document.getElementById('close-deck-selection-btn');
+
+    if (!overlay || !listEl || !titleEl || !closeBtn) return;
 
     titleEl.textContent = '強化するカードを選択';
     listEl.innerHTML = '';
@@ -298,6 +299,8 @@ class Game {
     const titleEl = document.getElementById('deck-selection-title');
     const closeBtn = document.getElementById('close-deck-selection-btn');
 
+    if (!overlay || !listEl || !titleEl || !closeBtn) return;
+
     titleEl.textContent = '削除するカードを選択';
     listEl.innerHTML = '';
     overlay.style.display = 'flex';
@@ -330,6 +333,8 @@ class Game {
     const titleEl = document.getElementById('deck-selection-title');
     const closeBtn = document.getElementById('close-deck-selection-btn');
 
+    if (!overlay || !listEl || !titleEl || !closeBtn) return;
+
     titleEl.textContent = '変化させるカードを選択';
     listEl.innerHTML = '';
     overlay.style.display = 'flex';
@@ -361,7 +366,7 @@ class Game {
 
   showShopScene() {
     this.sceneManager.showShop();
-    document.getElementById('shop-gold-value').textContent = this.player.gold;
+    document.getElementById('shop-gold-value').textContent = String(this.player.gold);
 
     const cardsContainer = document.getElementById('shop-cards');
     const relicsContainer = document.getElementById('shop-relics');
@@ -386,9 +391,9 @@ class Game {
         if (this.player.gold >= price) {
           this.player.gold -= price;
           this.player.masterDeck.push(card);
-          document.getElementById('shop-gold-value').textContent = this.player.gold;
+          document.getElementById('shop-gold-value').textContent = String(this.player.gold);
           wrapper.classList.add('sold-out');
-          alert(`${card.name} を購入しました！`);
+          alert(`${(card as any).name} を購入しました！`);
         } else {
           alert('ゴールドが足りません！');
         }
@@ -428,7 +433,7 @@ class Game {
           this.player.gold -= price;
           this.player.relics.push(relic);
           if (relic.onObtain) relic.onObtain(this.player);
-          document.getElementById('shop-gold-value').textContent = this.player.gold;
+          document.getElementById('shop-gold-value').textContent = String(this.player.gold);
           this.updateRelicUI();
           wrapper.classList.add('sold-out');
           alert(`${relic.name} を購入しました！`);
@@ -590,78 +595,96 @@ class Game {
   }
 
   onBattleWin() {
-    this.deselectCard();
-    alert('Victory!');
+    console.log('Game: onBattleWin triggered');
+    try {
+      this.deselectCard();
 
-    // 通常戦闘の場合、カウントアップ
-    if (!this.isEliteBattle && this.map.currentNode && this.map.currentNode.type === 'enemy') {
-      this.battleCount++;
-      console.log(`Normal Battle Count: ${this.battleCount}`);
+      // 通常戦闘の場合、カウントアップ
+      if (!this.isEliteBattle && this.map.currentNode && this.map.currentNode.type === 'enemy') {
+        this.battleCount++;
+      }
+
+      console.log('Game: Calling showRewardScene, isElite: ' + this.isEliteBattle);
+      // リワード画面表示
+      this.showRewardScene(this.isEliteBattle);
+    } catch (e) {
+      console.error('onBattleWin Error:', e);
     }
-
-    // リワード画面表示
-    this.showRewardScene(this.isEliteBattle);
   }
 
   showRewardScene(isElite) {
-    this.sceneManager.showReward();
+    console.log('Game: showRewardScene called, isElite:', isElite);
+    try {
+      this.sceneManager.showReward();
+      console.log('Game: SceneManager.showReward finished, filling reward list...');
 
-    const listEl = document.getElementById('reward-list');
-    listEl.innerHTML = '';
-
-    // ランダム報酬生成
-    const rewards = [];
-    // ゴールド
-    rewards.push({ type: 'gold', value: 10 + Math.floor(Math.random() * 20) + (isElite ? 20 : 0), taken: false });
-
-    // カード
-    rewards.push({ type: 'card', taken: false });
-
-    // ポーション（30%）
-    if (Math.random() < 0.3) {
-      rewards.push({ type: 'potion', taken: false });
-    }
-
-    // レリック（エリート戦なら確定）
-    if (isElite) {
-      // 未所持のレリックからランダムに1つ選ぶ
-      const ownedIds = this.player.relics.map(r => r.id);
-      const candidates = Object.values(RelicLibrary).filter(r =>
-        !ownedIds.includes(r.id) && r.rarity !== 'starter' && r.rarity !== 'boss'
-      );
-
-      if (candidates.length > 0) {
-        const relic = candidates[Math.floor(Math.random() * candidates.length)];
-        rewards.push({ type: 'relic', data: relic, taken: false });
+      const listEl = document.getElementById('reward-list');
+      if (!listEl) {
+        console.error('Reward list element not found!');
+        return;
       }
+      listEl.innerHTML = '';
+
+      // ランダム報酬生成
+      const rewards = [];
+      // ゴールド
+      rewards.push({ type: 'gold', value: 10 + Math.floor(Math.random() * 20) + (isElite ? 20 : 0), taken: false });
+
+      // カード
+      rewards.push({ type: 'card', taken: false });
+
+      // ポーション（30%）
+      if (Math.random() < 0.3) {
+        rewards.push({ type: 'potion', taken: false });
+      }
+
+      // レリック（エリート戦なら確定）
+      if (isElite) {
+        // 未所持のレリックからランダムに1つ選ぶ
+        const ownedIds = this.player.relics.map(r => r.id);
+        const candidates = Object.values(RelicLibrary).filter(r =>
+          !ownedIds.includes(r.id) && r.rarity !== 'starter' && r.rarity !== 'boss'
+        );
+
+        if (candidates.length > 0) {
+          const relic = candidates[Math.floor(Math.random() * candidates.length)];
+          rewards.push({ type: 'relic', data: relic, taken: false });
+        }
+      }
+
+      rewards.forEach((reward, index) => {
+        const itemEl = document.createElement('div');
+        itemEl.className = 'reward-item';
+
+        let text = '';
+        if (reward.type === 'gold') text = `💰 ゴールド (${reward.value})`;
+        if (reward.type === 'card') text = `🎴 カードを追加`;
+        if (reward.type === 'potion') text = `🧪 ポーション`;
+        if (reward.type === 'relic') text = `💍 レリック: ${reward.data.name}`;
+
+        itemEl.textContent = text;
+        itemEl.onclick = () => {
+          if (!reward.taken) this.onRewardClick(reward, index, itemEl);
+        };
+
+        listEl.appendChild(itemEl);
+      });
+
+      const doneBtn = document.getElementById('reward-done-btn');
+      if (doneBtn) {
+        doneBtn.onclick = () => {
+          // マップに戻る
+          if (this.map) {
+            this.map.updateAvailableNodes();
+            this.renderMap();
+          }
+          this.sceneManager.showMap();
+        };
+      }
+    } catch (e) {
+      console.error('showRewardScene Error:', e);
+      alert('Reward Scene Error: ' + e.message);
     }
-
-    rewards.forEach((reward, index) => {
-      const itemEl = document.createElement('div');
-      itemEl.className = 'reward-item';
-
-      let text = '';
-      if (reward.type === 'gold') text = `💰 ゴールド (${reward.value})`;
-      if (reward.type === 'card') text = `🎴 カードを追加`;
-      if (reward.type === 'potion') text = `🧪 ポーション`;
-      if (reward.type === 'relic') text = `💍 レリック: ${reward.data.name}`;
-
-      itemEl.textContent = text;
-      itemEl.onclick = () => {
-        if (!reward.taken) this.onRewardClick(reward, index, itemEl);
-      };
-
-      listEl.appendChild(itemEl);
-    });
-
-    // 次へボタンの設定
-    const doneBtn = document.getElementById('reward-done-btn');
-    doneBtn.onclick = () => {
-      // マップに戻る
-      this.map.updateAvailableNodes();
-      this.renderMap();
-      this.sceneManager.showMap();
-    };
   }
 
   // onRewardClickの修正: itemElを受け取ってクリック後に無効化スタイル適用
@@ -713,7 +736,7 @@ class Game {
     const titleEl = document.getElementById('deck-selection-title');
     const closeBtn = document.getElementById('close-deck-selection-btn');
 
-    if (!overlay || !container) return;
+    if (!overlay || !container || !titleEl || !closeBtn) return;
 
     titleEl.textContent = title;
     container.innerHTML = '';
@@ -767,6 +790,8 @@ class Game {
       container.appendChild(cardEl);
     }
 
+    if (!overlay || !container || !skipBtn) return;
+
     overlay.style.display = 'flex';
     skipBtn.onclick = () => {
       overlay.style.display = 'none';
@@ -798,6 +823,7 @@ class Game {
   }
 
   updateBattleUI() {
+    console.log('Game: updateBattleUI called');
     try {
       const player = this.player;
 
@@ -835,6 +861,7 @@ class Game {
 
         const enemyEl = document.createElement('div');
         enemyEl.className = 'entity enemy';
+        enemyEl.setAttribute('data-id', enemy.uuid);
 
         // 選択中の敵をハイライト
         if (this.selectedEnemyIndex === index) {
@@ -905,9 +932,9 @@ class Game {
       });
 
       // --- Deck / Energy ---
-      document.getElementById('energy-value').textContent = player.energy;
-      document.getElementById('deck-count').textContent = player.deck.length;
-      document.getElementById('discard-count').textContent = player.discard.length;
+      document.getElementById('energy-value').textContent = String(player.energy);
+      document.getElementById('deck-count').textContent = String(player.deck.length);
+      document.getElementById('discard-count').textContent = String(player.discard.length);
 
       // --- Hand ---
       this.elHand.innerHTML = '';
@@ -917,7 +944,9 @@ class Game {
       });
 
       // ターン終了ボタン
-      this.elEndTurnBtn.disabled = (this.battleEngine.phase !== 'player');
+      if (this.elEndTurnBtn) {
+        (this.elEndTurnBtn as HTMLButtonElement).disabled = (this.battleEngine.phase !== 'player');
+      }
     } catch (e) {
       console.error('UpdateBattleUI Error:', e);
       alert('UI Error: ' + e.message);
@@ -1071,32 +1100,40 @@ class Game {
 
   // ドラッグ完了時のカード使用処理
   tryPlayCard(index) {
-    // 処理中は操作不能
-    if (this.battleEngine && this.battleEngine.isProcessing) return;
-
     const card = this.player.hand[index];
+    if (!card) return;
 
-    // 呪いカードチェック
+    console.log('Game: tryPlayCard for', card.name, 'at index', index);
+
+    // 1. 呪いカードチェック
     if (card.type === 'curse') {
       alert('このカードは使用できません！');
-      this.updateBattleUI(); // 位置リセット
+      this.updateBattleUI();
       return;
     }
 
-    // エネルギーチェック
+    // 2. エネルギーチェック
     const currentCost = card.getCost(this.player);
-    const requiredEnergy = typeof currentCost === 'number' ? currentCost : 0;
-    if (currentCost !== 'X' && this.player.energy < requiredEnergy) {
+    const requiredEnergy = (currentCost === 'X') ? 0 : Number(currentCost);
 
+    if (currentCost !== 'X' && this.player.energy < requiredEnergy) {
       alert('エネルギーが足りません！');
-      this.updateBattleUI(); // 位置リセットのために再描画
+      this.updateBattleUI();
       return;
     }
 
-    // 使用条件チェック (クラッシュなど)
+    // 3. 使用条件チェック (クラッシュなど)
     if (!card.canPlay(this.player, this.battleEngine)) {
       alert('このカードの使用条件を満たしていません！');
       this.updateBattleUI();
+      return;
+    }
+
+    // --- ここから先は「実際にプレイ可能」な場合のみ ---
+
+    // 処理中は操作不能（アラート確認後にチェックすることで、ボタン連打によるデッドロックを防ぐ）
+    if (this.battleEngine && this.battleEngine.isProcessing) {
+      console.warn('Game: Action ignored because battleEngine is still processing previous effects.');
       return;
     }
 
@@ -1141,13 +1178,22 @@ class Game {
     }
   }
 
-  // deselectCard は不要になったので削除するか、空にしておく
-  deselectCard() {
-    // no-op
+}
+
+declare global {
+  interface Window {
+    game: Game;
   }
 }
 
-// ゲーム起動
-const game = new Game();
-window.game = game; // デバッグ用
-game.start();
+try {
+  const game = new Game();
+  (window as any).game = game; // デバッグ用
+  game.start();
+} catch (e) {
+  console.error('Core app start error:', e);
+  // alertが動く状態なら表示する
+  if (typeof alert !== 'undefined') {
+    alert('ゲームの起動に失敗しました。詳細はコンソールを確認してください。');
+  }
+}

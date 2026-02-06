@@ -858,6 +858,16 @@ export const CardLibrary = {
             if (e) e.drawCards(1);
         }
     }, null, 0, null, 8, null, false, false, null, 'assets/images/cards/ShrugItOff.png'),
+    FLEX: new Card('flex', 'フレックス', 0, 'skill', 'common', '筋力を2得る。ターン終了時、筋力を2失う。', (s, t) => {
+        s.addStatus('strength', 2);
+        s.addStatus('strength_down', 2);
+    }, 'self', false, {
+        description: '筋力を4得る。ターン終了時、筋力を4失う。',
+        effect: (s, t) => {
+            s.addStatus('strength', 4);
+            s.addStatus('strength_down', 4);
+        }
+    }),
     CLOTHESLINE: new Card('clothesline', 'ラリアット', 2, 'attack', 'common', '12ダメージを与え、脱力(2)を付与', async (s, t, e) => {
         if (e && e.dealDamageWithEffect) {
             await e.dealDamageWithEffect(s, t, s.calculateDamage(12));

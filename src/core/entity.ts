@@ -166,6 +166,12 @@ export class Entity {
         if (s.value > 0) s.value--;
       }
 
+      // フレックス(strength_down): ターン終了時に筋力を失う
+      if (s.type === 'strength_down') {
+        this.addStatus('strength', -s.value);
+        s.value = 0; // 値を0にして削除対象にする
+      }
+
       // 儀式(ritual): ターン終了時に筋力を得る
       if (s.type === 'ritual') {
         this.addStatus('strength', s.value);

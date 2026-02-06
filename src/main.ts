@@ -24,6 +24,7 @@ const STATUS_INFO = {
   entangled: { name: '絡みつき', desc: 'このターン、アタックカードを使用できない。' },
   curl_up: { name: '丸まり', desc: '攻撃を受けた際、ブロックを得る。' },
   malleable: { name: '柔軟', desc: '攻撃を受けるたび、ブロックを得る。' },
+  strength_down: { name: 'フレックス', desc: 'ターン終了時、筋力を失う。' },
 };
 
 

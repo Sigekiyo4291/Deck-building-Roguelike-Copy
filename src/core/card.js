@@ -1,5 +1,5 @@
 export class Card {
-    constructor(id, name, cost, type, rarity, description, effect, targetType, isUpgraded = false, upgradeData = null, canPlayCheck = null, baseDamage = 0, damageCalculator = null, baseBlock = 0, blockCalculator = null, isEthereal = false, isExhaust = false, costCalculator = null) {
+    constructor(id, name, cost, type, rarity, description, effect, targetType, isUpgraded = false, upgradeData = null, canPlayCheck = null, baseDamage = 0, damageCalculator = null, baseBlock = 0, blockCalculator = null, isEthereal = false, isExhaust = false, costCalculator = null, image = null) {
         this.id = id;
         this.baseName = name;
         this.name = name + (isUpgraded ? '+' : '');
@@ -26,6 +26,7 @@ export class Card {
         this.isEthereal = isEthereal;
         this.isExhaust = isExhaust;
         this.miscValue = 0; // 戦闘中などの動的な値を保持するプロパティ（ランページ等で使用）
+        this.image = image;
     }
 
     getCost(source) {
@@ -138,7 +139,8 @@ export class Card {
             this.blockCalculator,
             this.isEthereal,
             this.isExhaust,
-            this.costCalculator
+            this.costCalculator,
+            this.image
         );
         c.miscValue = this.miscValue;
         return c;
@@ -154,7 +156,7 @@ export const CardLibrary = {
         description: '9ダメージを与える',
         baseDamage: 9,
         effect: (s, t) => { t.takeDamage(s.calculateDamage(9), s); }
-    }, null, 6),
+    }, null, 6, null, 0, null, false, false, null, 'src/assets/images/cards/Strike.png'),
     DEFEND: new Card('defend', 'ディフェンド', 1, 'skill', 'basic', '5ブロックを得る', (s, t) => {
         s.addBlock(5);
     }, 'self', false, {

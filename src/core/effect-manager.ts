@@ -1,5 +1,7 @@
 // エフェクト管理クラス
 export class EffectManager {
+    activeEffects: HTMLElement[];
+
     constructor() {
         this.activeEffects = [];
     }
@@ -33,11 +35,20 @@ export class EffectManager {
         document.body.appendChild(effectEl);
         this.activeEffects.push(effectEl);
 
-        // アニメーション終了後に削除
-        effectEl.addEventListener('animationend', () => {
+        // コールバックを一度だけ実行するためのラッパー
+        let isCompleted = false;
+        const complete = () => {
+            if (isCompleted) return;
+            isCompleted = true;
             this.removeEffect(effectEl);
             if (callback) callback();
-        });
+        };
+
+        // アニメーション終了後に削除
+        effectEl.addEventListener('animationend', complete);
+
+        // フォールバック: 万が一イベントが発火しない場合のためにタイムアウトを設定 (アニメーション時間+α)
+        setTimeout(complete, 1000);
     }
 
     /**

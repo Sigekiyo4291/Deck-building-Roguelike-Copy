@@ -1,4 +1,11 @@
 export class MapNode {
+    id: string | number;
+    layer: number;
+    type: string;
+    nextNodes: (string | number)[];
+    isClear: boolean;
+    isAvailable: boolean;
+
     constructor(id, layer, type) {
         this.id = id;
         this.layer = layer; // 階層 (0: スタート, 1, 2... 14: ボス)
@@ -10,6 +17,9 @@ export class MapNode {
 }
 
 export class GameMap {
+    layers: MapNode[][];
+    currentNode: MapNode | null;
+
     constructor() {
         this.layers = []; // 各階層のノードリストの配列 [ [node, node], [node...], ... ]
         this.currentNode = null; // 現在プレイヤーがいるノード

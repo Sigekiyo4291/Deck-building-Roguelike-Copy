@@ -1,5 +1,9 @@
-
 export class Relic {
+    id: string;
+    name: string;
+    description: string;
+    rarity: string;
+
     constructor(id, name, description, rarity) {
         this.id = id;
         this.name = name;

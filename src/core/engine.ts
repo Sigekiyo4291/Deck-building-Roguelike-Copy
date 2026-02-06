@@ -1,6 +1,17 @@
-import { CardLibrary } from './card.js';
+import { CardLibrary } from './card.ts';
 
 export class BattleEngine {
+    player: any;
+    enemies: any[];
+    uiUpdateCallback: any;
+    onBattleEnd: any;
+    onCardSelectionRequest: any;
+    effectManager: any;
+    turn: number;
+    phase: string;
+    isProcessing: boolean = false;
+    isEnded: boolean = false;
+
     constructor(player, enemies, uiUpdateCallback, onBattleEnd, onCardSelectionRequest, effectManager = null) {
         this.player = player;
         this.enemies = enemies; // 配列で保持
@@ -74,29 +85,20 @@ export class BattleEngine {
     }
 
     async playCard(cardIndex, targetIndex = 0) {
-        if (this.phase !== 'player' || this.isProcessing) return;
+        if (this.phase !== 'player' || this.isProcessing || this.isEnded) return;
 
+        console.log('BattleEngine: Processing started (isProcessing = true)');
         this.isProcessing = true;
         try {
             const card = this.player.hand[cardIndex];
-
-            // 呪いカードは使用できない
-            if (card.type === 'curse') return;
-
-            // ターゲット取得
+            if (!card) return;
 
             let target = this.enemies[targetIndex];
-
-            // もしターゲットが死んでいたら、生存している別の敵を探す
             if (target && target.isDead()) {
                 target = this.enemies.find(e => !e.isDead());
             }
-
-            // 敵がいない、またはカードがターゲットを必要としない場合（全体攻撃など）の制御も将来必要
-            // ここではターゲット必須とする
             if (!target) return;
 
-            // 拘束(entangled)状態ならアタックカードを使用できない
             if (this.player.hasStatus('entangled') && card.type === 'attack') {
                 console.log("アタック不能！拘束されています。");
                 return;
@@ -104,24 +106,18 @@ export class BattleEngine {
 
             const currentCost = card.getCost(this.player);
             if (currentCost === 'X' || (typeof currentCost === 'number' && currentCost >= 0 && this.player.energy >= currentCost)) {
-                // 使用条件チェック (クラッシュの手札制限など)
                 if (!card.canPlay(this.player, this)) {
                     console.log("使用条件を満たしていません！");
                     return;
                 }
 
-                // カードを手札から取り出す（プレイ開始）
                 this.player.hand.splice(cardIndex, 1);
-
-                // カード効果を実行（非同期対応）
                 await card.play(this.player, target, this);
 
-                // 捨て札または廃棄へ
                 if (card.isExhaust) {
                     this.player.exhaust.push(card);
-                    console.log(`${card.name} は廃棄されました。`);
                 } else {
-                    this.player.discard.push(card); // 捨て札に追加
+                    this.player.discard.push(card);
                 }
 
                 this.checkBattleEnd();
@@ -129,15 +125,24 @@ export class BattleEngine {
             }
         } finally {
             this.isProcessing = false;
+            console.log('BattleEngine: Processing finished (isProcessing = false)');
         }
     }
 
     // ターゲットにエフェクトを表示
     showEffectForTarget(targetIndex, card, callback) {
-        const enemyElements = document.querySelectorAll('.entity.enemy');
-        if (enemyElements[targetIndex]) {
+        // targetIndexは使わず、enemies[targetIndex]からUUIDを取得してDOMを引く
+        // もしtargetIndexがnullなら処理できないが、呼び出し側で解決済みとする
+        const target = this.enemies[targetIndex];
+        if (!target) {
+            if (callback) callback();
+            return;
+        }
+
+        const enemyElement = document.querySelector(`.entity.enemy[data-id="${target.uuid}"]`);
+        if (enemyElement) {
             const effectType = card.effectType || 'slash';
-            this.effectManager.showAttackEffect(enemyElements[targetIndex], effectType, callback);
+            this.effectManager.showAttackEffect(enemyElement, effectType, callback);
         } else {
             // エフェクト表示に失敗した場合はコールバックを即座に実行
             callback();
@@ -178,9 +183,9 @@ export class BattleEngine {
 
         // エフェクトを表示
         if (this.effectManager) {
-            const enemyElements = document.querySelectorAll('.entity.enemy');
-            if (enemyElements[targetIndex]) {
-                await this.effectManager.showAttackEffectAsync(enemyElements[targetIndex], 'slash');
+            const enemyElement = document.querySelector(`.entity.enemy[data-id="${target.uuid}"]`);
+            if (enemyElement) {
+                await this.effectManager.showAttackEffectAsync(enemyElement, 'slash');
             }
         }
 
@@ -195,7 +200,7 @@ export class BattleEngine {
     }
 
     endTurn() {
-        if (this.phase !== 'player') return;
+        if (this.phase !== 'player' || this.isEnded) return;
 
         // 手札にある火傷 (BURN) カードの枚数を確認
         const burnCount = this.player.hand.filter(c => c.id === 'burn').length;
@@ -273,6 +278,7 @@ export class BattleEngine {
     }
 
     enemyTurn() {
+        if (this.isEnded) return;
         // 全ての生存している敵が行動
         this.enemies.forEach(enemy => {
             if (!enemy.isDead()) {
@@ -302,7 +308,7 @@ export class BattleEngine {
 
         this.turn++;
         this.checkBattleEnd();
-        if (!this.player.isDead()) {
+        if (!this.isEnded && !this.player.isDead()) {
             this.startPlayerTurn();
         }
     }
@@ -326,9 +332,11 @@ export class BattleEngine {
     }
 
     checkBattleEnd() {
+        if (this.isEnded) return;
         const allEnemiesDead = this.enemies.every(e => e.isDead());
 
         if (allEnemiesDead) {
+            this.isEnded = true;
             if (this.onBattleEnd) {
                 // レリック: onVictory
                 this.player.relics.forEach(relic => {
@@ -337,6 +345,7 @@ export class BattleEngine {
                 this.onBattleEnd('win');
             }
         } else if (this.player.isDead()) {
+            this.isEnded = true;
             if (this.onBattleEnd) this.onBattleEnd('lose');
         }
     }

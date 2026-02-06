@@ -1,4 +1,15 @@
 export class SceneManager {
+    game: any;
+    elApp: HTMLElement | null;
+    elBattleScene: HTMLElement | null;
+    elUiLayer: HTMLElement | null;
+    elMapScene: HTMLElement | null;
+    elRewardScene: HTMLElement | null;
+    elTreasureScene: HTMLElement | null;
+    elShopScene: HTMLElement | null;
+    elRestScene: HTMLElement | null;
+    elEventScene: HTMLElement | null;
+
     constructor(game) {
         this.game = game;
         this.elApp = document.getElementById('app');
@@ -22,60 +33,57 @@ export class SceneManager {
 
     showBattle() {
         this.hideAllScenes();
-        this.elBattleScene.style.display = 'flex';
-        this.elUiLayer.style.display = 'flex';
+        if (this.elBattleScene) this.elBattleScene.style.display = 'flex';
+        if (this.elUiLayer) this.elUiLayer.style.display = 'flex';
     }
 
     showMap() {
         this.hideAllScenes();
-        this.elUiLayer.style.display = 'none'; // マップではUIを隠す
-        if (this.elMapScene) {
-            this.elMapScene.style.display = 'flex';
-        }
+        if (this.elUiLayer) this.elUiLayer.style.display = 'none';
+        if (this.elMapScene) this.elMapScene.style.display = 'flex';
     }
 
     showReward() {
         this.hideAllScenes();
-        // リワードシーン要素を再取得（動的に追加される可能性があるため）
         if (!this.elRewardScene) this.elRewardScene = document.getElementById('reward-scene');
-        if (this.elRewardScene) {
-            this.elRewardScene.style.display = 'flex';
-        }
+        if (this.elRewardScene) this.elRewardScene.style.display = 'flex';
     }
 
     showTreasure() {
         this.hideAllScenes();
         if (!this.elTreasureScene) this.elTreasureScene = document.getElementById('treasure-scene');
-        if (this.elTreasureScene) {
-            this.elTreasureScene.style.display = 'flex';
-        }
+        if (this.elTreasureScene) this.elTreasureScene.style.display = 'flex';
     }
 
     showShop() {
         this.hideAllScenes();
         if (!this.elShopScene) this.elShopScene = document.getElementById('shop-scene');
-        if (this.elShopScene) {
-            this.elShopScene.style.display = 'flex';
-        }
+        if (this.elShopScene) this.elShopScene.style.display = 'flex';
     }
 
     showRest() {
         this.hideAllScenes();
         if (!this.elRestScene) this.elRestScene = document.getElementById('rest-scene');
-        if (this.elRestScene) {
-            this.elRestScene.style.display = 'flex';
-        }
+        if (this.elRestScene) this.elRestScene.style.display = 'flex';
     }
 
     showEvent() {
         this.hideAllScenes();
         if (!this.elEventScene) this.elEventScene = document.getElementById('event-scene');
-        if (this.elEventScene) {
-            this.elEventScene.style.display = 'flex';
-        }
+        if (this.elEventScene) this.elEventScene.style.display = 'flex';
     }
 
     hideAllScenes() {
+        // 安全のために再取得
+        if (!this.elBattleScene) this.elBattleScene = document.querySelector('.battle-scene');
+        if (!this.elUiLayer) this.elUiLayer = document.querySelector('.ui-layer');
+        if (!this.elMapScene) this.elMapScene = document.getElementById('map-scene');
+        if (!this.elRewardScene) this.elRewardScene = document.getElementById('reward-scene');
+        if (!this.elTreasureScene) this.elTreasureScene = document.getElementById('treasure-scene');
+        if (!this.elShopScene) this.elShopScene = document.getElementById('shop-scene');
+        if (!this.elRestScene) this.elRestScene = document.getElementById('rest-scene');
+        if (!this.elEventScene) this.elEventScene = document.getElementById('event-scene');
+
         const scenes = [
             this.elBattleScene,
             this.elMapScene,
@@ -87,10 +95,11 @@ export class SceneManager {
         ];
 
         scenes.forEach(scene => {
-            if (scene) scene.style.display = 'none';
+            if (scene) {
+                scene.style.display = 'none';
+            }
         });
 
-        // UIレイヤーはバトル以外では隠すのが基本だが、個別に制御
         if (this.elUiLayer) this.elUiLayer.style.display = 'none';
     }
 
@@ -165,8 +174,8 @@ export class SceneManager {
             const wrapperRect = mapWrapper.getBoundingClientRect();
 
             // SVGのサイズをmapWrapperに合わせる
-            svg.setAttribute('width', mapWrapper.scrollWidth);
-            svg.setAttribute('height', mapWrapper.scrollHeight);
+            svg.setAttribute('width', String(mapWrapper.scrollWidth));
+            svg.setAttribute('height', String(mapWrapper.scrollHeight));
 
             map.layers.forEach(layer => {
                 layer.forEach(node => {
@@ -187,10 +196,10 @@ export class SceneManager {
                         const endY = endRect.top - wrapperRect.top + endRect.height / 2;
 
                         const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                        line.setAttribute('x1', startX);
-                        line.setAttribute('y1', startY);
-                        line.setAttribute('x2', endX);
-                        line.setAttribute('y2', endY);
+                        line.setAttribute('x1', String(startX));
+                        line.setAttribute('y1', String(startY));
+                        line.setAttribute('x2', String(endX));
+                        line.setAttribute('y2', String(endY));
                         line.setAttribute('class', 'map-path-line');
 
                         // 現在地から繋がっているパスを強調

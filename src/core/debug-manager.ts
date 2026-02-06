@@ -1,14 +1,17 @@
-import { Config } from '../config.js';
-import { CardLibrary } from './card.js';
-import { RelicLibrary } from './relic.js';
-import { EventLibrary } from './event-data.js';
+import { Config } from '../config.ts';
+import { CardLibrary } from './card.ts';
+import { RelicLibrary } from './relic.ts';
+import { EventLibrary } from './event-data.ts';
 import {
     Louse, Cultist, JawWorm, AcidSlimeM, SpikeSlimeM, AcidSlimeS, SpikeSlimeS,
     FungiBeast, AcidSlimeL, SpikeSlimeL, BlueSlaver, RedSlaver, Looter,
     GremlinNob, Lagavulin, Sentry, SlimeBoss, Guardian, Hexaghost
-} from './entity.js';
+} from './entity.ts';
 
 export class DebugManager {
+    game: any;
+    isVisible: boolean;
+
     constructor(game) {
         this.game = game;
         this.isVisible = false;
@@ -83,14 +86,16 @@ export class DebugManager {
         // Tab Switching
         const tabs = overlay.querySelectorAll('.debug-tab');
         tabs.forEach(tab => {
-            tab.onclick = () => {
+            (tab as HTMLElement).onclick = () => {
                 tabs.forEach(t => t.classList.remove('active'));
                 tab.classList.add('active');
 
                 const contents = overlay.querySelectorAll('.debug-content');
-                contents.forEach(c => c.style.display = 'none');
+                contents.forEach(c => (c as HTMLElement).style.display = 'none');
 
-                document.getElementById(`debug-content-${tab.dataset.tab}`).style.display = 'block';
+                const targetId = (tab as HTMLElement).dataset.tab;
+                const targetContent = document.getElementById(`debug-content-${targetId}`);
+                if (targetContent) targetContent.style.display = 'block';
             };
         });
 

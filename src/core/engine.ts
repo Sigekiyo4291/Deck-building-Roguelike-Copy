@@ -1,4 +1,4 @@
-import { CardLibrary } from './card.ts';
+import { CardLibrary } from './card';
 
 export class BattleEngine {
     player: any;

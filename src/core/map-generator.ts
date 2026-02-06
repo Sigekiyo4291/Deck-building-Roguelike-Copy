@@ -1,4 +1,4 @@
-import { MapNode, GameMap } from './map-data.ts';
+import { MapNode, GameMap } from './map-data';
 
 export class MapGenerator {
     static generate(layersCount = 15) {

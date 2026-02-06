@@ -1,12 +1,12 @@
-import { Config } from '../config.ts';
-import { CardLibrary } from './card.ts';
-import { RelicLibrary } from './relic.ts';
-import { EventLibrary } from './event-data.ts';
+import { Config } from '../config';
+import { CardLibrary } from './card';
+import { RelicLibrary } from './relic';
+import { EventLibrary } from './event-data';
 import {
     Louse, Cultist, JawWorm, AcidSlimeM, SpikeSlimeM, AcidSlimeS, SpikeSlimeS,
     FungiBeast, AcidSlimeL, SpikeSlimeL, BlueSlaver, RedSlaver, Looter,
     GremlinNob, Lagavulin, Sentry, SlimeBoss, Guardian, Hexaghost
-} from './entity.ts';
+} from './entity';
 
 export class DebugManager {
     game: any;

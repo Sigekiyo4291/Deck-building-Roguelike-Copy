@@ -1,5 +1,5 @@
-import { CardLibrary } from './card.ts';
-import { RelicLibrary } from './relic.ts';
+import { CardLibrary } from './card';
+import { RelicLibrary } from './relic';
 
 /**
  * イベントライブラリ

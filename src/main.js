@@ -74,7 +74,9 @@ class Game {
     cardEl.className = `card ${card.rarity}`;
     const currentCost = card.getCost(this.player);
     const displayCost = currentCost === 'X' ? 'X' : (currentCost < 0 ? '' : currentCost);
+    const imageHtml = card.image ? `<img src="${card.image}" class="card-illustration" />` : '';
     cardEl.innerHTML = `
+            ${imageHtml}
             <div class="card-cost">${displayCost}</div>
             <div class="card-title">${card.name}</div>
             <div class="card-desc">${card.description}</div>
@@ -771,7 +773,9 @@ class Game {
   createRewardCardElement(card) {
     const cardEl = document.createElement('div');
     cardEl.className = `card ${card.rarity}`;
+    const imageHtml = card.image ? `<img src="${card.image}" class="card-illustration" />` : '';
     cardEl.innerHTML = `
+            ${imageHtml}
             <div class="card-cost">${card.cost}</div>
             <div class="card-title">${card.name}</div>
             <div class="card-desc">${card.description}</div>
@@ -1001,7 +1005,9 @@ class Game {
 
     const currentCost = card.getCost(this.player);
     const displayCost = currentCost === 'X' ? 'X' : (currentCost < 0 ? '' : currentCost);
+    const imageHtml = card.image ? `<img src="${card.image}" class="card-illustration" />` : '';
     cardEl.innerHTML = `
+              ${imageHtml}
               <div class="card-cost">${displayCost}</div>
               <div class="card-title">${card.name}</div>
               <div class="card-desc">${description}</div>

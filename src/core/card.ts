@@ -868,6 +868,30 @@ export const CardLibrary = {
             s.addStatus('strength_down', 4);
         }
     }),
+    TRUE_GRIT: new Card('true_grit', '不屈の闘志', 1, 'skill', 'common', '7ブロックを得る。手札からランダムに1枚廃棄する。', (s, t, e) => {
+        s.addBlock(7);
+        if (e && s.hand.length > 0) {
+            const randomIndex = Math.floor(Math.random() * s.hand.length);
+            const exhausted = s.hand.splice(randomIndex, 1)[0];
+            s.exhaust.push(exhausted);
+            if (e.uiUpdateCallback) e.uiUpdateCallback();
+        }
+    }, 'self', false, {
+        description: '9ブロックを得る。手札から1枚選んで廃棄する。',
+        baseBlock: 9,
+        effect: (s, t, e) => {
+            s.addBlock(9);
+            if (e && e.onCardSelectionRequest && s.hand.length > 0) {
+                e.onCardSelectionRequest('廃棄するカードを選択', s.hand, (card, index) => {
+                    if (card) {
+                        s.hand.splice(index, 1);
+                        s.exhaust.push(card);
+                        if (e.uiUpdateCallback) e.uiUpdateCallback();
+                    }
+                });
+            }
+        }
+    }, null, 0, null, 7),
     CLOTHESLINE: new Card('clothesline', 'ラリアット', 2, 'attack', 'common', '12ダメージを与え、脱力(2)を付与', async (s, t, e) => {
         if (e && e.dealDamageWithEffect) {
             await e.dealDamageWithEffect(s, t, s.calculateDamage(12));
@@ -978,6 +1002,352 @@ export const CardLibrary = {
             }
         }
     }, null, 12),
+
+    // Additional Skills
+    ARMAMENTS: new Card('armaments', '武装', 1, 'skill', 'common', '5ブロックを得る。手札のカード1枚を戦闘中のみ強化する。', (s, t, e) => {
+        s.addBlock(5);
+        if (e && e.onCardSelectionRequest && s.hand.length > 0) {
+            e.onCardSelectionRequest('強化するカードを選択', s.hand, (card, index) => {
+                if (card && !card.isUpgraded) {
+                    card.upgrade();
+                    if (e.uiUpdateCallback) e.uiUpdateCallback();
+                }
+            });
+        }
+    }, 'self', false, {
+        description: '5ブロックを得る。手札の全てのカードを戦闘中のみ強化する。',
+        baseBlock: 5,
+        effect: (s, t, e) => {
+            s.addBlock(5);
+            s.hand.forEach(card => {
+                if (!card.isUpgraded) card.upgrade();
+            });
+            if (e && e.uiUpdateCallback) e.uiUpdateCallback();
+        }
+    }, null, 0, null, 5),
+    HAVOC: new Card('havoc', '荒廃', 1, 'skill', 'uncommon', '山札の一番上のカードをプレイして廃棄する。', (s, t, e) => {
+        if (e && e.player.deck.length > 0) {
+            const card = e.player.deck.pop();
+            card.isExhaust = true;
+            e.player.hand.push(card);
+            if (e.uiUpdateCallback) e.uiUpdateCallback();
+        }
+    }, 'self', false, {
+        cost: 0,
+        description: '山札の一番上のカードをプレイして廃棄する。'
+    }),
+    WARCRY: new Card('warcry', '雄叫び', 0, 'skill', 'common', 'カードを1枚引く。手札のカード1枚を山札の一番上に置く。廃棄。', (s, t, e) => {
+        if (e) {
+            e.drawCards(1);
+            if (e.onCardSelectionRequest && s.hand.length > 0) {
+                e.onCardSelectionRequest('山札の一番上に置くカードを選択', s.hand, (card, index) => {
+                    if (card) {
+                        s.hand.splice(index, 1);
+                        e.player.deck.push(card);
+                        if (e.uiUpdateCallback) e.uiUpdateCallback();
+                    }
+                });
+            }
+        }
+    }, 'self', false, {
+        description: 'カードを2枚引く。手札のカード1枚を山札の一番上に置く。廃棄。',
+        effect: (s, t, e) => {
+            if (e) {
+                e.drawCards(2);
+                if (e.onCardSelectionRequest && s.hand.length > 0) {
+                    e.onCardSelectionRequest('山札の一番上に置くカードを選択', s.hand, (card, index) => {
+                        if (card) {
+                            s.hand.splice(index, 1);
+                            e.player.deck.push(card);
+                            if (e.uiUpdateCallback) e.uiUpdateCallback();
+                        }
+                    });
+                }
+            }
+        }
+    }, null, 0, null, 0, null, false, true),
+    POWER_THROUGH: new Card('power_through', 'やせ我慢', 1, 'skill', 'uncommon', '15ブロックを得る。手札に負傷を2枚加える。', (s, t, e) => {
+        s.addBlock(15);
+        if (e) {
+            s.hand.push(CardLibrary.WOUND.clone());
+            s.hand.push(CardLibrary.WOUND.clone());
+            if (e.uiUpdateCallback) e.uiUpdateCallback();
+        }
+    }, 'self', false, {
+        description: '20ブロックを得る。手札に負傷を2枚加える。',
+        baseBlock: 20,
+        effect: (s, t, e) => {
+            s.addBlock(20);
+            if (e) {
+                s.hand.push(CardLibrary.WOUND.clone());
+                s.hand.push(CardLibrary.WOUND.clone());
+                if (e.uiUpdateCallback) e.uiUpdateCallback();
+            }
+        }
+    }, null, 0, null, 15),
+    GHOSTLY_ARMOR: new Card('ghostly_armor', 'ゴーストアーマー', 1, 'skill', 'uncommon', 'エセリアル。10ブロックを得る。', (s, t) => {
+        s.addBlock(10);
+    }, 'self', false, {
+        description: 'エセリアル。13ブロックを得る。',
+        baseBlock: 13,
+        effect: (s, t) => { s.addBlock(13); }
+    }, null, 0, null, 10, null, true),
+    SECOND_WIND: new Card('second_wind', 'セカンドウィンド', 1, 'skill', 'uncommon', '手札の非アタックカードを全て廃棄し、1枚につき5ブロックを得る。', (s, t, e) => {
+        const nonAttacks = s.hand.filter(c => c.type !== 'attack');
+        const count = nonAttacks.length;
+        nonAttacks.forEach(c => s.exhaust.push(c));
+        s.hand = s.hand.filter(c => c.type === 'attack');
+        s.addBlock(5 * count);
+        if (e && e.uiUpdateCallback) e.uiUpdateCallback();
+    }, 'self', false, {
+        description: '手札の非アタックカードを全て廃棄し、1枚につき7ブロックを得る。',
+        effect: (s, t, e) => {
+            const nonAttacks = s.hand.filter(c => c.type !== 'attack');
+            const count = nonAttacks.length;
+            nonAttacks.forEach(c => s.exhaust.push(c));
+            s.hand = s.hand.filter(c => c.type === 'attack');
+            s.addBlock(7 * count);
+            if (e && e.uiUpdateCallback) e.uiUpdateCallback();
+        }
+    }),
+    BATTLE_TRANCE: new Card('battle_trance', 'バトルトランス', 0, 'skill', 'uncommon', 'カードを3枚引く。このターン、カードを引けなくなる。', (s, t, e) => {
+        if (e) {
+            e.drawCards(3);
+            s.addStatus('no_draw', 1);
+        }
+    }, 'self', false, {
+        description: 'カードを4枚引く。このターン、カードを引けなくなる。',
+        effect: (s, t, e) => {
+            if (e) {
+                e.drawCards(4);
+                s.addStatus('no_draw', 1);
+            }
+        }
+    }),
+    DUAL_WIELD: new Card('dual_wield', '二刀流', 1, 'skill', 'uncommon', '手札のアタックかパワーカード1枚の複製を手札に加える。', (s, t, e) => {
+        if (e && e.onCardSelectionRequest) {
+            const targets = s.hand.filter(c => c.type === 'attack' || c.type === 'power');
+            if (targets.length > 0) {
+                e.onCardSelectionRequest('複製するカードを選択', targets, (card, index) => {
+                    if (card) {
+                        s.hand.push(card.clone());
+                        if (e.uiUpdateCallback) e.uiUpdateCallback();
+                    }
+                });
+            }
+        }
+    }, 'self', false, {
+        description: '手札のアタックかパワーカード1枚の複製を2枚手札に加える。',
+        effect: (s, t, e) => {
+            if (e && e.onCardSelectionRequest) {
+                const targets = s.hand.filter(c => c.type === 'attack' || c.type === 'power');
+                if (targets.length > 0) {
+                    e.onCardSelectionRequest('複製するカードを選択', targets, (card, index) => {
+                        if (card) {
+                            s.hand.push(card.clone());
+                            s.hand.push(card.clone());
+                            if (e.uiUpdateCallback) e.uiUpdateCallback();
+                        }
+                    });
+                }
+            }
+        }
+    }),
+    ENTRENCH: new Card('entrench', '塹壕', 2, 'skill', 'uncommon', '現在のブロック値を2倍にする。', (s, t) => {
+        s.block *= 2;
+    }, 'self', false, {
+        cost: 1,
+        description: '現在のブロック値を2倍にする。'
+    }),
+    INTIMIDATE: new Card('intimidate', '威嚇', 0, 'skill', 'uncommon', '全ての敵に脱力(1)を付与する。廃棄。', (s, t, e) => {
+        if (e) {
+            e.enemies.forEach(enemy => {
+                if (!enemy.isDead()) enemy.addStatus('weak', 1);
+            });
+        }
+    }, 'all', false, {
+        description: '全ての敵に脱力(2)を付与する。廃棄。',
+        effect: (s, t, e) => {
+            if (e) {
+                e.enemies.forEach(enemy => {
+                    if (!enemy.isDead()) enemy.addStatus('weak', 2);
+                });
+            }
+        }
+    }, null, 0, null, 0, null, false, true),
+    SPOT_WEAKNESS: new Card('spot_weakness', '弱点発見', 1, 'skill', 'uncommon', '敵が攻撃予定なら筋力を3得る。', (s, t, e) => {
+        if (t && t.nextMove && t.nextMove.type === 'attack') {
+            s.addStatus('strength', 3);
+        }
+    }, 'single', false, {
+        description: '敵が攻撃予定なら筋力を4得る。',
+        effect: (s, t, e) => {
+            if (t && t.nextMove && t.nextMove.type === 'attack') {
+                s.addStatus('strength', 4);
+            }
+        }
+    }),
+    RAGE: new Card('rage', '激怒', 0, 'skill', 'uncommon', 'アタックカードをプレイする度に3ブロックを得る。', (s, t, e) => {
+        s.addStatus('rage', 3);
+    }, 'self', false, {
+        description: 'アタックカードをプレイする度に5ブロックを得る。',
+        effect: (s, t, e) => { s.addStatus('rage', 5); }
+    }),
+    DISARM: new Card('disarm', '武装解除', 1, 'skill', 'uncommon', '敵の筋力を2減らす。廃棄。', (s, t) => {
+        t.addStatus('strength', -2);
+    }, 'single', false, {
+        description: '敵の筋力を3減らす。廃棄。',
+        effect: (s, t) => { t.addStatus('strength', -3); }
+    }, null, 0, null, 0, null, false, true),
+    SEEING_RED: new Card('seeing_red', '激昂', 1, 'skill', 'uncommon', '2エナジーを得る。廃棄。', (s, t, e) => {
+        if (e) s.energy = Math.min(s.maxEnergy, s.energy + 2);
+    }, 'self', false, {
+        cost: 0,
+        description: '2エナジーを得る。廃棄。'
+    }, null, 0, null, 0, null, false, true),
+    BLOODLETTING: new Card('bloodletting', '瀉血', 0, 'skill', 'uncommon', 'HPを3失い、2エナジーを得る。', (s, t, e) => {
+        s.loseHP(3);
+        if (e) {
+            s.energy = Math.min(s.maxEnergy, s.energy + 2);
+            if (e.uiUpdateCallback) e.uiUpdateCallback();
+        }
+    }, 'self', false, {
+        description: 'HPを3失い、3エナジーを得る。',
+        effect: (s, t, e) => {
+            s.loseHP(3);
+            if (e) {
+                s.energy = Math.min(s.maxEnergy, s.energy + 3);
+                if (e.uiUpdateCallback) e.uiUpdateCallback();
+            }
+        }
+    }),
+    FLAME_BARRIER: new Card('flame_barrier', '炎の障壁', 2, 'skill', 'uncommon', '12ブロックを得る。攻撃を受けると攻撃者に4ダメージを与える。', (s, t) => {
+        s.addBlock(12);
+        s.addStatus('thorns', 4);
+    }, 'self', false, {
+        description: '16ブロックを得る。攻撃を受けると攻撃者に6ダメージを与える。',
+        baseBlock: 16,
+        effect: (s, t) => {
+            s.addBlock(16);
+            s.addStatus('thorns', 6);
+        }
+    }, null, 0, null, 12),
+    BURNING_PACT: new Card('burning_pact', '焦熱の契約', 1, 'skill', 'uncommon', '手札のカード1枚を廃棄し、カードを2枚引く。', (s, t, e) => {
+        if (e && e.onCardSelectionRequest && s.hand.length > 0) {
+            e.onCardSelectionRequest('廃棄するカードを選択', s.hand, (card, index) => {
+                if (card) {
+                    s.hand.splice(index, 1);
+                    s.exhaust.push(card);
+                    e.drawCards(2);
+                    if (e.uiUpdateCallback) e.uiUpdateCallback();
+                }
+            });
+        }
+    }, 'self', false, {
+        description: '手札のカード1枚を廃棄し、カードを3枚引く。',
+        effect: (s, t, e) => {
+            if (e && e.onCardSelectionRequest && s.hand.length > 0) {
+                e.onCardSelectionRequest('廃棄するカードを選択', s.hand, (card, index) => {
+                    if (card) {
+                        s.hand.splice(index, 1);
+                        s.exhaust.push(card);
+                        e.drawCards(3);
+                        if (e.uiUpdateCallback) e.uiUpdateCallback();
+                    }
+                });
+            }
+        }
+    }),
+    SHOCKWAVE: new Card('shockwave', '衝撃波', 2, 'skill', 'uncommon', '全ての敵に脱力(3)と脆弱(3)を付与する。廃棄。', (s, t, e) => {
+        if (e) {
+            e.enemies.forEach(enemy => {
+                if (!enemy.isDead()) {
+                    enemy.addStatus('weak', 3);
+                    enemy.addStatus('vulnerable', 3);
+                }
+            });
+        }
+    }, 'all', false, {
+        description: '全ての敵に脱力(5)と脆弱(5)を付与する。廃棄。',
+        effect: (s, t, e) => {
+            if (e) {
+                e.enemies.forEach(enemy => {
+                    if (!enemy.isDead()) {
+                        enemy.addStatus('weak', 5);
+                        enemy.addStatus('vulnerable', 5);
+                    }
+                });
+            }
+        }
+    }, null, 0, null, 0, null, false, true),
+    SENTINEL: new Card('sentinel', '見張り', 1, 'skill', 'uncommon', '5ブロックを得る。このカードが廃棄された時、2エナジーを得る。', (s, t) => {
+        s.addBlock(5);
+    }, 'self', false, {
+        description: '8ブロックを得る。このカードが廃棄された時、3エナジーを得る。',
+        baseBlock: 8,
+        effect: (s, t) => { s.addBlock(8); }
+    }, null, 0, null, 5),
+    DARK_SHACKLES: new Card('dark_shackles', '非道の刃', 1, 'skill', 'rare', 'ランダムなアタックカード1枚を生成し、そのコストを0にする。廃棄。', (s, t, e) => {
+        if (e) {
+            const attackCards = Object.values(CardLibrary).filter((c: any) => c.type === 'attack');
+            const randomCard = attackCards[Math.floor(Math.random() * attackCards.length)].clone();
+            randomCard.cost = 0;
+            s.hand.push(randomCard);
+            if (e.uiUpdateCallback) e.uiUpdateCallback();
+        }
+    }, 'self', false, {
+        cost: 0,
+        description: 'ランダムなアタックカード1枚を生成し、そのコストを0にする。廃棄。'
+    }, null, 0, null, 0, null, false, true),
+    DOUBLE_TAP: new Card('double_tap', 'ダブルタップ', 1, 'skill', 'rare', '次にプレイするアタックカードを2回プレイする。', (s, t) => {
+        s.addStatus('double_tap', 1);
+    }, 'self', false, {
+        description: '次にプレイする2枚のアタックカードをそれぞれ2回プレイする。',
+        effect: (s, t) => { s.addStatus('double_tap', 2); }
+    }),
+    LIMIT_BREAK: new Card('limit_break', 'リミットブレイク', 1, 'skill', 'rare', '筋力を2倍にする。廃棄。', (s, t) => {
+        const currentStr = s.getStatusValue('strength');
+        s.addStatus('strength', currentStr);
+    }, 'self', false, {
+        description: '筋力を2倍にする。',
+        effect: (s, t) => {
+            const currentStr = s.getStatusValue('strength');
+            s.addStatus('strength', currentStr);
+        }
+    }, null, 0, null, 0, null, false, false),
+    OFFERING: new Card('offering', '供物', 0, 'skill', 'rare', 'HPを6失い、2エナジーを得て、カードを3枚引く。廃棄。', (s, t, e) => {
+        s.loseHP(6);
+        if (e) {
+            s.energy = Math.min(s.maxEnergy, s.energy + 2);
+            e.drawCards(3);
+            if (e.uiUpdateCallback) e.uiUpdateCallback();
+        }
+    }, 'self', false, {
+        description: 'HPを6失い、2エナジーを得て、カードを5枚引く。廃棄。',
+        effect: (s, t, e) => {
+            s.loseHP(6);
+            if (e) {
+                s.energy = Math.min(s.maxEnergy, s.energy + 2);
+                e.drawCards(5);
+                if (e.uiUpdateCallback) e.uiUpdateCallback();
+            }
+        }
+    }, null, 0, null, 0, null, false, true),
+    EXHUME: new Card('exhume', '発掘', 1, 'skill', 'rare', '廃棄置き場からカード1枚を手札に加える。廃棄。', (s, t, e) => {
+        if (e && e.onCardSelectionRequest && s.exhaust.length > 0) {
+            e.onCardSelectionRequest('回収するカードを選択', s.exhaust, (card, index) => {
+                if (card) {
+                    s.exhaust.splice(index, 1);
+                    s.hand.push(card);
+                    if (e.uiUpdateCallback) e.uiUpdateCallback();
+                }
+            });
+        }
+    }, 'self', false, {
+        cost: 0,
+        description: '廃棄置き場からカード1枚を手札に加える。廃棄。'
+    }, null, 0, null, 0, null, false, true),
+
     INFLAME: new Card('inflame', '炎症', 1, 'power', 'uncommon', '筋力を2得る', (s, t) => {
         s.addStatus('strength', 2);
     }, 'self', false, {

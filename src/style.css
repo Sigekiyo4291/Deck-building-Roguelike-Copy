@@ -189,7 +189,7 @@ body {
   font-family: 'Crimson Text', serif;
   pointer-events: auto;
   transition: transform 0.2s;
-  background-image: url('assets/card_bg.png');
+  background-image: url('assets/images/cards/card_bg.png');
   background-size: cover;
   z-index: 150;
 }
@@ -286,7 +286,7 @@ body {
 .card {
   width: var(--card-width);
   height: var(--card-height);
-  background: url('assets/card_bg.png') no-repeat center/165% 115%;
+  background: url('assets/images/cards/card_bg.png') no-repeat center/165% 115%;
   border-radius: 8px;
   position: relative;
   cursor: pointer;
@@ -535,7 +535,7 @@ body {
 .card.rare {
   border-color: #f1c40f;
   box-shadow: 0 4px 12px rgba(241, 196, 15, 0.6);
-  background: linear-gradient(135deg, #444 0%, #555 100%);
+
 }
 
 .card.rare .card-title {

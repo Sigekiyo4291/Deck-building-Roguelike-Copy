@@ -148,7 +148,10 @@ export class BattleEngine {
                     }
                 }
 
-                if (card.isExhaust) {
+                if (card.type === 'power') {
+                    // パワーカードは戦闘から取り除かれる（どこにも追加しない）
+                    console.log(`${card.name} は戦闘から取り除かれました。`);
+                } else if (card.isExhaust) {
                     this.player.exhaustCard(card, this);
                 } else {
                     this.player.discard.push(card);

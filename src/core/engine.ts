@@ -127,6 +127,26 @@ export class BattleEngine {
                 this.player.hand.splice(cardIndex, 1);
                 await card.play(this.player, target, this);
 
+                // ダブルタップ (Double Tap) の処理
+                if (card.type === 'attack') {
+                    const doubleTapStatus = this.player.statusEffects.find(s => s.type === 'double_tap');
+                    if (doubleTapStatus && doubleTapStatus.value > 0) {
+                        this.player.addStatus('double_tap', -1);
+                        console.log('Double Tap triggered!');
+
+                        // ターゲットの再取得（もし死んでいたら）
+                        let newTarget = target;
+                        if (card.targetType === 'single' && (!newTarget || newTarget.isDead())) {
+                            newTarget = this.enemies.find(e => !e.isDead());
+                        }
+
+                        if (newTarget || card.targetType !== 'single') {
+                            await new Promise(resolve => setTimeout(resolve, 300));
+                            await card.play(this.player, newTarget, this, true);
+                        }
+                    }
+                }
+
                 if (card.isExhaust) {
                     this.player.exhaustCard(card, this);
                 } else {

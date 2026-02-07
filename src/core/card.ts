@@ -138,7 +138,7 @@ export class Card {
         if (this.upgradeData.onExhaust) this.onExhaust = this.upgradeData.onExhaust;
     }
 
-    async play(source, target, engine) {
+    async play(source, target, engine, freePlay = false) {
         if (this.type === 'curse') return false;
 
         const currentCost = this.getCost(source);
@@ -146,10 +146,16 @@ export class Card {
         let xValue = 0;
         if (currentCost === 'X') {
             xValue = source.energy;
-            source.energy = 0;
-        } else if (typeof currentCost === 'number' && currentCost >= 0 && source.energy >= currentCost) {
-            source.energy -= currentCost;
-            xValue = currentCost;
+            if (!freePlay) source.energy = 0;
+        } else if (typeof currentCost === 'number' && currentCost >= 0) {
+            if (freePlay) {
+                xValue = currentCost;
+            } else if (source.energy >= currentCost) {
+                source.energy -= currentCost;
+                xValue = currentCost;
+            } else {
+                return false;
+            }
         } else if (typeof currentCost === 'number' && currentCost < 0) {
             // 呪いなど使用不可
             return false;

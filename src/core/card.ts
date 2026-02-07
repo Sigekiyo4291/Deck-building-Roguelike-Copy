@@ -21,8 +21,9 @@ export class Card {
     miscValue: number;
     image: string | null;
     effectType: string;
+    onExhaust: any;
 
-    constructor(id, name, cost, type, rarity, description, effect, targetType, isUpgraded = false, upgradeData = null, canPlayCheck = null, baseDamage = 0, damageCalculator = null, baseBlock = 0, blockCalculator = null, isEthereal = false, isExhaust = false, costCalculator = null, image = null, effectType = 'slash') {
+    constructor(id, name, cost, type, rarity, description, effect, targetType, isUpgraded = false, upgradeData = null, canPlayCheck = null, baseDamage = 0, damageCalculator = null, baseBlock = 0, blockCalculator = null, isEthereal = false, isExhaust = false, costCalculator = null, image = null, effectType = 'slash', onExhaust = null) {
         this.id = id;
         this.baseName = name;
         this.name = name + (isUpgraded ? '+' : '');
@@ -50,7 +51,8 @@ export class Card {
         this.isExhaust = isExhaust;
         this.miscValue = 0; // 戦闘中などの動的な値を保持するプロパティ（ランページ等で使用）
         this.image = image;
-        this.effectType = effectType; // エフェクトタイプ（'slash', 'impact', etc.）
+        this.effectType = effectType;
+        this.onExhaust = onExhaust; // 廃棄時効果 (関数: (source, engine) => { ... }) // エフェクトタイプ（'slash', 'impact', etc.）
     }
 
     getCost(source) {
@@ -110,6 +112,7 @@ export class Card {
         if (this.upgradeData.damageCalculator) this.damageCalculator = this.upgradeData.damageCalculator;
         if (this.upgradeData.baseBlock !== undefined) this.baseBlock = this.upgradeData.baseBlock;
         if (this.upgradeData.blockCalculator) this.blockCalculator = this.upgradeData.blockCalculator;
+        if (this.upgradeData.onExhaust) this.onExhaust = this.upgradeData.onExhaust;
     }
 
     async play(source, target, engine) {
@@ -165,7 +168,8 @@ export class Card {
             this.isExhaust,
             this.costCalculator,
             this.image,
-            this.effectType
+            this.effectType,
+            this.onExhaust
         );
         c.miscValue = this.miscValue;
         return c;
@@ -481,7 +485,7 @@ export const CardLibrary = {
     SEVER_SOUL: new Card('sever_soul', '霊魂切断', 2, 'attack', 'uncommon', '16ダメージ。アタック以外の手札を全廃棄。', async (s, t, e) => {
         // アタック以外のカードを特定して廃棄
         const nonAttacks = s.hand.filter(c => c.type !== 'attack');
-        nonAttacks.forEach(c => s.exhaust.push(c));
+        nonAttacks.forEach(c => s.exhaustCard(c, e));
         // 手札からアタック以外を削除
         s.hand = s.hand.filter(c => c.type === 'attack');
 
@@ -499,7 +503,7 @@ export const CardLibrary = {
         baseDamage: 22,
         effect: async (s, t, e) => {
             const nonAttacks = s.hand.filter(c => c.type !== 'attack');
-            nonAttacks.forEach(c => s.exhaust.push(c));
+            nonAttacks.forEach(c => s.exhaustCard(c, e));
             s.hand = s.hand.filter(c => c.type === 'attack');
             if (t) {
                 if (e && e.dealDamageWithEffect) {
@@ -637,7 +641,7 @@ export const CardLibrary = {
     }, null, 21),
     FIEND_FIRE: new Card('fiend_fire', '鬼火', 2, 'attack', 'rare', '手札を全て廃棄し、1枚につき7ダメージを与える。廃棄。', async (s, t, e) => {
         const count = s.hand.length;
-        s.hand.forEach(c => s.exhaust.push(c));
+        s.hand.forEach(c => s.exhaustCard(c, e));
         s.hand.length = 0; // 手札を空にする
         if (t) {
             if (e && e.attackWithEffect) {
@@ -657,7 +661,7 @@ export const CardLibrary = {
         baseDamage: 10,
         effect: async (s, t, e) => {
             const count = s.hand.length;
-            s.hand.forEach(c => s.exhaust.push(c));
+            s.hand.forEach(c => s.exhaustCard(c, e));
             s.hand.length = 0; // 手札を空にする
             if (t) {
                 if (e && e.attackWithEffect) {
@@ -873,7 +877,7 @@ export const CardLibrary = {
         if (e && s.hand.length > 0) {
             const randomIndex = Math.floor(Math.random() * s.hand.length);
             const exhausted = s.hand.splice(randomIndex, 1)[0];
-            s.exhaust.push(exhausted);
+            s.exhaustCard(exhausted, e);
             if (e.uiUpdateCallback) e.uiUpdateCallback();
         }
     }, 'self', false, {
@@ -885,7 +889,7 @@ export const CardLibrary = {
                 e.onCardSelectionRequest('廃棄するカードを選択', s.hand, (card, index) => {
                     if (card) {
                         s.hand.splice(index, 1);
-                        s.exhaust.push(card);
+                        s.exhaustCard(card, e);
                         if (e.uiUpdateCallback) e.uiUpdateCallback();
                     }
                 });
@@ -1095,7 +1099,7 @@ export const CardLibrary = {
     SECOND_WIND: new Card('second_wind', 'セカンドウィンド', 1, 'skill', 'uncommon', '手札の非アタックカードを全て廃棄し、1枚につき5ブロックを得る。', (s, t, e) => {
         const nonAttacks = s.hand.filter(c => c.type !== 'attack');
         const count = nonAttacks.length;
-        nonAttacks.forEach(c => s.exhaust.push(c));
+        nonAttacks.forEach(c => s.exhaustCard(c, e));
         s.hand = s.hand.filter(c => c.type === 'attack');
         s.addBlock(5 * count);
         if (e && e.uiUpdateCallback) e.uiUpdateCallback();
@@ -1104,7 +1108,7 @@ export const CardLibrary = {
         effect: (s, t, e) => {
             const nonAttacks = s.hand.filter(c => c.type !== 'attack');
             const count = nonAttacks.length;
-            nonAttacks.forEach(c => s.exhaust.push(c));
+            nonAttacks.forEach(c => s.exhaustCard(c, e));
             s.hand = s.hand.filter(c => c.type === 'attack');
             s.addBlock(7 * count);
             if (e && e.uiUpdateCallback) e.uiUpdateCallback();
@@ -1237,7 +1241,7 @@ export const CardLibrary = {
             e.onCardSelectionRequest('廃棄するカードを選択', s.hand, (card, index) => {
                 if (card) {
                     s.hand.splice(index, 1);
-                    s.exhaust.push(card);
+                    s.exhaustCard(card, e);
                     e.drawCards(2);
                     if (e.uiUpdateCallback) e.uiUpdateCallback();
                 }
@@ -1250,7 +1254,7 @@ export const CardLibrary = {
                 e.onCardSelectionRequest('廃棄するカードを選択', s.hand, (card, index) => {
                     if (card) {
                         s.hand.splice(index, 1);
-                        s.exhaust.push(card);
+                        s.exhaustCard(card, e);
                         e.drawCards(3);
                         if (e.uiUpdateCallback) e.uiUpdateCallback();
                     }
@@ -1277,8 +1281,19 @@ export const CardLibrary = {
     }, 'self', false, {
         description: '8ブロックを得る。このカードが廃棄された時、3エナジーを得る。',
         baseBlock: 8,
-        effect: (s, t) => { s.addBlock(8); }
-    }, null, 0, null, 5),
+        effect: (s, t) => { s.addBlock(8); },
+        onExhaust: (s, e) => {
+            if (e) {
+                s.energy += 3;
+                if (e.uiUpdateCallback) e.uiUpdateCallback();
+            }
+        }
+    }, null, 0, null, 5, null, false, false, null, null, 'slash', (s, e) => {
+        if (e) {
+            s.energy += 2;
+            if (e.uiUpdateCallback) e.uiUpdateCallback();
+        }
+    }),
     DARK_SHACKLES: new Card('dark_shackles', '非道の刃', 1, 'skill', 'rare', 'ランダムなアタックカード1枚を生成し、そのコストを0にする。廃棄。', (s, t, e) => {
         if (e) {
             const attackCards = Object.values(CardLibrary).filter((c: any) => c.type === 'attack');

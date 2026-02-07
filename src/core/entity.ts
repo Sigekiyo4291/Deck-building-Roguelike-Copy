@@ -240,6 +240,13 @@ export class Player extends Entity {
     this.relics.push(RelicLibrary.BURNING_BLOOD);
   }
 
+  exhaustCard(card, engine) {
+    this.exhaust.push(card);
+    if (card.onExhaust && engine) {
+      card.onExhaust(this, engine);
+    }
+  }
+
   resetEnergy() {
     this.energy = this.maxEnergy;
   }

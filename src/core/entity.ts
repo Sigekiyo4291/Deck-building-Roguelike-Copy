@@ -171,6 +171,11 @@ export class Entity {
         s.value = 0;
       }
 
+      // 激怒(rage): ターン終了時に解除
+      if (s.type === 'rage') {
+        s.value = 0;
+      }
+
       // フレックス(strength_down): ターン終了時に筋力を失う
       if (s.type === 'strength_down') {
         this.addStatus('strength', -s.value);

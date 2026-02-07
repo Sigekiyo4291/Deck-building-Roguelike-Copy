@@ -1,3 +1,27 @@
+export interface CardInitParams {
+    id: string;
+    name: string;
+    cost: number | string;
+    type: string;
+    rarity: string;
+    description: string;
+    effect?: any;
+    targetType?: string;
+    isUpgraded?: boolean;
+    upgradeData?: any;
+    canPlayCheck?: any;
+    baseDamage?: number;
+    damageCalculator?: any;
+    baseBlock?: number;
+    blockCalculator?: any;
+    isEthereal?: boolean;
+    isExhaust?: boolean;
+    costCalculator?: any;
+    image?: string | null;
+    effectType?: string;
+    onExhaust?: any;
+}
+
 export class Card {
     id: string;
     baseName: string;
@@ -23,36 +47,35 @@ export class Card {
     effectType: string;
     onExhaust: any;
 
-    constructor(id, name, cost, type, rarity, description, effect, targetType, isUpgraded = false, upgradeData = null, canPlayCheck = null, baseDamage = 0, damageCalculator = null, baseBlock = 0, blockCalculator = null, isEthereal = false, isExhaust = false, costCalculator = null, image = null, effectType = 'slash', onExhaust = null) {
-        this.id = id;
-        this.baseName = name;
-        this.name = name + (isUpgraded ? '+' : '');
-        this.cost = cost;
-        this.costCalculator = costCalculator;
-        this.type = type; // 'attack', 'skill', 'power'
-        this.rarity = rarity; // 'basic', 'common', 'uncommon', 'rare'
-        this.description = description;
-        this.effect = effect; // 関数: (source, target) => { ... }
-        this.isUpgraded = isUpgraded;
-        this.upgradeData = upgradeData;
+    constructor(params: CardInitParams) {
+        this.id = params.id;
+        this.baseName = params.name;
+        this.name = params.name + (params.isUpgraded ? '+' : '');
+        this.cost = params.cost;
+        this.costCalculator = params.costCalculator;
+        this.type = params.type;
+        this.rarity = params.rarity;
+        this.description = params.description;
+        this.effect = params.effect;
+        this.isUpgraded = params.isUpgraded || false;
+        this.upgradeData = params.upgradeData || null;
 
-        if (targetType) {
-            this.targetType = targetType;
+        if (params.targetType) {
+            this.targetType = params.targetType;
         } else {
-            // デフォルト: アタックは単体、その他は自分（または対象指定なし）
-            this.targetType = (type === 'attack') ? 'single' : 'self';
+            this.targetType = (params.type === 'attack') ? 'single' : 'self';
         }
-        this.canPlayCheck = canPlayCheck;
-        this.baseDamage = baseDamage;
-        this.damageCalculator = damageCalculator;
-        this.baseBlock = baseBlock;
-        this.blockCalculator = blockCalculator;
-        this.isEthereal = isEthereal;
-        this.isExhaust = isExhaust;
-        this.miscValue = 0; // 戦闘中などの動的な値を保持するプロパティ（ランページ等で使用）
-        this.image = image;
-        this.effectType = effectType;
-        this.onExhaust = onExhaust; // 廃棄時効果 (関数: (source, engine) => { ... }) // エフェクトタイプ（'slash', 'impact', etc.）
+        this.canPlayCheck = params.canPlayCheck || null;
+        this.baseDamage = params.baseDamage || 0;
+        this.damageCalculator = params.damageCalculator || null;
+        this.baseBlock = params.baseBlock || 0;
+        this.blockCalculator = params.blockCalculator || null;
+        this.isEthereal = params.isEthereal || false;
+        this.isExhaust = params.isExhaust || false;
+        this.miscValue = 0;
+        this.image = params.image || null;
+        this.effectType = params.effectType || 'slash';
+        this.onExhaust = params.onExhaust || null;
     }
 
     getCost(source) {
@@ -148,29 +171,29 @@ export class Card {
     }
 
     clone() {
-        const c = new Card(
-            this.id,
-            this.baseName,
-            this.cost,
-            this.type,
-            this.rarity,
-            this.description,
-            this.effect,
-            this.targetType,
-            this.isUpgraded,
-            this.upgradeData,
-            this.canPlayCheck,
-            this.baseDamage,
-            this.damageCalculator,
-            this.baseBlock,
-            this.blockCalculator,
-            this.isEthereal,
-            this.isExhaust,
-            this.costCalculator,
-            this.image,
-            this.effectType,
-            this.onExhaust
-        );
+        const c = new Card({
+            id: this.id,
+            name: this.baseName,
+            cost: this.cost,
+            type: this.type,
+            rarity: this.rarity,
+            description: this.description,
+            effect: this.effect,
+            targetType: this.targetType,
+            isUpgraded: this.isUpgraded,
+            upgradeData: this.upgradeData,
+            canPlayCheck: this.canPlayCheck,
+            baseDamage: this.baseDamage,
+            damageCalculator: this.damageCalculator,
+            baseBlock: this.baseBlock,
+            blockCalculator: this.blockCalculator,
+            isEthereal: this.isEthereal,
+            isExhaust: this.isExhaust,
+            costCalculator: this.costCalculator,
+            image: this.image,
+            effectType: this.effectType,
+            onExhaust: this.onExhaust
+        });
         c.miscValue = this.miscValue;
         return c;
     }
@@ -179,148 +202,223 @@ export class Card {
 // カードライブラリ
 export const CardLibrary = {
     // Basic
-    STRIKE: new Card('strike', 'ストライク', 1, 'attack', 'basic', '6ダメージを与える', async (s, t, e) => {
-        if (e && e.dealDamageWithEffect) {
-            await e.dealDamageWithEffect(s, t, s.calculateDamage(6));
-        } else {
-            t.takeDamage(s.calculateDamage(6), s);
-        }
-    }, 'single', false, {
-        description: '9ダメージを与える',
-        baseDamage: 9,
+    STRIKE: new Card({
+        id: 'strike',
+        name: 'ストライク',
+        cost: 1,
+        type: 'attack',
+        rarity: 'basic',
+        description: '6ダメージを与える',
         effect: async (s, t, e) => {
             if (e && e.dealDamageWithEffect) {
-                await e.dealDamageWithEffect(s, t, s.calculateDamage(9));
+                await e.dealDamageWithEffect(s, t, s.calculateDamage(6));
             } else {
-                t.takeDamage(s.calculateDamage(9), s);
+                t.takeDamage(s.calculateDamage(6), s);
             }
-        }
-    }, null, 6, null, 0, null, false, false, null, 'assets/images/cards/Strike.png'),
-    DEFEND: new Card('defend', 'ディフェンド', 1, 'skill', 'basic', '5ブロックを得る', (s, t) => {
-        s.addBlock(5);
-    }, 'self', false, {
-        description: '8ブロックを得る',
-        baseBlock: 8,
-        effect: (s, t) => { s.addBlock(8); }
-    }, null, 0, null, 5, null, false, false, null, 'assets/images/cards/Defend.png'),
-    BASH: new Card('bash', '強打', 2, 'attack', 'basic', '8ダメージを与え、脆弱(2)を付与', async (s, t, e) => {
-        if (e && e.dealDamageWithEffect) {
-            await e.dealDamageWithEffect(s, t, s.calculateDamage(8));
-        } else {
-            t.takeDamage(s.calculateDamage(8), s);
-        }
-        t.addStatus('vulnerable', 2);
-    }, 'single', false, {
-        description: '10ダメージを与え、脆弱(3)を付与',
-        baseDamage: 10,
+        },
+        targetType: 'single',
+        upgradeData: {
+            description: '9ダメージを与える',
+            baseDamage: 9,
+            effect: async (s, t, e) => {
+                if (e && e.dealDamageWithEffect) {
+                    await e.dealDamageWithEffect(s, t, s.calculateDamage(9));
+                } else {
+                    t.takeDamage(s.calculateDamage(9), s);
+                }
+            }
+        },
+        baseDamage: 6,
+        image: 'assets/images/cards/Strike.png'
+    }),
+    DEFEND: new Card({
+        id: 'defend',
+        name: 'ディフェンド',
+        cost: 1,
+        type: 'skill',
+        rarity: 'basic',
+        description: '5ブロックを得る',
+        effect: (s, t) => {
+            s.addBlock(5);
+        },
+        targetType: 'self',
+        upgradeData: {
+            description: '8ブロックを得る',
+            baseBlock: 8,
+            effect: (s, t) => { s.addBlock(8); }
+        },
+        baseBlock: 5,
+        image: 'assets/images/cards/Defend.png'
+    }),
+    BASH: new Card({
+        id: 'bash',
+        name: '強打',
+        cost: 2,
+        type: 'attack',
+        rarity: 'basic',
+        description: '8ダメージを与え、脆弱(2)を付与',
         effect: async (s, t, e) => {
             if (e && e.dealDamageWithEffect) {
-                await e.dealDamageWithEffect(s, t, s.calculateDamage(10));
+                await e.dealDamageWithEffect(s, t, s.calculateDamage(8));
             } else {
-                t.takeDamage(s.calculateDamage(10), s);
+                t.takeDamage(s.calculateDamage(8), s);
             }
-            t.addStatus('vulnerable', 3);
-        }
-    }, null, 8, null, 0, null, false, false, null, 'assets/images/cards/Bash.png'),
+            t.addStatus('vulnerable', 2);
+        },
+        targetType: 'single',
+        upgradeData: {
+            description: '10ダメージを与え、脆弱(3)を付与',
+            baseDamage: 10,
+            effect: async (s, t, e) => {
+                if (e && e.dealDamageWithEffect) {
+                    await e.dealDamageWithEffect(s, t, s.calculateDamage(10));
+                } else {
+                    t.takeDamage(s.calculateDamage(10), s);
+                }
+                t.addStatus('vulnerable', 3);
+            }
+        },
+        baseDamage: 8,
+        image: 'assets/images/cards/Bash.png'
+    }),
 
     // Common
-    IRON_WAVE: new Card('iron_wave', 'アイアンウェーブ', 1, 'attack', 'common', '5ダメージを与え、5ブロックを得る', async (s, t, e) => {
-        if (e && e.dealDamageWithEffect) {
-            await e.dealDamageWithEffect(s, t, s.calculateDamage(5));
-        } else {
-            t.takeDamage(s.calculateDamage(5), s);
-        }
-        s.addBlock(5);
-    }, 'single', false, {
-        description: '7ダメージを与え、7ブロックを得る',
-        baseDamage: 7,
-        baseBlock: 7,
+    IRON_WAVE: new Card({
+        id: 'iron_wave',
+        name: 'アイアンウェーブ',
+        cost: 1,
+        type: 'attack',
+        rarity: 'common',
+        description: '5ダメージを与え、5ブロックを得る',
         effect: async (s, t, e) => {
             if (e && e.dealDamageWithEffect) {
-                await e.dealDamageWithEffect(s, t, s.calculateDamage(7));
+                await e.dealDamageWithEffect(s, t, s.calculateDamage(5));
             } else {
-                t.takeDamage(s.calculateDamage(7), s);
+                t.takeDamage(s.calculateDamage(5), s);
             }
-            s.addBlock(7);
-        }
-    }, null, 5, null, 5, null, false, false, null, 'assets/images/cards/IronWave.png'),
-    CLEAVE: new Card('cleave', 'なぎ払い', 1, 'attack', 'common', '全体に8ダメージを与える', async (s, t, e) => {
-        if (e && e.dealDamageWithEffect) {
-            await e.dealDamageWithEffect(s, t, s.calculateDamage(8));
-        } else {
-            t.takeDamage(s.calculateDamage(8), s);
-        }
-    }, 'all', false, {
-        description: '全体に11ダメージを与える',
-        baseDamage: 11,
-        effect: async (s, t, e) => {
-            if (e && e.dealDamageWithEffect) {
-                await e.dealDamageWithEffect(s, t, s.calculateDamage(11));
-            } else {
-                t.takeDamage(s.calculateDamage(11), s);
+            s.addBlock(5);
+        },
+        targetType: 'single',
+        upgradeData: {
+            description: '7ダメージを与え、7ブロックを得る',
+            baseDamage: 7,
+            baseBlock: 7,
+            effect: async (s, t, e) => {
+                if (e && e.dealDamageWithEffect) {
+                    await e.dealDamageWithEffect(s, t, s.calculateDamage(7));
+                } else {
+                    t.takeDamage(s.calculateDamage(7), s);
+                }
+                s.addBlock(7);
             }
-        }
-    }, null, 8, null, 0, null, false, false, null, 'assets/images/cards/Cleave.png'),
-    CLASH: new Card('clash', 'クラッシュ', 0, 'attack', 'common', '14ダメージを与える。手札が全てアタック時のみ使用可能。', async (s, t, e) => {
-        if (e && e.dealDamageWithEffect) {
-            await e.dealDamageWithEffect(s, t, s.calculateDamage(14));
-        } else {
-            t.takeDamage(s.calculateDamage(14), s);
-        }
-    }, 'single', false, {
-        description: '18ダメージを与える。',
-        baseDamage: 18,
+        },
+        baseDamage: 5,
+        baseBlock: 5,
+        image: 'assets/images/cards/IronWave.png'
+    }),
+    CLEAVE: new Card({
+        id: 'cleave',
+        name: 'なぎ払い',
+        cost: 1,
+        type: 'attack',
+        rarity: 'common',
+        description: '全体に8ダメージを与える',
         effect: async (s, t, e) => {
             if (e && e.dealDamageWithEffect) {
-                await e.dealDamageWithEffect(s, t, s.calculateDamage(18));
+                await e.dealDamageWithEffect(s, t, s.calculateDamage(8));
             } else {
-                t.takeDamage(s.calculateDamage(18), s);
+                t.takeDamage(s.calculateDamage(8), s);
             }
-        }
-    }, (s, e) => {
-        if (!e) return true;
-        return e.player.hand.every(c => c.type === 'attack');
-    }, 14, null, 0, null, false, false, null, 'assets/images/cards/Clash.png'),
-    THUNDERCLAP: new Card('thunderclap', 'サンダークラップ', 1, 'attack', 'common', '全体に4ダメージを与え、脆弱(1)を付与。', async (s, t, e) => {
-        if (e && e.dealDamageWithEffect) {
-            await e.dealDamageWithEffect(s, t, s.calculateDamage(4));
-        } else {
-            t.takeDamage(s.calculateDamage(4), s);
-        }
-        t.addStatus('vulnerable', 1);
-    }, 'all', false, {
-        description: '全体に7ダメージを与え、脆弱(1)を付与。',
-        baseDamage: 7,
+        },
+        targetType: 'all',
+        upgradeData: {
+            description: '全体に11ダメージを与える',
+            baseDamage: 11,
+            effect: async (s, t, e) => {
+                if (e && e.dealDamageWithEffect) {
+                    await e.dealDamageWithEffect(s, t, s.calculateDamage(11));
+                } else {
+                    t.takeDamage(s.calculateDamage(11), s);
+                }
+            }
+        },
+        baseDamage: 8,
+        image: 'assets/images/cards/Cleave.png'
+    }),
+    CLASH: new Card({
+        id: 'clash',
+        name: 'クラッシュ',
+        cost: 0,
+        type: 'attack',
+        rarity: 'common',
+        description: '14ダメージを与える。手札が全てアタック時のみ使用可能。',
         effect: async (s, t, e) => {
             if (e && e.dealDamageWithEffect) {
-                await e.dealDamageWithEffect(s, t, s.calculateDamage(7));
+                await e.dealDamageWithEffect(s, t, s.calculateDamage(14));
             } else {
-                t.takeDamage(s.calculateDamage(7), s);
+                t.takeDamage(s.calculateDamage(14), s);
+            }
+        },
+        targetType: 'single',
+        upgradeData: {
+            description: '18ダメージを与える。',
+            baseDamage: 18,
+            effect: async (s, t, e) => {
+                if (e && e.dealDamageWithEffect) {
+                    await e.dealDamageWithEffect(s, t, s.calculateDamage(18));
+                } else {
+                    t.takeDamage(s.calculateDamage(18), s);
+                }
+            }
+        },
+        canPlayCheck: (s, e) => {
+            if (!e) return true;
+            return e.player.hand.every(c => c.type === 'attack');
+        },
+        baseDamage: 14,
+        image: 'assets/images/cards/Clash.png'
+    }),
+    THUNDERCLAP: new Card({
+        id: 'thunderclap',
+        name: 'サンダークラップ',
+        cost: 1,
+        type: 'attack',
+        rarity: 'common',
+        description: '全体に4ダメージを与え、脆弱(1)を付与。',
+        effect: async (s, t, e) => {
+            if (e && e.dealDamageWithEffect) {
+                await e.dealDamageWithEffect(s, t, s.calculateDamage(4));
+            } else {
+                t.takeDamage(s.calculateDamage(4), s);
             }
             t.addStatus('vulnerable', 1);
-        }
-    }, null, 4, null, 0, null, false, false, null, 'assets/images/cards/Thunderclap.png'),
-    SWORD_BOOMERANG: new Card('sword_boomerang', 'ソードブーメラン', 1, 'attack', 'common', '3ダメージを3回与える(対象ランダム)', async (s, t, e) => {
-        if (e && e.attackWithEffect) {
-            for (let i = 0; i < 3; i++) {
-                // ランダムな敵を選択
-                const aliveEnemies = e.enemies.filter(enemy => !enemy.isDead());
-                if (aliveEnemies.length === 0) break;
-                const randomTarget = aliveEnemies[Math.floor(Math.random() * aliveEnemies.length)];
-                const targetIndex = e.enemies.indexOf(randomTarget);
-                await e.attackWithEffect(s, randomTarget, s.calculateDamage(3), targetIndex);
+        },
+        targetType: 'all',
+        upgradeData: {
+            description: '全体に7ダメージを与え、脆弱(1)を付与。',
+            baseDamage: 7,
+            effect: async (s, t, e) => {
+                if (e && e.dealDamageWithEffect) {
+                    await e.dealDamageWithEffect(s, t, s.calculateDamage(7));
+                } else {
+                    t.takeDamage(s.calculateDamage(7), s);
+                }
+                t.addStatus('vulnerable', 1);
             }
-        } else {
-            t.takeDamage(s.calculateDamage(3), s);
-            t.takeDamage(s.calculateDamage(3), s);
-            t.takeDamage(s.calculateDamage(3), s);
-        }
-    }, 'random', false, {
-        description: '3ダメージを4回与える(対象ランダム)',
-        baseDamage: 3,
+        },
+        baseDamage: 4,
+        image: 'assets/images/cards/Thunderclap.png'
+    }),
+    SWORD_BOOMERANG: new Card({
+        id: 'sword_boomerang',
+        name: 'ソードブーメラン',
+        cost: 1,
+        type: 'attack',
+        rarity: 'common',
+        description: '3ダメージを3回与える(対象ランダム)',
         effect: async (s, t, e) => {
             if (e && e.attackWithEffect) {
-                for (let i = 0; i < 4; i++) {
+                for (let i = 0; i < 3; i++) {
                     const aliveEnemies = e.enemies.filter(enemy => !enemy.isDead());
                     if (aliveEnemies.length === 0) break;
                     const randomTarget = aliveEnemies[Math.floor(Math.random() * aliveEnemies.length)];
@@ -328,130 +426,193 @@ export const CardLibrary = {
                     await e.attackWithEffect(s, randomTarget, s.calculateDamage(3), targetIndex);
                 }
             } else {
-                for (let i = 0; i < 4; i++) t.takeDamage(s.calculateDamage(3), s);
+                t.takeDamage(s.calculateDamage(3), s);
+                t.takeDamage(s.calculateDamage(3), s);
+                t.takeDamage(s.calculateDamage(3), s);
             }
-        }
-    }, null, 3, null, 0, null, false, false, null, 'assets/images/cards/SwordBoomerang.png'),
-    ANGER: new Card('anger', '怒り', 0, 'attack', 'common', '6ダメージ。自身の正確な複製を捨て札に1枚加える。', async (s, t, e, c) => {
-        if (e && e.dealDamageWithEffect) {
-            await e.dealDamageWithEffect(s, t, s.calculateDamage(6));
-        } else {
-            t.takeDamage(s.calculateDamage(6), s);
-        }
-        if (e) {
-            e.player.discard.push(c.clone());
-            if (e.uiUpdateCallback) e.uiUpdateCallback();
-        }
-    }, 'single', false, {
-        description: '8ダメージ。自身の正確な複製を捨て札に1枚加える。',
-        baseDamage: 8,
+        },
+        targetType: 'random',
+        upgradeData: {
+            description: '3ダメージを4回与える(対象ランダム)',
+            baseDamage: 3,
+            effect: async (s, t, e) => {
+                if (e && e.attackWithEffect) {
+                    for (let i = 0; i < 4; i++) {
+                        const aliveEnemies = e.enemies.filter(enemy => !enemy.isDead());
+                        if (aliveEnemies.length === 0) break;
+                        const randomTarget = aliveEnemies[Math.floor(Math.random() * aliveEnemies.length)];
+                        const targetIndex = e.enemies.indexOf(randomTarget);
+                        await e.attackWithEffect(s, randomTarget, s.calculateDamage(3), targetIndex);
+                    }
+                } else {
+                    for (let i = 0; i < 4; i++) t.takeDamage(s.calculateDamage(3), s);
+                }
+            }
+        },
+        baseDamage: 3,
+        image: 'assets/images/cards/SwordBoomerang.png'
+    }),
+    ANGER: new Card({
+        id: 'anger',
+        name: '怒り',
+        cost: 0,
+        type: 'attack',
+        rarity: 'common',
+        description: '6ダメージ。自身の正確な複製を捨て札に1枚加える。',
         effect: async (s, t, e, c) => {
             if (e && e.dealDamageWithEffect) {
-                await e.dealDamageWithEffect(s, t, s.calculateDamage(8));
+                await e.dealDamageWithEffect(s, t, s.calculateDamage(6));
             } else {
-                t.takeDamage(s.calculateDamage(8), s);
+                t.takeDamage(s.calculateDamage(6), s);
             }
             if (e) {
                 e.player.discard.push(c.clone());
                 if (e.uiUpdateCallback) e.uiUpdateCallback();
             }
-        }
-    }, null, 6),
-    PERFECT_STRIKE: new Card('perfect_strike', 'パーフェクトストライク', 2, 'attack', 'common', '6ダメージ。デッキ内の「ストライク」1枚につき+2ダメージ。', async (s, t, e) => {
-        if (!e) return;
-        const allCards = [...e.player.deck, ...e.player.hand, ...e.player.discard];
-        const count = allCards.filter(c => c.name.includes('ストライク') || c.baseName.includes('ストライク')).length;
-
-        if (e.dealDamageWithEffect) {
-            await e.dealDamageWithEffect(s, t, s.calculateDamage(6 + count * 2));
-        } else {
-            t.takeDamage(s.calculateDamage(6 + count * 2), s);
-        }
-    }, 'single', false, {
-        description: '6ダメージ。デッキ内の「ストライク」1枚につき+3ダメージ。',
-        damageCalculator: (s, e) => {
-            if (!e) return 6;
-            const allCards = [...e.player.deck, ...e.player.hand, ...e.player.discard];
-            const count = allCards.filter(c => c.name.includes('ストライク') || c.baseName.includes('ストライク')).length;
-            return 6 + count * 3;
         },
+        targetType: 'single',
+        upgradeData: {
+            description: '8ダメージ。自身の正確な複製を捨て札に1枚加える。',
+            baseDamage: 8,
+            effect: async (s, t, e, c) => {
+                if (e && e.dealDamageWithEffect) {
+                    await e.dealDamageWithEffect(s, t, s.calculateDamage(8));
+                } else {
+                    t.takeDamage(s.calculateDamage(8), s);
+                }
+                if (e) {
+                    e.player.discard.push(c.clone());
+                    if (e.uiUpdateCallback) e.uiUpdateCallback();
+                }
+            }
+        },
+        baseDamage: 6
+    }),
+    PERFECT_STRIKE: new Card({
+        id: 'perfect_strike',
+        name: 'パーフェクトストライク',
+        cost: 2,
+        type: 'attack',
+        rarity: 'common',
+        description: '6ダメージ。デッキ内の「ストライク」1枚につき+2ダメージ。',
         effect: async (s, t, e) => {
             if (!e) return;
             const allCards = [...e.player.deck, ...e.player.hand, ...e.player.discard];
             const count = allCards.filter(c => c.name.includes('ストライク') || c.baseName.includes('ストライク')).length;
 
             if (e.dealDamageWithEffect) {
-                await e.dealDamageWithEffect(s, t, s.calculateDamage(6 + count * 3));
+                await e.dealDamageWithEffect(s, t, s.calculateDamage(6 + count * 2));
             } else {
-                t.takeDamage(s.calculateDamage(6 + count * 3), s);
+                t.takeDamage(s.calculateDamage(6 + count * 2), s);
             }
-        }
-    }, null, 6, (s, e) => {
-        if (!e) return 6;
-        const allCards = [...e.player.deck, ...e.player.hand, ...e.player.discard];
-        const count = allCards.filter(c => c.name.includes('ストライク') || c.baseName.includes('ストライク')).length;
-        return 6 + count * 2;
-    }, 0, null, false, false, null, 'assets/images/cards/PerfectStrike.png'),
-    DROPKICK: new Card('dropkick', 'ドロップキック', 1, 'attack', 'uncommon', '5ダメージ。敵が脆弱なら1エナジー+1ドロー。', async (s, t, e) => {
-        if (e && e.dealDamageWithEffect) {
-            await e.dealDamageWithEffect(s, t, s.calculateDamage(5));
-        } else {
-            t.takeDamage(s.calculateDamage(5), s);
-        }
-        if (t.hasStatus('vulnerable') && e) {
-            e.player.energy = Math.min(e.player.maxEnergy, e.player.energy + 1);
-            e.drawCards(1);
-            if (e.uiUpdateCallback) e.uiUpdateCallback();
-        }
-    }, 'single', false, {
-        description: '8ダメージ。敵が脆弱なら1エナジー+1ドロー。',
-        baseDamage: 8,
+        },
+        targetType: 'single',
+        upgradeData: {
+            description: '6ダメージ。デッキ内の「ストライク」1枚につき+3ダメージ。',
+            damageCalculator: (s, e) => {
+                if (!e) return 6;
+                const allCards = [...e.player.deck, ...e.player.hand, ...e.player.discard];
+                const count = allCards.filter(c => c.name.includes('ストライク') || c.baseName.includes('ストライク')).length;
+                return 6 + count * 3;
+            },
+            effect: async (s, t, e) => {
+                if (!e) return;
+                const allCards = [...e.player.deck, ...e.player.hand, ...e.player.discard];
+                const count = allCards.filter(c => c.name.includes('ストライク') || c.baseName.includes('ストライク')).length;
+
+                if (e.dealDamageWithEffect) {
+                    await e.dealDamageWithEffect(s, t, s.calculateDamage(6 + count * 3));
+                } else {
+                    t.takeDamage(s.calculateDamage(6 + count * 3), s);
+                }
+            }
+        },
+        baseDamage: 6,
+        damageCalculator: (s, e) => {
+            if (!e) return 6;
+            const allCards = [...e.player.deck, ...e.player.hand, ...e.player.discard];
+            const count = allCards.filter(c => c.name.includes('ストライク') || c.baseName.includes('ストライク')).length;
+            return 6 + count * 2;
+        },
+        image: 'assets/images/cards/PerfectStrike.png'
+    }),
+    DROPKICK: new Card({
+        id: 'dropkick',
+        name: 'ドロップキック',
+        cost: 1,
+        type: 'attack',
+        rarity: 'uncommon',
+        description: '5ダメージ。敵が脆弱なら1エナジー+1ドロー。',
         effect: async (s, t, e) => {
             if (e && e.dealDamageWithEffect) {
-                await e.dealDamageWithEffect(s, t, s.calculateDamage(8));
+                await e.dealDamageWithEffect(s, t, s.calculateDamage(5));
             } else {
-                t.takeDamage(s.calculateDamage(8), s);
+                t.takeDamage(s.calculateDamage(5), s);
             }
             if (t.hasStatus('vulnerable') && e) {
                 e.player.energy = Math.min(e.player.maxEnergy, e.player.energy + 1);
                 e.drawCards(1);
                 if (e.uiUpdateCallback) e.uiUpdateCallback();
             }
-        }
-    }, null, 5),
-    HEMOKINESIS: new Card('hemokinesis', 'ヘモキネシス', 1, 'attack', 'uncommon', '15ダメージ。HPを2失う。', async (s, t, e) => {
-        s.loseHP(2);
-        if (e && e.dealDamageWithEffect) {
-            await e.dealDamageWithEffect(s, t, s.calculateDamage(15));
-        } else {
-            t.takeDamage(s.calculateDamage(15), s);
-        }
-        if (e && e.uiUpdateCallback) e.uiUpdateCallback();
-    }, 'single', false, {
-        description: '20ダメージ。HPを2失う。',
-        baseDamage: 20,
+        },
+        targetType: 'single',
+        upgradeData: {
+            description: '8ダメージ。敵が脆弱なら1エナジー+1ドロー。',
+            baseDamage: 8,
+            effect: async (s, t, e) => {
+                if (e && e.dealDamageWithEffect) {
+                    await e.dealDamageWithEffect(s, t, s.calculateDamage(8));
+                } else {
+                    t.takeDamage(s.calculateDamage(8), s);
+                }
+                if (t.hasStatus('vulnerable') && e) {
+                    e.player.energy = Math.min(e.player.maxEnergy, e.player.energy + 1);
+                    e.drawCards(1);
+                    if (e.uiUpdateCallback) e.uiUpdateCallback();
+                }
+            }
+        },
+        baseDamage: 5
+    }),
+    HEMOKINESIS: new Card({
+        id: 'hemokinesis',
+        name: 'ヘモキネシス',
+        cost: 1,
+        type: 'attack',
+        rarity: 'uncommon',
+        description: '15ダメージ。HPを2失う。',
         effect: async (s, t, e) => {
             s.loseHP(2);
             if (e && e.dealDamageWithEffect) {
-                await e.dealDamageWithEffect(s, t, s.calculateDamage(20));
+                await e.dealDamageWithEffect(s, t, s.calculateDamage(15));
             } else {
-                t.takeDamage(s.calculateDamage(20), s);
+                t.takeDamage(s.calculateDamage(15), s);
             }
             if (e && e.uiUpdateCallback) e.uiUpdateCallback();
-        }
-    }, null, 15),
-    RAMPAGE: new Card('rampage', 'ランページ', 1, 'attack', 'uncommon', '8ダメージ。使うたびにこのカードのダメージが5増加する。', async (s, t, e, c) => {
-        const damage = c.getFinalDamage(s, t, e);
-        if (e && e.dealDamageWithEffect) {
-            await e.dealDamageWithEffect(s, t, damage);
-        } else {
-            t.takeDamage(damage, s);
-        }
-        c.miscValue += 5;
-        if (e && e.uiUpdateCallback) e.uiUpdateCallback();
-    }, 'single', false, {
-        description: '8ダメージ。使うたびにこのカード의ダメージが8増加する。',
-        baseDamage: 8,
+        },
+        targetType: 'single',
+        upgradeData: {
+            description: '20ダメージ。HPを2失う。',
+            baseDamage: 20,
+            effect: async (s, t, e) => {
+                s.loseHP(2);
+                if (e && e.dealDamageWithEffect) {
+                    await e.dealDamageWithEffect(s, t, s.calculateDamage(20));
+                } else {
+                    t.takeDamage(s.calculateDamage(20), s);
+                }
+                if (e && e.uiUpdateCallback) e.uiUpdateCallback();
+            }
+        },
+        baseDamage: 15
+    }),
+    RAMPAGE: new Card({
+        id: 'rampage',
+        name: 'ランページ',
+        cost: 1,
+        type: 'attack',
+        rarity: 'uncommon',
+        description: '8ダメージ。使うたびにこのカードのダメージが5増加する。',
         effect: async (s, t, e, c) => {
             const damage = c.getFinalDamage(s, t, e);
             if (e && e.dealDamageWithEffect) {
@@ -459,206 +620,233 @@ export const CardLibrary = {
             } else {
                 t.takeDamage(damage, s);
             }
-            c.miscValue += 8;
+            c.miscValue += 5;
             if (e && e.uiUpdateCallback) e.uiUpdateCallback();
-        }
-    }, null, 8),
-    BLOOD_FOR_BLOOD: new Card('blood_for_blood', '血には血を', 4, 'attack', 'uncommon', 'コストは戦闘中にダメージを受けた回数分減少する。18ダメージを与える。', async (s, t, e) => {
-        if (e && e.dealDamageWithEffect) {
-            await e.dealDamageWithEffect(s, t, s.calculateDamage(18));
-        } else {
-            t.takeDamage(s.calculateDamage(18), s);
-        }
-    }, 'single', false, {
-        cost: 3,
-        description: 'コストは戦闘中にダメージを受けた回数分減少する。22ダメージを与える。',
-        baseDamage: 22,
-        costCalculator: (s) => Math.max(0, 3 - (s.hpLossCount || 0)),
+        },
+        targetType: 'single',
+        upgradeData: {
+            description: '8ダメージ。使うたびにこのカード의ダメージが8増加する。',
+            baseDamage: 8,
+            effect: async (s, t, e, c) => {
+                const damage = c.getFinalDamage(s, t, e);
+                if (e && e.dealDamageWithEffect) {
+                    await e.dealDamageWithEffect(s, t, damage);
+                } else {
+                    t.takeDamage(damage, s);
+                }
+                c.miscValue += 8;
+                if (e && e.uiUpdateCallback) e.uiUpdateCallback();
+            }
+        },
+        baseDamage: 8
+    }),
+    BLOOD_FOR_BLOOD: new Card({
+        id: 'blood_for_blood',
+        name: '血には血を',
+        cost: 4,
+        type: 'attack',
+        rarity: 'uncommon',
+        description: 'コストは戦闘中にダメージを受けた回数分減少する。18ダメージを与える。',
         effect: async (s, t, e) => {
             if (e && e.dealDamageWithEffect) {
-                await e.dealDamageWithEffect(s, t, s.calculateDamage(22));
+                await e.dealDamageWithEffect(s, t, s.calculateDamage(18));
             } else {
-                t.takeDamage(s.calculateDamage(22), s);
+                t.takeDamage(s.calculateDamage(18), s);
             }
-        }
-    }, null, 18, null, 0, null, false, false, (s) => Math.max(0, 4 - (s.hpLossCount || 0))),
-    SEVER_SOUL: new Card('sever_soul', '霊魂切断', 2, 'attack', 'uncommon', '16ダメージ。アタック以外の手札を全廃棄。', async (s, t, e) => {
-        // アタック以外のカードを特定して廃棄
-        const nonAttacks = s.hand.filter(c => c.type !== 'attack');
-        nonAttacks.forEach(c => s.exhaustCard(c, e));
-        // 手札からアタック以外を削除
-        s.hand = s.hand.filter(c => c.type === 'attack');
-
-        // ダメージ
-        if (t) {
-            if (e && e.dealDamageWithEffect) {
-                await e.dealDamageWithEffect(s, t, s.calculateDamage(16));
-            } else {
-                t.takeDamage(s.calculateDamage(16), s);
-            }
-        }
-        if (e && e.uiUpdateCallback) e.uiUpdateCallback();
-    }, 'single', false, {
-        description: '22ダメージ。アタック以外の手札を全廃棄。',
-        baseDamage: 22,
-        effect: async (s, t, e) => {
-            const nonAttacks = s.hand.filter(c => c.type !== 'attack');
-            nonAttacks.forEach(c => s.exhaustCard(c, e));
-            s.hand = s.hand.filter(c => c.type === 'attack');
-            if (t) {
+        },
+        targetType: 'single',
+        upgradeData: {
+            cost: 3,
+            description: 'コストは戦闘中にダメージを受けた回数分減少する。22ダメージを与える。',
+            baseDamage: 22,
+            costCalculator: (s) => Math.max(0, 3 - (s.hpLossCount || 0)),
+            effect: async (s, t, e) => {
                 if (e && e.dealDamageWithEffect) {
                     await e.dealDamageWithEffect(s, t, s.calculateDamage(22));
                 } else {
                     t.takeDamage(s.calculateDamage(22), s);
                 }
             }
-            if (e && e.uiUpdateCallback) e.uiUpdateCallback();
-        }
-    }, null, 16),
-    FEED: new Card('feed', '捕食', 1, 'attack', 'rare', '10ダメージ。これで敵を倒すと最大HPが+3される。廃棄。', async (s, t, e) => {
-        if (t) {
-            if (e && e.dealDamageWithEffect) {
-                await e.dealDamageWithEffect(s, t, s.calculateDamage(10));
-            } else {
-                t.takeDamage(s.calculateDamage(10), s);
+        },
+        baseDamage: 18,
+        costCalculator: (s) => Math.max(0, 4 - (s.hpLossCount || 0))
+    }),
+    SEVER_SOUL: new Card({
+        id: 'sever_soul',
+        name: '霊魂切断',
+        cost: 2,
+        type: 'attack',
+        rarity: 'uncommon',
+        description: '16ダメージ。アタック以外の手札を全廃棄。',
+        effect: async (s, t, e) => {
+            // アタック以外のカードを特定して廃棄
+            const nonAttacks = s.hand.filter(c => c.type !== 'attack');
+            nonAttacks.forEach(c => s.exhaustCard(c, e));
+            // 手札からアタック以外を削除
+            s.hand = s.hand.filter(c => c.type === 'attack');
+
+            // ダメージ
+            if (t) {
+                if (e && e.dealDamageWithEffect) {
+                    await e.dealDamageWithEffect(s, t, s.calculateDamage(16));
+                } else {
+                    t.takeDamage(s.calculateDamage(16), s);
+                }
             }
-            if (t.isDead()) {
-                s.increaseMaxHp(3);
+            if (e && e.uiUpdateCallback) e.uiUpdateCallback();
+        },
+        targetType: 'single',
+        upgradeData: {
+            description: '22ダメージ。アタック以外の手札を全廃棄。',
+            baseDamage: 22,
+            effect: async (s, t, e) => {
+                const nonAttacks = s.hand.filter(c => c.type !== 'attack');
+                nonAttacks.forEach(c => s.exhaustCard(c, e));
+                s.hand = s.hand.filter(c => c.type === 'attack');
+                if (t) {
+                    if (e && e.dealDamageWithEffect) {
+                        await e.dealDamageWithEffect(s, t, s.calculateDamage(22));
+                    } else {
+                        t.takeDamage(s.calculateDamage(22), s);
+                    }
+                }
                 if (e && e.uiUpdateCallback) e.uiUpdateCallback();
             }
-        }
-    }, 'single', false, {
-        description: '12ダメージ。これで敵を倒すと最大HPが+4される。廃棄。',
-        baseDamage: 12,
+        },
+        baseDamage: 16
+    }),
+    FEED: new Card({
+        id: 'feed',
+        name: '捕食',
+        cost: 1,
+        type: 'attack',
+        rarity: 'rare',
+        description: '10ダメージ。これで敵を倒すと最大HPが+3される。廃棄。',
         effect: async (s, t, e) => {
             if (t) {
                 if (e && e.dealDamageWithEffect) {
-                    await e.dealDamageWithEffect(s, t, s.calculateDamage(12));
+                    await e.dealDamageWithEffect(s, t, s.calculateDamage(10));
                 } else {
-                    t.takeDamage(s.calculateDamage(12), s);
+                    t.takeDamage(s.calculateDamage(10), s);
                 }
                 if (t.isDead()) {
-                    s.increaseMaxHp(4);
+                    s.increaseMaxHp(3);
                     if (e && e.uiUpdateCallback) e.uiUpdateCallback();
                 }
             }
-        }
-    }, null, 10, null, 0, null, false, true),
-    REAPER: new Card('reaper', '死神', 2, 'attack', 'rare', '全体に4ダメージ。与えたダメージの合計分回復する。廃棄。', async (s, t, e) => {
-        let actualDamage = 0;
-        if (e && e.dealDamageWithEffect) {
-            const damageBefore = t.hp; // 簡易的な計算（厳密にはtakeDamageの戻り値が必要だが、dealDamageWithEffectはawaitするので難しい）
-            // dealDamageWithEffectの戻り値をtakeDamageの戻り値にするよう修正が必要だが、ここでは簡易的に実装
-            await e.dealDamageWithEffect(s, t, s.calculateDamage(4));
-            // 本来は damageBefore - t.hp だが、ブロックやオーバーキルを考慮すると takeDamage の戻り値が最適。
-            // しかし、非同期化で takeDamage の結果を直接受け取るのが少し手間。
-            // ここでは effect 内で計算を行うか、ヘルパーがダメージ値を返すようにする必要があるが、
-            // 既存の実装に合わせて HP 差分で計算する（ただしブロックで防がれた場合は回復しない仕様なので注意）
-            // 修正: dealDamageWithEffectは内部でtakeDamageを呼ぶが戻り値を返さないので、
-            // 厳密な挙動にはヘルパーの修正が必要。しかし、今回は visual effect 重視で、
-            // 「ダメージを与えた後のHP減少分」を回復量とする（ブロックで防がれたら回復しない）
-            // が、t.hpの変化を見るしかない。
-            /*
-              しかし、全体攻撃(Card.targetType === 'all')の場合、Card.playでループして呼ばれる。
-              この `t` は個々の敵。
-            */
-            // ここでは takeDamage を直接呼ぶわけではないので、戻り値が得られない。
-            // 暫定的に「計算ダメージ」ではなく「実際の減少HP」を見る実装にする。
-            // 事前のHPを保存するのは難しい（非同期なので）。
-            // ひとまず、標準的な実装として、 takeDamage自体の戻り値（実際に与えたダメージ）を利用したいが、
-            // dealDamageWithEffectはvoid。
-            // → 一旦、回復効果は「ブロック貫通した分」とするため、少し不正確だがダメージ計算後のHP差分等を
-            //   見たいが、ここでは単純に「攻撃後のHP差分」を得にくい。
-            //   一旦、Reaperは例外的に takeDamage を直接呼ぶか、あるいはヘルパーを使わない（全体エフェクトはCard.play側で制御されるので）
-            //   
-            //   Card.playの修正で `targetType === 'all'` の場合、ループして `await this.effect(...)` される。
-            //   つまりここで `t` は個々の敵。
-            //   Reaperのエフェクトは「全体攻撃」だが、処理は個々。
-            //   全敵にエフェクト → 全敵にダメージ、としたいが、Card.playのループだと「敵1エフェクト→敵1ダメージ→敵2エフェクト...」となる。
-            //   これは今回の要件（一斉攻撃エフェクト）とは異なるかもしれないが、個別の攻撃エフェクトなら問題ない。
-            //   Reaperの回復処理:
-            //     `const actualDamage = t.takeDamage(...)`
-            //   これを非同期にするなら:
-            //     `const actualDamage = await e.dealDamageWithEffectReturnsDamage(...)`
-            //   みたいなのが必要。
-            //   
-            //   今回は reaper については、エフェクトとダメージを「同期」させるために、
-            //   takeDamageの戻り値が必要なので、自前で `showAttackEffectAsync` してから `takeDamage` する形にする。
-            if (e && e.effectManager) { // エフェクトだけ出す
-                const targetElement = document.querySelectorAll('.entity.enemy')[e.enemies.indexOf(t)];
-                if (targetElement) await e.effectManager.showAttackEffectAsync(targetElement, 'slash');
+        },
+        targetType: 'single',
+        upgradeData: {
+            description: '12ダメージ。これで敵を倒すと最大HPが+4される。廃棄。',
+            baseDamage: 12,
+            effect: async (s, t, e) => {
+                if (t) {
+                    if (e && e.dealDamageWithEffect) {
+                        await e.dealDamageWithEffect(s, t, s.calculateDamage(12));
+                    } else {
+                        t.takeDamage(s.calculateDamage(12), s);
+                    }
+                    if (t.isDead()) {
+                        s.increaseMaxHp(4);
+                        if (e && e.uiUpdateCallback) e.uiUpdateCallback();
+                    }
+                }
             }
-            actualDamage = t.takeDamage(s.calculateDamage(4), s);
-        } else {
-            actualDamage = t.takeDamage(s.calculateDamage(4), s);
-        }
-        s.heal(actualDamage);
-        if (e && e.uiUpdateCallback) e.uiUpdateCallback();
-    }, 'all', false, {
-        description: '全体に5ダメージ。与えたダメージの合計分回復する。廃棄。',
-        baseDamage: 5,
+        },
+        baseDamage: 10,
+        isExhaust: true
+    }),
+    REAPER: new Card({
+        id: 'reaper',
+        name: '死神',
+        cost: 2,
+        type: 'attack',
+        rarity: 'rare',
+        description: '全体に4ダメージ。与えたダメージの合計分回復する。廃棄。',
         effect: async (s, t, e) => {
             let actualDamage = 0;
-            if (e && e.effectManager) {
-                const targetElement = document.querySelectorAll('.entity.enemy')[e.enemies.indexOf(t)];
-                if (targetElement) await e.effectManager.showAttackEffectAsync(targetElement, 'slash');
-                actualDamage = t.takeDamage(s.calculateDamage(5), s);
+            if (e && e.dealDamageWithEffect) {
+                const damageBefore = t.hp;
+                // dealDamageWithEffectの戻り値をtakeDamageの戻り値にするよう修正が必要だが、ここでは簡易的に実装
+                // 注: 元のコードのコメントとロジックを保持
+                if (e.effectManager) {
+                    const targetElement = document.querySelectorAll('.entity.enemy')[e.enemies.indexOf(t)];
+                    if (targetElement) await e.effectManager.showAttackEffectAsync(targetElement, 'slash');
+                }
+                actualDamage = t.takeDamage(s.calculateDamage(4), s);
             } else {
-                actualDamage = t.takeDamage(s.calculateDamage(5), s);
+                actualDamage = t.takeDamage(s.calculateDamage(4), s);
             }
             s.heal(actualDamage);
             if (e && e.uiUpdateCallback) e.uiUpdateCallback();
-        }
-    }, null, 4, null, 0, null, false, true),
-    IMMOLATE: new Card('immolate', '焼身', 2, 'attack', 'rare', '全体に21ダメージ。捨て札に火傷を1枚加える。', async (s, t, e) => {
-        if (t) {
-            if (e && e.dealDamageWithEffect) {
-                await e.dealDamageWithEffect(s, t, s.calculateDamage(21));
-            } else {
-                t.takeDamage(s.calculateDamage(21), s);
+        },
+        targetType: 'all',
+        upgradeData: {
+            description: '全体に5ダメージ。与えたダメージの合計分回復する。廃棄。',
+            baseDamage: 5,
+            effect: async (s, t, e) => {
+                let actualDamage = 0;
+                if (e && e.effectManager) {
+                    const targetElement = document.querySelectorAll('.entity.enemy')[e.enemies.indexOf(t)];
+                    if (targetElement) await e.effectManager.showAttackEffectAsync(targetElement, 'slash');
+                    actualDamage = t.takeDamage(s.calculateDamage(5), s);
+                } else {
+                    actualDamage = t.takeDamage(s.calculateDamage(5), s);
+                }
+                s.heal(actualDamage);
+                if (e && e.uiUpdateCallback) e.uiUpdateCallback();
             }
-        }
-        if (e) {
-            e.player.discard.push(CardLibrary.BURN.clone());
-            if (e.uiUpdateCallback) e.uiUpdateCallback();
-        }
-    }, 'all', false, {
-        description: '全体に28ダメージ。捨て札に火傷を1枚加える。',
-        baseDamage: 28,
+        },
+        baseDamage: 4,
+        isExhaust: true
+    }),
+    IMMOLATE: new Card({
+        id: 'immolate',
+        name: '焼身',
+        cost: 2,
+        type: 'attack',
+        rarity: 'rare',
+        description: '全体に21ダメージ。捨て札に火傷を1枚加える。',
         effect: async (s, t, e) => {
             if (t) {
                 if (e && e.dealDamageWithEffect) {
-                    await e.dealDamageWithEffect(s, t, s.calculateDamage(28));
+                    await e.dealDamageWithEffect(s, t, s.calculateDamage(21));
                 } else {
-                    t.takeDamage(s.calculateDamage(28), s);
+                    t.takeDamage(s.calculateDamage(21), s);
                 }
             }
             if (e) {
                 e.player.discard.push(CardLibrary.BURN.clone());
                 if (e.uiUpdateCallback) e.uiUpdateCallback();
             }
-        }
-    }, null, 21),
-    FIEND_FIRE: new Card('fiend_fire', '鬼火', 2, 'attack', 'rare', '手札を全て廃棄し、1枚につき7ダメージを与える。廃棄。', async (s, t, e) => {
-        const count = s.hand.length;
-        s.hand.forEach(c => s.exhaustCard(c, e));
-        s.hand.length = 0; // 手札を空にする
-        if (t) {
-            if (e && e.attackWithEffect) {
-                const targetIndex = e.enemies.indexOf(t);
-                for (let i = 0; i < count; i++) {
-                    await e.attackWithEffect(s, t, s.calculateDamage(7), targetIndex);
+        },
+        targetType: 'all',
+        upgradeData: {
+            description: '全体に28ダメージ。捨て札に火傷を1枚加える。',
+            baseDamage: 28,
+            effect: async (s, t, e) => {
+                if (t) {
+                    if (e && e.dealDamageWithEffect) {
+                        await e.dealDamageWithEffect(s, t, s.calculateDamage(28));
+                    } else {
+                        t.takeDamage(s.calculateDamage(28), s);
+                    }
                 }
-            } else {
-                for (let i = 0; i < count; i++) {
-                    t.takeDamage(s.calculateDamage(7), s);
+                if (e) {
+                    e.player.discard.push(CardLibrary.BURN.clone());
+                    if (e.uiUpdateCallback) e.uiUpdateCallback();
                 }
             }
-        }
-        if (e && e.uiUpdateCallback) e.uiUpdateCallback();
-    }, 'single', false, {
-        description: '手札を全て廃棄し、1枚につき10ダメージを与える。廃棄。',
-        baseDamage: 10,
+        },
+        baseDamage: 21
+    }),
+    FIEND_FIRE: new Card({
+        id: 'fiend_fire',
+        name: '鬼火',
+        cost: 2,
+        type: 'attack',
+        rarity: 'rare',
+        description: '手札を全て廃棄し、1枚につき7ダメージを与える。廃棄。',
         effect: async (s, t, e) => {
             const count = s.hand.length;
             s.hand.forEach(c => s.exhaustCard(c, e));
@@ -667,136 +855,196 @@ export const CardLibrary = {
                 if (e && e.attackWithEffect) {
                     const targetIndex = e.enemies.indexOf(t);
                     for (let i = 0; i < count; i++) {
-                        await e.attackWithEffect(s, t, s.calculateDamage(10), targetIndex);
+                        await e.attackWithEffect(s, t, s.calculateDamage(7), targetIndex);
                     }
                 } else {
                     for (let i = 0; i < count; i++) {
-                        t.takeDamage(s.calculateDamage(10), s);
+                        t.takeDamage(s.calculateDamage(7), s);
                     }
                 }
             }
             if (e && e.uiUpdateCallback) e.uiUpdateCallback();
-        }
-    }, null, 7, null, 0, null, false, true),
-    CARNAGE: new Card('carnage', '大虐殺', 2, 'attack', 'uncommon', 'エセリアル。20ダメージを与える。', async (s, t, e) => {
-        if (e && e.dealDamageWithEffect) {
-            await e.dealDamageWithEffect(s, t, s.calculateDamage(20));
-        } else {
-            t.takeDamage(s.calculateDamage(20), s);
-        }
-    }, 'single', false, {
-        description: 'エセリアル。28ダメージを与える。',
-        baseDamage: 28,
+        },
+        targetType: 'single',
+        upgradeData: {
+            description: '手札を全て廃棄し、1枚につき10ダメージを与える。廃棄。',
+            baseDamage: 10,
+            effect: async (s, t, e) => {
+                const count = s.hand.length;
+                s.hand.forEach(c => s.exhaustCard(c, e));
+                s.hand.length = 0; // 手札を空にする
+                if (t) {
+                    if (e && e.attackWithEffect) {
+                        const targetIndex = e.enemies.indexOf(t);
+                        for (let i = 0; i < count; i++) {
+                            await e.attackWithEffect(s, t, s.calculateDamage(10), targetIndex);
+                        }
+                    } else {
+                        for (let i = 0; i < count; i++) {
+                            t.takeDamage(s.calculateDamage(10), s);
+                        }
+                    }
+                }
+                if (e && e.uiUpdateCallback) e.uiUpdateCallback();
+            }
+        },
+        baseDamage: 7,
+        isExhaust: true
+    }),
+    CARNAGE: new Card({
+        id: 'carnage',
+        name: '大虐殺',
+        cost: 2,
+        type: 'attack',
+        rarity: 'uncommon',
+        description: 'エセリアル。20ダメージを与える。',
         effect: async (s, t, e) => {
             if (e && e.dealDamageWithEffect) {
-                await e.dealDamageWithEffect(s, t, s.calculateDamage(28));
+                await e.dealDamageWithEffect(s, t, s.calculateDamage(20));
             } else {
-                t.takeDamage(s.calculateDamage(28), s);
+                t.takeDamage(s.calculateDamage(20), s);
             }
-        }
-    }, null, 20, null, 0, null, true),
-    PUMMEL: new Card('pummel', '猛撃', 1, 'attack', 'uncommon', '2ダメージを4回与える。廃棄。', async (s, t, e) => {
-        const targetIndex = e ? e.enemies.indexOf(t) : 0;
-        if (e && e.attackWithEffect) {
-            for (let i = 0; i < 4; i++) {
-                await e.attackWithEffect(s, t, s.calculateDamage(2), targetIndex);
+        },
+        targetType: 'single',
+        upgradeData: {
+            description: 'エセリアル。28ダメージを与える。',
+            baseDamage: 28,
+            effect: async (s, t, e) => {
+                if (e && e.dealDamageWithEffect) {
+                    await e.dealDamageWithEffect(s, t, s.calculateDamage(28));
+                } else {
+                    t.takeDamage(s.calculateDamage(28), s);
+                }
             }
-        } else {
-            for (let i = 0; i < 4; i++) {
-                t.takeDamage(s.calculateDamage(2), s);
-            }
-        }
-    }, 'single', false, {
-        description: '2ダメージを5回与える。廃棄。',
+        },
+        baseDamage: 20,
+        isEthereal: true
+    }),
+    PUMMEL: new Card({
+        id: 'pummel',
+        name: '猛撃',
+        cost: 1,
+        type: 'attack',
+        rarity: 'uncommon',
+        description: '2ダメージを4回与える。廃棄。',
         effect: async (s, t, e) => {
             const targetIndex = e ? e.enemies.indexOf(t) : 0;
             if (e && e.attackWithEffect) {
-                for (let i = 0; i < 5; i++) {
+                for (let i = 0; i < 4; i++) {
                     await e.attackWithEffect(s, t, s.calculateDamage(2), targetIndex);
                 }
             } else {
-                for (let i = 0; i < 5; i++) {
+                for (let i = 0; i < 4; i++) {
                     t.takeDamage(s.calculateDamage(2), s);
                 }
             }
-        }
-    }, null, 2, null, 0, null, false, true),
-    WHIRLWIND: new Card('whirlwind', '旋風刃', 'X', 'attack', 'uncommon', 'コストX。敵全体に5ダメージをX回与える。', async (s, t, e, c, x) => {
-        if (e && e.attackWithEffect) {
-            const targetIndex = e.enemies.indexOf(t);
-            for (let i = 0; i < x; i++) {
-                await e.attackWithEffect(s, t, s.calculateDamage(5), targetIndex);
+        },
+        targetType: 'single',
+        upgradeData: {
+            description: '2ダメージを5回与える。廃棄。',
+            effect: async (s, t, e) => {
+                const targetIndex = e ? e.enemies.indexOf(t) : 0;
+                if (e && e.attackWithEffect) {
+                    for (let i = 0; i < 5; i++) {
+                        await e.attackWithEffect(s, t, s.calculateDamage(2), targetIndex);
+                    }
+                } else {
+                    for (let i = 0; i < 5; i++) {
+                        t.takeDamage(s.calculateDamage(2), s);
+                    }
+                }
             }
-        } else {
-            for (let i = 0; i < x; i++) {
-                t.takeDamage(s.calculateDamage(5), s);
-            }
-        }
-    }, 'all', false, {
-        description: 'コストX。敵全体に8ダメージをX回与える。',
-        baseDamage: 8,
+        },
+        baseDamage: 2,
+        isExhaust: true
+    }),
+    WHIRLWIND: new Card({
+        id: 'whirlwind',
+        name: '旋風刃',
+        cost: 'X',
+        type: 'attack',
+        rarity: 'uncommon',
+        description: 'コストX。敵全体に5ダメージをX回与える。',
         effect: async (s, t, e, c, x) => {
             if (e && e.attackWithEffect) {
                 const targetIndex = e.enemies.indexOf(t);
                 for (let i = 0; i < x; i++) {
-                    await e.attackWithEffect(s, t, s.calculateDamage(8), targetIndex);
+                    await e.attackWithEffect(s, t, s.calculateDamage(5), targetIndex);
                 }
             } else {
                 for (let i = 0; i < x; i++) {
-                    t.takeDamage(s.calculateDamage(8), s);
+                    t.takeDamage(s.calculateDamage(5), s);
                 }
             }
-        }
-    }, null, 5),
-    RECKLESS_CHARGE: new Card('reckless_charge', '無謀なる突進', 0, 'attack', 'common', '7ダメージを与える。山札にめまいを1枚加える。', async (s, t, e) => {
-        if (e && e.dealDamageWithEffect) {
-            await e.dealDamageWithEffect(s, t, s.calculateDamage(7));
-        } else {
-            t.takeDamage(s.calculateDamage(7), s);
-        }
-        if (e) {
-            e.player.deck.push(CardLibrary.DAZED.clone());
-            e.shuffle(e.player.deck);
-            if (e.uiUpdateCallback) e.uiUpdateCallback();
-        }
-    }, 'single', false, {
-        description: '10ダメージを与える。山札にめまいを1枚加える。',
-        baseDamage: 10,
+        },
+        targetType: 'all',
+        upgradeData: {
+            description: 'コストX。敵全体に8ダメージをX回与える。',
+            baseDamage: 8,
+            effect: async (s, t, e, c, x) => {
+                if (e && e.attackWithEffect) {
+                    const targetIndex = e.enemies.indexOf(t);
+                    for (let i = 0; i < x; i++) {
+                        await e.attackWithEffect(s, t, s.calculateDamage(8), targetIndex);
+                    }
+                } else {
+                    for (let i = 0; i < x; i++) {
+                        t.takeDamage(s.calculateDamage(8), s);
+                    }
+                }
+            }
+        },
+        baseDamage: 5
+    }),
+    RECKLESS_CHARGE: new Card({
+        id: 'reckless_charge',
+        name: '無謀なる突進',
+        cost: 0,
+        type: 'attack',
+        rarity: 'common',
+        description: '7ダメージを与える。山札にめまいを1枚加える。',
         effect: async (s, t, e) => {
             if (e && e.dealDamageWithEffect) {
-                await e.dealDamageWithEffect(s, t, s.calculateDamage(10));
+                await e.dealDamageWithEffect(s, t, s.calculateDamage(7));
             } else {
-                t.takeDamage(s.calculateDamage(10), s);
+                t.takeDamage(s.calculateDamage(7), s);
             }
             if (e) {
                 e.player.deck.push(CardLibrary.DAZED.clone());
                 e.shuffle(e.player.deck);
+                if (e.uiUpdateCallback) e.uiUpdateCallback();
             }
-        }
-    }, null, 7),
-    HEADBUTT: new Card('headbutt', 'ヘッドバット', 1, 'attack', 'common', '9ダメージを与える。捨て札からカードを1枚選び、山札の一番上に置く。', async (s, t, e) => {
-        if (e && e.dealDamageWithEffect) {
-            await e.dealDamageWithEffect(s, t, s.calculateDamage(9));
-        } else {
-            t.takeDamage(s.calculateDamage(9), s);
-        }
-        if (e && e.onCardSelectionRequest && e.player.discard.length > 0) {
-            e.onCardSelectionRequest('捨て札からカードを選択 (山札の一番上に置く)', e.player.discard, (card, index) => {
-                if (card) {
-                    e.player.discard.splice(index, 1);
-                    e.player.deck.push(card);
-                    if (e.uiUpdateCallback) e.uiUpdateCallback();
+        },
+        targetType: 'single',
+        upgradeData: {
+            description: '10ダメージを与える。山札にめまいを1枚加える。',
+            baseDamage: 10,
+            effect: async (s, t, e) => {
+                if (e && e.dealDamageWithEffect) {
+                    await e.dealDamageWithEffect(s, t, s.calculateDamage(10));
+                } else {
+                    t.takeDamage(s.calculateDamage(10), s);
                 }
-            });
-        }
-    }, 'single', false, {
-        description: '12ダメージを与える。捨て札からカードを1枚選び、山札の一番上に置く。',
-        baseDamage: 12,
+                if (e) {
+                    e.player.deck.push(CardLibrary.DAZED.clone());
+                    e.shuffle(e.player.deck);
+                }
+            }
+        },
+        baseDamage: 7
+    }),
+    HEADBUTT: new Card({
+        id: 'headbutt',
+        name: 'ヘッドバット',
+        cost: 1,
+        type: 'attack',
+        rarity: 'common',
+        description: '9ダメージを与える。捨て札からカードを1枚選び、山札の一番上に置く。',
         effect: async (s, t, e) => {
             if (e && e.dealDamageWithEffect) {
-                await e.dealDamageWithEffect(s, t, s.calculateDamage(12));
+                await e.dealDamageWithEffect(s, t, s.calculateDamage(9));
             } else {
-                t.takeDamage(s.calculateDamage(12), s);
+                t.takeDamage(s.calculateDamage(9), s);
             }
             if (e && e.onCardSelectionRequest && e.player.discard.length > 0) {
                 e.onCardSelectionRequest('捨て札からカードを選択 (山札の一番上に置く)', e.player.discard, (card, index) => {
@@ -807,170 +1055,280 @@ export const CardLibrary = {
                     }
                 });
             }
-        }
-    }, null, 9, null, 0, null, false, false, null, 'assets/images/cards/Headbutt.png'),
-    TWIN_STRIKE: new Card('twin_strike', 'ツインストライク', 1, 'attack', 'common', '5ダメージを2回与える', async (s, t, e) => {
-        const targetIndex = e ? e.enemies.indexOf(t) : 0;
-        if (e && e.attackWithEffect) {
-            await e.attackWithEffect(s, t, s.calculateDamage(5), targetIndex);
-            await e.attackWithEffect(s, t, s.calculateDamage(5), targetIndex);
-        } else {
-            t.takeDamage(s.calculateDamage(5), s);
-            t.takeDamage(s.calculateDamage(5), s);
-        }
-    }, 'single', false, {
-        description: '7ダメージを2回与える',
-        baseDamage: 7,
+        },
+        targetType: 'single',
+        upgradeData: {
+            description: '12ダメージを与える。捨て札からカードを1枚選び、山札の一番上に置く。',
+            baseDamage: 12,
+            effect: async (s, t, e) => {
+                if (e && e.dealDamageWithEffect) {
+                    await e.dealDamageWithEffect(s, t, s.calculateDamage(12));
+                } else {
+                    t.takeDamage(s.calculateDamage(12), s);
+                }
+                if (e && e.onCardSelectionRequest && e.player.discard.length > 0) {
+                    e.onCardSelectionRequest('捨て札からカードを選択 (山札の一番上に置く)', e.player.discard, (card, index) => {
+                        if (card) {
+                            e.player.discard.splice(index, 1);
+                            e.player.deck.push(card);
+                            if (e.uiUpdateCallback) e.uiUpdateCallback();
+                        }
+                    });
+                }
+            }
+        },
+        baseDamage: 9
+    }),
+    TWIN_STRIKE: new Card({
+        id: 'twin_strike',
+        name: 'ツインストライク',
+        cost: 1,
+        type: 'attack',
+        rarity: 'common',
+        description: '5ダメージを2回与える',
         effect: async (s, t, e) => {
             const targetIndex = e ? e.enemies.indexOf(t) : 0;
             if (e && e.attackWithEffect) {
-                await e.attackWithEffect(s, t, s.calculateDamage(7), targetIndex);
-                await e.attackWithEffect(s, t, s.calculateDamage(7), targetIndex);
+                await e.attackWithEffect(s, t, s.calculateDamage(5), targetIndex);
+                await e.attackWithEffect(s, t, s.calculateDamage(5), targetIndex);
             } else {
-                t.takeDamage(s.calculateDamage(7), s);
-                t.takeDamage(s.calculateDamage(7), s);
+                t.takeDamage(s.calculateDamage(5), s);
+                t.takeDamage(s.calculateDamage(5), s);
             }
-        }
-    }, null, 5, null, 0, null, false, false, null, 'assets/images/cards/TwinStrike.png'),
-    POMMEL_STRIKE: new Card('pommel_strike', 'ポンメルストライク', 1, 'attack', 'common', '9ダメージを与え、カードを1枚引く', async (s, t, e) => {
-        if (e && e.dealDamageWithEffect) {
-            await e.dealDamageWithEffect(s, t, s.calculateDamage(9));
-        } else {
-            t.takeDamage(s.calculateDamage(9), s);
-        }
-        if (e) e.drawCards(1);
-    }, 'single', false, {
-        description: '10ダメージを与え、カードを2枚引く',
-        baseDamage: 10,
+        },
+        targetType: 'single',
+        upgradeData: {
+            description: '7ダメージを2回与える',
+            baseDamage: 7,
+            effect: async (s, t, e) => {
+                const targetIndex = e ? e.enemies.indexOf(t) : 0;
+                if (e && e.attackWithEffect) {
+                    await e.attackWithEffect(s, t, s.calculateDamage(7), targetIndex);
+                    await e.attackWithEffect(s, t, s.calculateDamage(7), targetIndex);
+                } else {
+                    t.takeDamage(s.calculateDamage(7), s);
+                    t.takeDamage(s.calculateDamage(7), s);
+                }
+            }
+        },
+        baseDamage: 5
+    }),
+    POMMEL_STRIKE: new Card({
+        id: 'pommel_strike',
+        name: 'ポンメルストライク',
+        cost: 1,
+        type: 'attack',
+        rarity: 'common',
+        description: '9ダメージを与え、カードを1枚引く',
         effect: async (s, t, e) => {
             if (e && e.dealDamageWithEffect) {
-                await e.dealDamageWithEffect(s, t, s.calculateDamage(10));
+                await e.dealDamageWithEffect(s, t, s.calculateDamage(9));
             } else {
-                t.takeDamage(s.calculateDamage(10), s);
+                t.takeDamage(s.calculateDamage(9), s);
             }
-            if (e) e.drawCards(2);
-        }
-    }, null, 9, null, 0, null, false, false, null, 'assets/images/cards/PommelStrike.png'),
-    SHRUG_IT_OFF: new Card('shrug_it_off', '受け流し', 1, 'skill', 'common', '8ブロックを得て、カードを1枚引く', (s, t, e) => {
-        s.addBlock(8);
-        if (e) e.drawCards(1);
-    }, 'self', false, {
-        description: '11ブロックを得て、カードを1枚引く',
-        baseBlock: 11,
-        effect: (s, t, e) => {
-            s.addBlock(11);
             if (e) e.drawCards(1);
-        }
-    }, null, 0, null, 8, null, false, false, null, 'assets/images/cards/ShrugItOff.png'),
-    FLEX: new Card('flex', 'フレックス', 0, 'skill', 'common', '筋力を2得る。ターン終了時、筋力を2失う。', (s, t) => {
-        s.addStatus('strength', 2);
-        s.addStatus('strength_down', 2);
-    }, 'self', false, {
-        description: '筋力を4得る。ターン終了時、筋力を4失う。',
+        },
+        targetType: 'single',
+        upgradeData: {
+            description: '10ダメージを与え、カードを2枚引く',
+            baseDamage: 10,
+            effect: async (s, t, e) => {
+                if (e && e.dealDamageWithEffect) {
+                    await e.dealDamageWithEffect(s, t, s.calculateDamage(10));
+                } else {
+                    t.takeDamage(s.calculateDamage(10), s);
+                }
+                if (e) e.drawCards(2);
+            }
+        },
+        baseDamage: 9
+    }),
+    SHRUG_IT_OFF: new Card({
+        id: 'shrug_it_off',
+        name: '受け流し',
+        cost: 1,
+        type: 'skill',
+        rarity: 'common',
+        description: '8ブロックを得て、カードを1枚引く',
+        effect: (s, t, e) => {
+            s.addBlock(8);
+            if (e) e.drawCards(1);
+        },
+        targetType: 'self',
+        upgradeData: {
+            description: '11ブロックを得て、カードを1枚引く',
+            baseBlock: 11,
+            effect: (s, t, e) => {
+                s.addBlock(11);
+                if (e) e.drawCards(1);
+            }
+        },
+        baseBlock: 8
+    }),
+    FLEX: new Card({
+        id: 'flex',
+        name: 'フレックス',
+        cost: 0,
+        type: 'skill',
+        rarity: 'common',
+        description: '筋力を2得る。ターン終了時、筋力を2失う。',
         effect: (s, t) => {
-            s.addStatus('strength', 4);
-            s.addStatus('strength_down', 4);
+            s.addStatus('strength', 2);
+            s.addStatus('strength_down', 2);
+        },
+        targetType: 'self',
+        upgradeData: {
+            description: '筋力を4得る。ターン終了時、筋力を4失う。',
+            effect: (s, t) => {
+                s.addStatus('strength', 4);
+                s.addStatus('strength_down', 4);
+            }
         }
     }),
-    TRUE_GRIT: new Card('true_grit', '不屈の闘志', 1, 'skill', 'common', '7ブロックを得る。手札からランダムに1枚廃棄する。', (s, t, e) => {
-        s.addBlock(7);
-        if (e && s.hand.length > 0) {
-            const randomIndex = Math.floor(Math.random() * s.hand.length);
-            const exhausted = s.hand.splice(randomIndex, 1)[0];
-            s.exhaustCard(exhausted, e);
-            if (e.uiUpdateCallback) e.uiUpdateCallback();
-        }
-    }, 'self', false, {
-        description: '9ブロックを得る。手札から1枚選んで廃棄する。',
-        baseBlock: 9,
+    TRUE_GRIT: new Card({
+        id: 'true_grit',
+        name: '不屈の闘志',
+        cost: 1,
+        type: 'skill',
+        rarity: 'common',
+        description: '7ブロックを得る。手札からランダムに1枚廃棄する。',
         effect: (s, t, e) => {
-            s.addBlock(9);
-            if (e && e.onCardSelectionRequest && s.hand.length > 0) {
-                e.onCardSelectionRequest('廃棄するカードを選択', s.hand, (card, index) => {
-                    if (card) {
-                        s.hand.splice(index, 1);
-                        s.exhaustCard(card, e);
-                        if (e.uiUpdateCallback) e.uiUpdateCallback();
-                    }
-                });
+            s.addBlock(7);
+            if (e && s.hand.length > 0) {
+                const randomIndex = Math.floor(Math.random() * s.hand.length);
+                const exhausted = s.hand.splice(randomIndex, 1)[0];
+                s.exhaustCard(exhausted, e);
+                if (e.uiUpdateCallback) e.uiUpdateCallback();
             }
-        }
-    }, null, 0, null, 7),
-    CLOTHESLINE: new Card('clothesline', 'ラリアット', 2, 'attack', 'common', '12ダメージを与え、脱力(2)を付与', async (s, t, e) => {
-        if (e && e.dealDamageWithEffect) {
-            await e.dealDamageWithEffect(s, t, s.calculateDamage(12));
-        } else {
-            t.takeDamage(s.calculateDamage(12), s);
-        }
-        t.addStatus('weak', 2);
-    }, 'single', false, {
-        description: '14ダメージを与え、脱力(3)を付与',
-        baseDamage: 14,
+        },
+        targetType: 'self',
+        upgradeData: {
+            description: '9ブロックを得る。手札から1枚選んで廃棄する。',
+            baseBlock: 9,
+            effect: (s, t, e) => {
+                s.addBlock(9);
+                if (e && e.onCardSelectionRequest && s.hand.length > 0) {
+                    e.onCardSelectionRequest('廃棄するカードを選択', s.hand, (card, index) => {
+                        if (card) {
+                            s.hand.splice(index, 1);
+                            s.exhaustCard(card, e);
+                            if (e.uiUpdateCallback) e.uiUpdateCallback();
+                        }
+                    });
+                }
+            }
+        },
+        baseBlock: 7
+    }),
+    CLOTHESLINE: new Card({
+        id: 'clothesline',
+        name: 'ラリアット',
+        cost: 2,
+        type: 'attack',
+        rarity: 'common',
+        description: '12ダメージを与え、脱力(2)を付与',
         effect: async (s, t, e) => {
             if (e && e.dealDamageWithEffect) {
-                await e.dealDamageWithEffect(s, t, s.calculateDamage(14));
+                await e.dealDamageWithEffect(s, t, s.calculateDamage(12));
             } else {
-                t.takeDamage(s.calculateDamage(14), s);
+                t.takeDamage(s.calculateDamage(12), s);
             }
-            t.addStatus('weak', 3);
-        }
-    }, null, 12),
+            t.addStatus('weak', 2);
+        },
+        targetType: 'single',
+        upgradeData: {
+            description: '14ダメージを与え、脱力(3)を付与',
+            baseDamage: 14,
+            effect: async (s, t, e) => {
+                if (e && e.dealDamageWithEffect) {
+                    await e.dealDamageWithEffect(s, t, s.calculateDamage(14));
+                } else {
+                    t.takeDamage(s.calculateDamage(14), s);
+                }
+                t.addStatus('weak', 3);
+            }
+        },
+        baseDamage: 12
+    }),
 
     // Uncommon
-    UPPERCUT: new Card('uppercut', 'アッパーカット', 2, 'attack', 'uncommon', '13ダメージを与え、脱力(1)と脆弱(1)を付与', async (s, t, e) => {
-        if (e && e.dealDamageWithEffect) {
-            await e.dealDamageWithEffect(s, t, s.calculateDamage(13));
-        } else {
-            t.takeDamage(s.calculateDamage(13), s);
-        }
-        t.addStatus('weak', 1);
-        t.addStatus('vulnerable', 1);
-    }, 'single', false, {
-        description: '13ダメージを与え、脱力(2)と脆弱(2)を付与',
-        baseDamage: 13,
+    UPPERCUT: new Card({
+        id: 'uppercut',
+        name: 'アッパーカット',
+        cost: 2,
+        type: 'attack',
+        rarity: 'uncommon',
+        description: '13ダメージを与え、脱力(1)と脆弱(1)を付与',
         effect: async (s, t, e) => {
             if (e && e.dealDamageWithEffect) {
                 await e.dealDamageWithEffect(s, t, s.calculateDamage(13));
             } else {
                 t.takeDamage(s.calculateDamage(13), s);
             }
-            t.addStatus('weak', 2);
-            t.addStatus('vulnerable', 2);
-        }
-    }, null, 13),
-    HEAVY_BLADE: new Card('heavy_blade', 'ヘヴィブレード', 2, 'attack', 'uncommon', '14ダメージ。筋力の効果を3倍受ける。', async (s, t, e) => {
-        const str = s.getStatusValue('strength');
-        if (e && e.dealDamageWithEffect) {
-            await e.dealDamageWithEffect(s, t, s.calculateDamage(14 + str * 2));
-        } else {
-            t.takeDamage(s.calculateDamage(14 + str * 2), s);
-        }
-    }, 'single', false, {
-        description: '14ダメージ。筋力の効果を5倍受ける。',
-        damageCalculator: (s, e) => {
-            const str = s.getStatusValue('strength');
-            return 14 + str * 4;
+            t.addStatus('weak', 1);
+            t.addStatus('vulnerable', 1);
         },
-        effect: async (s, t, e) => {
-            const str = s.getStatusValue('strength');
-            if (e && e.dealDamageWithEffect) {
-                await e.dealDamageWithEffect(s, t, s.calculateDamage(14 + str * 4));
-            } else {
-                t.takeDamage(s.calculateDamage(14 + str * 4), s);
+        targetType: 'single',
+        upgradeData: {
+            description: '13ダメージを与え、脱力(2)と脆弱(2)を付与',
+            baseDamage: 13,
+            effect: async (s, t, e) => {
+                if (e && e.dealDamageWithEffect) {
+                    await e.dealDamageWithEffect(s, t, s.calculateDamage(13));
+                } else {
+                    t.takeDamage(s.calculateDamage(13), s);
+                }
+                t.addStatus('weak', 2);
+                t.addStatus('vulnerable', 2);
             }
-        }
-    }, null, 14, (s, e) => {
-        const str = s.getStatusValue('strength');
-        return 14 + str * 2;
+        },
+        baseDamage: 13
     }),
-    BODY_SLAM: new Card('body_slam', 'ボディスラム', 1, 'attack', 'uncommon', '0ダメージを与える。現在のブロック値に等しいダメージを与える。', async (s, t, e) => {
-        if (e && e.dealDamageWithEffect) {
-            await e.dealDamageWithEffect(s, t, s.calculateDamage(s.block));
-        } else {
-            t.takeDamage(s.calculateDamage(s.block), s);
-        }
-    }, 'single', false, {
-        cost: 0,
+    HEAVY_BLADE: new Card({
+        id: 'heavy_blade',
+        name: 'ヘヴィブレード',
+        cost: 2,
+        type: 'attack',
+        rarity: 'uncommon',
+        description: '14ダメージ。筋力の効果を3倍受ける。',
+        effect: async (s, t, e) => {
+            const str = s.getStatusValue ? s.getStatusValue('strength') : (s.status.find(st => st.name === 'strength')?.value || 0);
+            if (e && e.dealDamageWithEffect) {
+                await e.dealDamageWithEffect(s, t, s.calculateDamage(14 + str * 2));
+            } else {
+                t.takeDamage(s.calculateDamage(14 + str * 2), s);
+            }
+        },
+        targetType: 'single',
+        upgradeData: {
+            description: '14ダメージ。筋力の効果を5倍受ける。',
+            baseDamage: 14,
+            damageCalculator: (s, e) => {
+                const str = s.getStatusValue ? s.getStatusValue('strength') : (s.status.find(st => st.name === 'strength')?.value || 0);
+                return 14 + str * 4;
+            },
+            effect: async (s, t, e) => {
+                const str = s.getStatusValue ? s.getStatusValue('strength') : (s.status.find(st => st.name === 'strength')?.value || 0);
+                if (e && e.dealDamageWithEffect) {
+                    await e.dealDamageWithEffect(s, t, s.calculateDamage(14 + str * 4));
+                } else {
+                    t.takeDamage(s.calculateDamage(14 + str * 4), s);
+                }
+            }
+        },
+        baseDamage: 14,
+        damageCalculator: (s, e) => {
+            const str = s.getStatusValue ? s.getStatusValue('strength') : (s.status.find(st => st.name === 'strength')?.value || 0);
+            return 14 + str * 2;
+        },
+        image: 'assets/images/cards/HeavyBlade.png'
+    }),
+    BODY_SLAM: new Card({
+        id: 'body_slam',
+        name: 'ボディスラム',
+        cost: 1,
+        type: 'attack',
+        rarity: 'uncommon',
         description: '0ダメージを与える。現在のブロック値に等しいダメージを与える。',
         effect: async (s, t, e) => {
             if (e && e.dealDamageWithEffect) {
@@ -979,85 +1337,123 @@ export const CardLibrary = {
                 t.takeDamage(s.calculateDamage(s.block), s);
             }
         },
-        damageCalculator: (s, e) => s.block
-    }, null, 0, (s, e) => (s as any).block, 0, null, false, false, null, 'assets/images/cards/BodySlam.png'),
-    WILD_STRIKE: new Card('wild_strike', 'ワイルドストライク', 1, 'attack', 'common', '12ダメージを与える。山札に「負傷」を1枚混ぜる。', async (s, t, e) => {
-        if (e && e.dealDamageWithEffect) {
-            await e.dealDamageWithEffect(s, t, s.calculateDamage(12));
-        } else {
-            t.takeDamage(s.calculateDamage(12), s);
-        }
-        if (e) {
-            e.player.deck.push(CardLibrary.WOUND.clone());
-            e.shuffle(e.player.deck);
-        }
-    }, 'single', false, {
-        description: '17ダメージを与える。山札に「負傷」を1枚混ぜる。',
-        baseDamage: 17,
+        targetType: 'single',
+        upgradeData: {
+            cost: 0,
+            description: '0ダメージを与える。現在のブロック値に等しいダメージを与える。',
+            effect: async (s, t, e) => {
+                if (e && e.dealDamageWithEffect) {
+                    await e.dealDamageWithEffect(s, t, s.calculateDamage(s.block));
+                } else {
+                    t.takeDamage(s.calculateDamage(s.block), s);
+                }
+            },
+            damageCalculator: (s, e) => s.block
+        },
+        damageCalculator: (s, e) => s.block,
+        image: 'assets/images/cards/BodySlam.png'
+    }),
+    WILD_STRIKE: new Card({
+        id: 'wild_strike',
+        name: 'ワイルドストライク',
+        cost: 1,
+        type: 'attack',
+        rarity: 'common',
+        description: '12ダメージを与える。山札に「負傷」を1枚混ぜる。',
         effect: async (s, t, e) => {
             if (e && e.dealDamageWithEffect) {
-                await e.dealDamageWithEffect(s, t, s.calculateDamage(17));
+                await e.dealDamageWithEffect(s, t, s.calculateDamage(12));
             } else {
-                t.takeDamage(s.calculateDamage(17), s);
+                t.takeDamage(s.calculateDamage(12), s);
             }
             if (e) {
                 e.player.deck.push(CardLibrary.WOUND.clone());
                 e.shuffle(e.player.deck);
             }
-        }
-    }, null, 12),
-
-    // Additional Skills
-    ARMAMENTS: new Card('armaments', '武装', 1, 'skill', 'common', '5ブロックを得る。手札のカード1枚を戦闘中のみ強化する。', (s, t, e) => {
-        s.addBlock(5);
-        if (e && e.onCardSelectionRequest && s.hand.length > 0) {
-            e.onCardSelectionRequest('強化するカードを選択', s.hand, (card, index) => {
-                if (card && !card.isUpgraded) {
-                    card.upgrade();
-                    if (e.uiUpdateCallback) e.uiUpdateCallback();
+        },
+        targetType: 'single',
+        upgradeData: {
+            description: '17ダメージを与える。山札に「負傷」を1枚混ぜる。',
+            baseDamage: 17,
+            effect: async (s, t, e) => {
+                if (e && e.dealDamageWithEffect) {
+                    await e.dealDamageWithEffect(s, t, s.calculateDamage(17));
+                } else {
+                    t.takeDamage(s.calculateDamage(17), s);
                 }
-            });
-        }
-    }, 'self', false, {
-        description: '5ブロックを得る。手札の全てのカードを戦闘中のみ強化する。',
-        baseBlock: 5,
+                if (e) {
+                    e.player.deck.push(CardLibrary.WOUND.clone());
+                    e.shuffle(e.player.deck);
+                }
+            }
+        },
+        baseDamage: 12
+    }),
+    ARMAMENTS: new Card({
+        id: 'armaments',
+        name: '武装',
+        cost: 1,
+        type: 'skill',
+        rarity: 'common',
+        description: '5ブロックを得る。手札のカード1枚を戦闘中のみ強化する。',
         effect: (s, t, e) => {
             s.addBlock(5);
-            s.hand.forEach(card => {
-                if (!card.isUpgraded) card.upgrade();
-            });
-            if (e && e.uiUpdateCallback) e.uiUpdateCallback();
-        }
-    }, null, 0, null, 5),
-    HAVOC: new Card('havoc', '荒廃', 1, 'skill', 'uncommon', '山札の一番上のカードをプレイして廃棄する。', (s, t, e) => {
-        if (e && e.player.deck.length > 0) {
-            const card = e.player.deck.pop();
-            card.isExhaust = true;
-            e.player.hand.push(card);
-            if (e.uiUpdateCallback) e.uiUpdateCallback();
-        }
-    }, 'self', false, {
-        cost: 0,
-        description: '山札の一番上のカードをプレイして廃棄する。'
-    }),
-    WARCRY: new Card('warcry', '雄叫び', 0, 'skill', 'common', 'カードを1枚引く。手札のカード1枚を山札の一番上に置く。廃棄。', (s, t, e) => {
-        if (e) {
-            e.drawCards(1);
-            if (e.onCardSelectionRequest && s.hand.length > 0) {
-                e.onCardSelectionRequest('山札の一番上に置くカードを選択', s.hand, (card, index) => {
-                    if (card) {
-                        s.hand.splice(index, 1);
-                        e.player.deck.push(card);
+            if (e && e.onCardSelectionRequest && s.hand.length > 0) {
+                e.onCardSelectionRequest('強化するカードを選択', s.hand, (card, index) => {
+                    if (card && !card.isUpgraded) {
+                        card.upgrade();
                         if (e.uiUpdateCallback) e.uiUpdateCallback();
                     }
                 });
             }
+        },
+        targetType: 'self',
+        upgradeData: {
+            description: '5ブロックを得る。手札の全てのカードを戦闘中のみ強化する。',
+            baseBlock: 5,
+            effect: (s, t, e) => {
+                s.addBlock(5);
+                s.hand.forEach(card => {
+                    if (!card.isUpgraded) card.upgrade();
+                });
+                if (e && e.uiUpdateCallback) e.uiUpdateCallback();
+            }
+        },
+        baseBlock: 5
+    }),
+    HAVOC: new Card({
+        id: 'havoc',
+        name: '荒廃',
+        cost: 1,
+        type: 'skill',
+        rarity: 'uncommon',
+        description: '山札の一番上のカードをプレイして廃棄する。',
+        effect: (s, t, e) => {
+            if (e && e.player.deck.length > 0) {
+                const card = e.player.deck.pop();
+                if (card) {
+                    card.isExhaust = true;
+                    e.player.hand.push(card);
+                    if (e.uiUpdateCallback) e.uiUpdateCallback();
+                }
+            }
+        },
+        targetType: 'self',
+        upgradeData: {
+            cost: 0,
+            description: '山札の一番上のカードをプレイして廃棄する。'
         }
-    }, 'self', false, {
-        description: 'カードを2枚引く。手札のカード1枚を山札の一番上に置く。廃棄。',
+    }),
+    WARCRY: new Card({
+        id: 'warcry',
+        name: '雄叫び',
+        cost: 0,
+        type: 'skill',
+        rarity: 'common',
+        description: 'カードを1枚引く。手札のカード1枚を山札の一番上に置く。廃棄。',
         effect: (s, t, e) => {
             if (e) {
-                e.drawCards(2);
+                e.drawCards(1);
                 if (e.onCardSelectionRequest && s.hand.length > 0) {
                     e.onCardSelectionRequest('山札の一番上に置くカードを選択', s.hand, (card, index) => {
                         if (card) {
@@ -1068,80 +1464,135 @@ export const CardLibrary = {
                     });
                 }
             }
-        }
-    }, null, 0, null, 0, null, false, true),
-    POWER_THROUGH: new Card('power_through', 'やせ我慢', 1, 'skill', 'uncommon', '15ブロックを得る。手札に負傷を2枚加える。', (s, t, e) => {
-        s.addBlock(15);
-        if (e) {
-            s.hand.push(CardLibrary.WOUND.clone());
-            s.hand.push(CardLibrary.WOUND.clone());
-            if (e.uiUpdateCallback) e.uiUpdateCallback();
-        }
-    }, 'self', false, {
-        description: '20ブロックを得る。手札に負傷を2枚加える。',
-        baseBlock: 20,
+        },
+        targetType: 'self',
+        upgradeData: {
+            description: 'カードを2枚引く。手札のカード1枚を山札の一番上に置く。廃棄。',
+            effect: (s, t, e) => {
+                if (e) {
+                    e.drawCards(2);
+                    if (e.onCardSelectionRequest && s.hand.length > 0) {
+                        e.onCardSelectionRequest('山札の一番上に置くカードを選択', s.hand, (card, index) => {
+                            if (card) {
+                                s.hand.splice(index, 1);
+                                e.player.deck.push(card);
+                                if (e.uiUpdateCallback) e.uiUpdateCallback();
+                            }
+                        });
+                    }
+                }
+            }
+        },
+        isExhaust: true
+    }),
+    POWER_THROUGH: new Card({
+        id: 'power_through',
+        name: 'やせ我慢',
+        cost: 1,
+        type: 'skill',
+        rarity: 'uncommon',
+        description: '15ブロックを得る。手札に負傷を2枚加える。',
         effect: (s, t, e) => {
-            s.addBlock(20);
+            s.addBlock(15);
             if (e) {
                 s.hand.push(CardLibrary.WOUND.clone());
                 s.hand.push(CardLibrary.WOUND.clone());
                 if (e.uiUpdateCallback) e.uiUpdateCallback();
             }
-        }
-    }, null, 0, null, 15),
-    GHOSTLY_ARMOR: new Card('ghostly_armor', 'ゴーストアーマー', 1, 'skill', 'uncommon', 'エセリアル。10ブロックを得る。', (s, t) => {
-        s.addBlock(10);
-    }, 'self', false, {
-        description: 'エセリアル。13ブロックを得る。',
-        baseBlock: 13,
-        effect: (s, t) => { s.addBlock(13); }
-    }, null, 0, null, 10, null, true),
-    SECOND_WIND: new Card('second_wind', 'セカンドウィンド', 1, 'skill', 'uncommon', '手札の非アタックカードを全て廃棄し、1枚につき5ブロックを得る。', (s, t, e) => {
-        const nonAttacks = s.hand.filter(c => c.type !== 'attack');
-        const count = nonAttacks.length;
-        nonAttacks.forEach(c => s.exhaustCard(c, e));
-        s.hand = s.hand.filter(c => c.type === 'attack');
-        s.addBlock(5 * count);
-        if (e && e.uiUpdateCallback) e.uiUpdateCallback();
-    }, 'self', false, {
-        description: '手札の非アタックカードを全て廃棄し、1枚につき7ブロックを得る。',
+        },
+        targetType: 'self',
+        upgradeData: {
+            description: '20ブロックを得る。手札に負傷を2枚加える。',
+            baseBlock: 20,
+            effect: (s, t, e) => {
+                s.addBlock(20);
+                if (e) {
+                    s.hand.push(CardLibrary.WOUND.clone());
+                    s.hand.push(CardLibrary.WOUND.clone());
+                    if (e.uiUpdateCallback) e.uiUpdateCallback();
+                }
+            }
+        },
+        baseBlock: 15
+    }),
+    GHOSTLY_ARMOR: new Card({
+        id: 'ghostly_armor',
+        name: 'ゴーストアーマー',
+        cost: 1,
+        type: 'skill',
+        rarity: 'uncommon',
+        description: 'エセリアル。10ブロックを得る。',
+        effect: (s, t) => {
+            s.addBlock(10);
+        },
+        targetType: 'self',
+        upgradeData: {
+            description: 'エセリアル。13ブロックを得る。',
+            baseBlock: 13,
+            effect: (s, t) => { s.addBlock(13); }
+        },
+        baseBlock: 10,
+        isEthereal: true
+    }),
+    SECOND_WIND: new Card({
+        id: 'second_wind',
+        name: 'セカンドウィンド',
+        cost: 1,
+        type: 'skill',
+        rarity: 'uncommon',
+        description: '手札の非アタックカードを全て廃棄し、1枚につき5ブロックを得る。',
         effect: (s, t, e) => {
             const nonAttacks = s.hand.filter(c => c.type !== 'attack');
             const count = nonAttacks.length;
             nonAttacks.forEach(c => s.exhaustCard(c, e));
             s.hand = s.hand.filter(c => c.type === 'attack');
-            s.addBlock(7 * count);
+            s.addBlock(5 * count);
             if (e && e.uiUpdateCallback) e.uiUpdateCallback();
+        },
+        targetType: 'self',
+        upgradeData: {
+            description: '手札の非アタックカードを全て廃棄し、1枚につき7ブロックを得る。',
+            effect: (s, t, e) => {
+                const nonAttacks = s.hand.filter(c => c.type !== 'attack');
+                const count = nonAttacks.length;
+                nonAttacks.forEach(c => s.exhaustCard(c, e));
+                s.hand = s.hand.filter(c => c.type === 'attack');
+                s.addBlock(7 * count);
+                if (e && e.uiUpdateCallback) e.uiUpdateCallback();
+            }
         }
     }),
-    BATTLE_TRANCE: new Card('battle_trance', 'バトルトランス', 0, 'skill', 'uncommon', 'カードを3枚引く。このターン、カードを引けなくなる。', (s, t, e) => {
-        if (e) {
-            e.drawCards(3);
-            s.addStatus('no_draw', 1);
-        }
-    }, 'self', false, {
-        description: 'カードを4枚引く。このターン、カードを引けなくなる。',
+    BATTLE_TRANCE: new Card({
+        id: 'battle_trance',
+        name: 'バトルトランス',
+        cost: 0,
+        type: 'skill',
+        rarity: 'uncommon',
+        description: 'カードを3枚引く。このターン、カードを引けなくなる。',
         effect: (s, t, e) => {
             if (e) {
-                e.drawCards(4);
+                e.drawCards(3);
                 s.addStatus('no_draw', 1);
+            }
+        },
+        targetType: 'self',
+        upgradeData: {
+            description: 'カードを4枚引く。このターン、カードを引けなくなる。',
+            effect: (s, t, e) => {
+                if (e) {
+                    e.drawCards(4);
+                    s.addStatus('no_draw', 1);
+                }
             }
         }
     }),
-    DUAL_WIELD: new Card('dual_wield', '二刀流', 1, 'skill', 'uncommon', '手札のアタックかパワーカード1枚の複製を手札に加える。', (s, t, e) => {
-        if (e && e.onCardSelectionRequest) {
-            const targets = s.hand.filter(c => c.type === 'attack' || c.type === 'power');
-            if (targets.length > 0) {
-                e.onCardSelectionRequest('複製するカードを選択', targets, (card, index) => {
-                    if (card) {
-                        s.hand.push(card.clone());
-                        if (e.uiUpdateCallback) e.uiUpdateCallback();
-                    }
-                });
-            }
-        }
-    }, 'self', false, {
-        description: '手札のアタックかパワーカード1枚の複製を2枚手札に加える。',
+    DUAL_WIELD: new Card({
+        id: 'dual_wield',
+        name: '二刀流',
+        cost: 1,
+        type: 'skill',
+        rarity: 'uncommon',
+        description: '手札のアタックかパワーカード1枚の複製を手札に加える。',
         effect: (s, t, e) => {
             if (e && e.onCardSelectionRequest) {
                 const targets = s.hand.filter(c => c.type === 'attack' || c.type === 'power');
@@ -1149,7 +1600,223 @@ export const CardLibrary = {
                     e.onCardSelectionRequest('複製するカードを選択', targets, (card, index) => {
                         if (card) {
                             s.hand.push(card.clone());
-                            s.hand.push(card.clone());
+                            if (e.uiUpdateCallback) e.uiUpdateCallback();
+                        }
+                    });
+                }
+            }
+        },
+        targetType: 'self',
+        upgradeData: {
+            description: '手札のアタックかパワーカード1枚の複製を2枚手札に加える。',
+            effect: (s, t, e) => {
+                if (e && e.onCardSelectionRequest) {
+                    const targets = s.hand.filter(c => c.type === 'attack' || c.type === 'power');
+                    if (targets.length > 0) {
+                        e.onCardSelectionRequest('複製するカードを選択', targets, (card, index) => {
+                            if (card) {
+                                s.hand.push(card.clone());
+                                s.hand.push(card.clone());
+                                if (e.uiUpdateCallback) e.uiUpdateCallback();
+                            }
+                        });
+                    }
+                }
+            }
+        }
+    }),
+    ENTRENCH: new Card({
+        id: 'entrench',
+        name: '塹壕',
+        cost: 2,
+        type: 'skill',
+        rarity: 'uncommon',
+        description: '現在のブロック値を2倍にする。',
+        effect: (s, t) => {
+            s.block *= 2;
+        },
+        targetType: 'self',
+        upgradeData: {
+            cost: 1,
+            description: '現在のブロック値を2倍にする。'
+        }
+    }),
+    INTIMIDATE: new Card({
+        id: 'intimidate',
+        name: '威嚇',
+        cost: 0,
+        type: 'skill',
+        rarity: 'uncommon',
+        description: '全ての敵に脱力(1)を付与する。廃棄。',
+        effect: (s, t, e) => {
+            if (e) {
+                e.enemies.forEach(enemy => {
+                    if (!enemy.isDead()) enemy.addStatus('weak', 1);
+                });
+            }
+        },
+        targetType: 'all',
+        upgradeData: {
+            description: '全ての敵に脱力(2)を付与する。廃棄。',
+            effect: (s, t, e) => {
+                if (e) {
+                    e.enemies.forEach(enemy => {
+                        if (!enemy.isDead()) enemy.addStatus('weak', 2);
+                    });
+                }
+            }
+        },
+        isExhaust: true
+    }),
+    SPOT_WEAKNESS: new Card({
+        id: 'spot_weakness',
+        name: '弱点発見',
+        cost: 1,
+        type: 'skill',
+        rarity: 'uncommon',
+        description: '敵が攻撃予定なら筋力を3得る。',
+        effect: (s, t, e) => {
+            if (t && t.nextMove && t.nextMove.type === 'attack') {
+                s.addStatus('strength', 3);
+            }
+        },
+        targetType: 'single',
+        upgradeData: {
+            description: '敵が攻撃予定なら筋力を4得る。',
+            effect: (s, t, e) => {
+                if (t && t.nextMove && t.nextMove.type === 'attack') {
+                    s.addStatus('strength', 4);
+                }
+            }
+        }
+    }),
+    RAGE: new Card({
+        id: 'rage',
+        name: '激怒',
+        cost: 0,
+        type: 'skill',
+        rarity: 'uncommon',
+        description: 'このターン、アタックカードをプレイする度に3ブロックを得る。',
+        effect: (s, t, e) => {
+            s.addStatus('rage', 3);
+        },
+        targetType: 'self',
+        upgradeData: {
+            description: 'このターン、アタックカードをプレイする度に5ブロックを得る。',
+            effect: (s, t, e) => { s.addStatus('rage', 5); }
+        }
+    }),
+    DISARM: new Card({
+        id: 'disarm',
+        name: '武装解除',
+        cost: 1,
+        type: 'skill',
+        rarity: 'uncommon',
+        description: '敵の筋力を2減らす。廃棄。',
+        effect: (s, t) => {
+            t.addStatus('strength', -2);
+        },
+        targetType: 'single',
+        upgradeData: {
+            description: '敵の筋力を3減らす。廃棄。',
+            effect: (s, t) => { t.addStatus('strength', -3); }
+        },
+        isExhaust: true
+    }),
+    SEEING_RED: new Card({
+        id: 'seeing_red',
+        name: '激昂',
+        cost: 1,
+        type: 'skill',
+        rarity: 'uncommon',
+        description: '2エナジーを得る。廃棄。',
+        effect: (s, t, e) => {
+            if (e) s.energy += 2;
+        },
+        targetType: 'self',
+        upgradeData: {
+            cost: 0,
+            description: '2エナジーを得る。廃棄。'
+        },
+        isExhaust: true
+    }),
+    BLOODLETTING: new Card({
+        id: 'bloodletting',
+        name: '瀉血',
+        cost: 0,
+        type: 'skill',
+        rarity: 'uncommon',
+        description: 'HPを3失い、2エナジーを得る。',
+        effect: (s, t, e) => {
+            s.loseHP(3);
+            if (e) {
+                s.energy += 2;
+                if (e.uiUpdateCallback) e.uiUpdateCallback();
+            }
+        },
+        targetType: 'self',
+        upgradeData: {
+            description: 'HPを3失い、3エナジーを得る。',
+            effect: (s, t, e) => {
+                s.loseHP(3);
+                if (e) {
+                    s.energy += 3;
+                    if (e.uiUpdateCallback) e.uiUpdateCallback();
+                }
+            }
+        }
+    }),
+    FLAME_BARRIER: new Card({
+        id: 'flame_barrier',
+        name: '炎の障壁',
+        cost: 2,
+        type: 'skill',
+        rarity: 'uncommon',
+        description: '12ブロックを得る。攻撃を受けると攻撃者に4ダメージを与える。',
+        effect: (s, t) => {
+            s.addBlock(12);
+            s.addStatus('thorns', 4);
+        },
+        targetType: 'self',
+        upgradeData: {
+            description: '16ブロックを得る。攻撃を受けると攻撃者に6ダメージを与える。',
+            baseBlock: 16,
+            effect: (s, t) => {
+                s.addBlock(16);
+                s.addStatus('thorns', 6);
+            }
+        },
+        baseBlock: 12
+    }),
+    BURNING_PACT: new Card({
+        id: 'burning_pact',
+        name: '焦熱の契約',
+        cost: 1,
+        type: 'skill',
+        rarity: 'uncommon',
+        description: '手札のカード1枚を廃棄し、カードを2枚引く。',
+        effect: (s, t, e) => {
+            if (e && e.onCardSelectionRequest && s.hand.length > 0) {
+                e.onCardSelectionRequest('廃棄するカードを選択', s.hand, (card, index) => {
+                    if (card) {
+                        s.hand.splice(index, 1);
+                        s.exhaustCard(card, e);
+                        e.drawCards(2);
+                        if (e.uiUpdateCallback) e.uiUpdateCallback();
+                    }
+                });
+            }
+        },
+        targetType: 'self',
+        upgradeData: {
+            description: '手札のカード1枚を廃棄し、カードを3枚引く。',
+            effect: (s, t, e) => {
+                if (e && e.onCardSelectionRequest && s.hand.length > 0) {
+                    e.onCardSelectionRequest('廃棄するカードを選択', s.hand, (card, index) => {
+                        if (card) {
+                            s.hand.splice(index, 1);
+                            s.exhaustCard(card, e);
+                            e.drawCards(3);
                             if (e.uiUpdateCallback) e.uiUpdateCallback();
                         }
                     });
@@ -1157,273 +1824,364 @@ export const CardLibrary = {
             }
         }
     }),
-    ENTRENCH: new Card('entrench', '塹壕', 2, 'skill', 'uncommon', '現在のブロック値を2倍にする。', (s, t) => {
-        s.block *= 2;
-    }, 'self', false, {
-        cost: 1,
-        description: '現在のブロック値を2倍にする。'
-    }),
-    INTIMIDATE: new Card('intimidate', '威嚇', 0, 'skill', 'uncommon', '全ての敵に脱力(1)を付与する。廃棄。', (s, t, e) => {
-        if (e) {
-            e.enemies.forEach(enemy => {
-                if (!enemy.isDead()) enemy.addStatus('weak', 1);
-            });
-        }
-    }, 'all', false, {
-        description: '全ての敵に脱力(2)を付与する。廃棄。',
-        effect: (s, t, e) => {
-            if (e) {
-                e.enemies.forEach(enemy => {
-                    if (!enemy.isDead()) enemy.addStatus('weak', 2);
-                });
-            }
-        }
-    }, null, 0, null, 0, null, false, true),
-    SPOT_WEAKNESS: new Card('spot_weakness', '弱点発見', 1, 'skill', 'uncommon', '敵が攻撃予定なら筋力を3得る。', (s, t, e) => {
-        if (t && t.nextMove && t.nextMove.type === 'attack') {
-            s.addStatus('strength', 3);
-        }
-    }, 'single', false, {
-        description: '敵が攻撃予定なら筋力を4得る。',
-        effect: (s, t, e) => {
-            if (t && t.nextMove && t.nextMove.type === 'attack') {
-                s.addStatus('strength', 4);
-            }
-        }
-    }),
-    RAGE: new Card('rage', '激怒', 0, 'skill', 'uncommon', 'このターン、アタックカードをプレイする度に3ブロックを得る。', (s, t, e) => {
-        s.addStatus('rage', 3);
-    }, 'self', false, {
-        description: 'このターン、アタックカードをプレイする度に5ブロックを得る。',
-        effect: (s, t, e) => { s.addStatus('rage', 5); }
-    }),
-    DISARM: new Card('disarm', '武装解除', 1, 'skill', 'uncommon', '敵の筋力を2減らす。廃棄。', (s, t) => {
-        t.addStatus('strength', -2);
-    }, 'single', false, {
-        description: '敵の筋力を3減らす。廃棄。',
-        effect: (s, t) => { t.addStatus('strength', -3); }
-    }, null, 0, null, 0, null, false, true),
-    SEEING_RED: new Card('seeing_red', '激昂', 1, 'skill', 'uncommon', '2エナジーを得る。廃棄。', (s, t, e) => {
-        if (e) s.energy += 2;
-    }, 'self', false, {
-        cost: 0,
-        description: '2エナジーを得る。廃棄。'
-    }, null, 0, null, 0, null, false, true),
-    BLOODLETTING: new Card('bloodletting', '瀉血', 0, 'skill', 'uncommon', 'HPを3失い、2エナジーを得る。', (s, t, e) => {
-        s.loseHP(3);
-        if (e) {
-            s.energy += 2;
-            if (e.uiUpdateCallback) e.uiUpdateCallback();
-        }
-    }, 'self', false, {
-        description: 'HPを3失い、3エナジーを得る。',
-        effect: (s, t, e) => {
-            s.loseHP(3);
-            if (e) {
-                s.energy += 3;
-                if (e.uiUpdateCallback) e.uiUpdateCallback();
-            }
-        }
-    }),
-    FLAME_BARRIER: new Card('flame_barrier', '炎の障壁', 2, 'skill', 'uncommon', '12ブロックを得る。攻撃を受けると攻撃者に4ダメージを与える。', (s, t) => {
-        s.addBlock(12);
-        s.addStatus('thorns', 4);
-    }, 'self', false, {
-        description: '16ブロックを得る。攻撃を受けると攻撃者に6ダメージを与える。',
-        baseBlock: 16,
-        effect: (s, t) => {
-            s.addBlock(16);
-            s.addStatus('thorns', 6);
-        }
-    }, null, 0, null, 12),
-    BURNING_PACT: new Card('burning_pact', '焦熱の契約', 1, 'skill', 'uncommon', '手札のカード1枚を廃棄し、カードを2枚引く。', (s, t, e) => {
-        if (e && e.onCardSelectionRequest && s.hand.length > 0) {
-            e.onCardSelectionRequest('廃棄するカードを選択', s.hand, (card, index) => {
-                if (card) {
-                    s.hand.splice(index, 1);
-                    s.exhaustCard(card, e);
-                    e.drawCards(2);
-                    if (e.uiUpdateCallback) e.uiUpdateCallback();
-                }
-            });
-        }
-    }, 'self', false, {
-        description: '手札のカード1枚を廃棄し、カードを3枚引く。',
-        effect: (s, t, e) => {
-            if (e && e.onCardSelectionRequest && s.hand.length > 0) {
-                e.onCardSelectionRequest('廃棄するカードを選択', s.hand, (card, index) => {
-                    if (card) {
-                        s.hand.splice(index, 1);
-                        s.exhaustCard(card, e);
-                        e.drawCards(3);
-                        if (e.uiUpdateCallback) e.uiUpdateCallback();
-                    }
-                });
-            }
-        }
-    }),
-    SHOCKWAVE: new Card('shockwave', '衝撃波', 2, 'skill', 'uncommon', '全ての敵に脱力(3)と脆弱(3)を付与する。廃棄。', (s, t, e) => {
-        if (t && !t.isDead()) {
-            t.addStatus('weak', 3);
-            t.addStatus('vulnerable', 3);
-        }
-    }, 'all', false, {
-        description: '全ての敵に脱力(5)と脆弱(5)を付与する。廃棄。',
+    SHOCKWAVE: new Card({
+        id: 'shockwave',
+        name: '衝撃波',
+        cost: 2,
+        type: 'skill',
+        rarity: 'uncommon',
+        description: '全ての敵に脱力(3)と脆弱(3)を付与する。廃棄。',
         effect: (s, t, e) => {
             if (t && !t.isDead()) {
-                t.addStatus('weak', 5);
-                t.addStatus('vulnerable', 5);
+                t.addStatus('weak', 3);
+                t.addStatus('vulnerable', 3);
             }
-        }
-    }, null, 0, null, 0, null, false, true),
-    SENTINEL: new Card('sentinel', '見張り', 1, 'skill', 'uncommon', '5ブロックを得る。このカードが廃棄された時、2エナジーを得る。', (s, t) => {
-        s.addBlock(5);
-    }, 'self', false, {
-        description: '8ブロックを得る。このカードが廃棄された時、3エナジーを得る。',
-        baseBlock: 8,
-        effect: (s, t) => { s.addBlock(8); },
+        },
+        targetType: 'all',
+        upgradeData: {
+            description: '全ての敵に脱力(5)と脆弱(5)を付与する。廃棄。',
+            effect: (s, t, e) => {
+                if (t && !t.isDead()) {
+                    t.addStatus('weak', 5);
+                    t.addStatus('vulnerable', 5);
+                }
+            }
+        },
+        isExhaust: true
+    }),
+    SENTINEL: new Card({
+        id: 'sentinel',
+        name: '見張り',
+        cost: 1,
+        type: 'skill',
+        rarity: 'uncommon',
+        description: '5ブロックを得る。このカードが廃棄された時、2エナジーを得る。',
+        effect: (s, t, e) => {
+            s.addBlock(5);
+        },
+        targetType: 'self',
+        upgradeData: {
+            description: '8ブロックを得る。このカードが廃棄された時、3エナジーを得る。',
+            baseBlock: 8,
+            effect: (s, t, e) => { s.addBlock(8); },
+            onExhaust: (s, e) => {
+                if (e) {
+                    s.energy += 3;
+                    if (e.uiUpdateCallback) e.uiUpdateCallback();
+                }
+            }
+        },
+        baseBlock: 5,
         onExhaust: (s, e) => {
             if (e) {
-                s.energy += 3;
+                s.energy += 2;
                 if (e.uiUpdateCallback) e.uiUpdateCallback();
             }
         }
-    }, null, 0, null, 5, null, false, false, null, null, 'slash', (s, e) => {
-        if (e) {
-            s.energy += 2;
-            if (e.uiUpdateCallback) e.uiUpdateCallback();
+    }),
+    DARK_SHACKLES: new Card({
+        id: 'dark_shackles',
+        name: '非道の刃',
+        cost: 1,
+        type: 'skill',
+        rarity: 'rare',
+        description: 'ランダムなアタックカード1枚を生成し、そのコストを0にする。廃棄。',
+        effect: (s, t, e) => {
+            if (e) {
+                const attackCards = Object.values(CardLibrary).filter((c: any) => c.type === 'attack');
+                const randomCard = attackCards[Math.floor(Math.random() * attackCards.length)].clone();
+                randomCard.cost = 0;
+                s.hand.push(randomCard);
+                if (e.uiUpdateCallback) e.uiUpdateCallback();
+            }
+        },
+        targetType: 'self',
+        upgradeData: {
+            cost: 0,
+            description: 'ランダムなアタックカード1枚を生成し、そのコストを0にする。廃棄。'
+        },
+        isExhaust: true
+    }),
+    DOUBLE_TAP: new Card({
+        id: 'double_tap',
+        name: 'ダブルタップ',
+        cost: 1,
+        type: 'skill',
+        rarity: 'rare',
+        description: '次にプレイするアタックカードを2回プレイする。',
+        effect: (s, t) => {
+            s.addStatus('double_tap', 1);
+        },
+        targetType: 'self',
+        upgradeData: {
+            description: '次にプレイする2枚のアタックカードをそれぞれ2回プレイする。',
+            effect: (s, t) => { s.addStatus('double_tap', 2); }
         }
     }),
-    DARK_SHACKLES: new Card('dark_shackles', '非道の刃', 1, 'skill', 'rare', 'ランダムなアタックカード1枚を生成し、そのコストを0にする。廃棄。', (s, t, e) => {
-        if (e) {
-            const attackCards = Object.values(CardLibrary).filter((c: any) => c.type === 'attack');
-            const randomCard = attackCards[Math.floor(Math.random() * attackCards.length)].clone();
-            randomCard.cost = 0;
-            s.hand.push(randomCard);
-            if (e.uiUpdateCallback) e.uiUpdateCallback();
-        }
-    }, 'self', false, {
-        cost: 0,
-        description: 'ランダムなアタックカード1枚を生成し、そのコストを0にする。廃棄。'
-    }, null, 0, null, 0, null, false, true),
-    DOUBLE_TAP: new Card('double_tap', 'ダブルタップ', 1, 'skill', 'rare', '次にプレイするアタックカードを2回プレイする。', (s, t) => {
-        s.addStatus('double_tap', 1);
-    }, 'self', false, {
-        description: '次にプレイする2枚のアタックカードをそれぞれ2回プレイする。',
-        effect: (s, t) => { s.addStatus('double_tap', 2); }
-    }),
-    LIMIT_BREAK: new Card('limit_break', 'リミットブレイク', 1, 'skill', 'rare', '筋力を2倍にする。廃棄。', (s, t) => {
-        const currentStr = s.getStatusValue('strength');
-        s.addStatus('strength', currentStr);
-    }, 'self', false, {
-        description: '筋力を2倍にする。',
+    LIMIT_BREAK: new Card({
+        id: 'limit_break',
+        name: 'リミットブレイク',
+        cost: 1,
+        type: 'skill',
+        rarity: 'rare',
+        description: '筋力を2倍にする。廃棄。',
         effect: (s, t) => {
             const currentStr = s.getStatusValue('strength');
             s.addStatus('strength', currentStr);
-        }
-    }, null, 0, null, 0, null, false, false),
-    OFFERING: new Card('offering', '供物', 0, 'skill', 'rare', 'HPを6失い、2エナジーを得て、カードを3枚引く。廃棄。', (s, t, e) => {
-        s.loseHP(6);
-        if (e) {
-            s.energy += 2;
-            e.drawCards(3);
-            if (e.uiUpdateCallback) e.uiUpdateCallback();
-        }
-    }, 'self', false, {
-        description: 'HPを6失い、2エナジーを得て、カードを5枚引く。廃棄。',
+        },
+        targetType: 'self',
+        upgradeData: {
+            description: '筋力を2倍にする。',
+            effect: (s, t) => {
+                const currentStr = s.getStatusValue('strength');
+                s.addStatus('strength', currentStr);
+            },
+            isExhaust: false
+        },
+        isExhaust: true
+    }),
+    OFFERING: new Card({
+        id: 'offering',
+        name: '供物',
+        cost: 0,
+        type: 'skill',
+        rarity: 'rare',
+        description: 'HPを6失い、2エナジーを得て、カードを3枚引く。廃棄。',
         effect: (s, t, e) => {
             s.loseHP(6);
             if (e) {
                 s.energy += 2;
-                e.drawCards(5);
+                e.drawCards(3);
                 if (e.uiUpdateCallback) e.uiUpdateCallback();
             }
-        }
-    }, null, 0, null, 0, null, false, true),
-    EXHUME: new Card('exhume', '発掘', 1, 'skill', 'rare', '廃棄置き場からカード1枚を手札に加える。廃棄。', (s, t, e) => {
-        if (e && e.onCardSelectionRequest && s.exhaust.length > 0) {
-            e.onCardSelectionRequest('回収するカードを選択', s.exhaust, (card, index) => {
-                if (card) {
-                    s.exhaust.splice(index, 1);
-                    s.hand.push(card);
+        },
+        targetType: 'self',
+        upgradeData: {
+            description: 'HPを6失い、2エナジーを得て、カードを5枚引く。廃棄。',
+            effect: (s, t, e) => {
+                s.loseHP(6);
+                if (e) {
+                    s.energy += 2;
+                    e.drawCards(5);
                     if (e.uiUpdateCallback) e.uiUpdateCallback();
                 }
-            });
-        }
-    }, 'self', false, {
-        cost: 0,
-        description: '廃棄置き場からカード1枚を手札に加える。廃棄。'
-    }, null, 0, null, 0, null, false, true),
+            }
+        },
+        isExhaust: true
+    }),
+    EXHUME: new Card({
+        id: 'exhume',
+        name: '発掘',
+        cost: 1,
+        type: 'skill',
+        rarity: 'rare',
+        description: '廃棄置き場からカード1枚を手札に加える。廃棄。',
+        effect: (s, t, e) => {
+            if (e && e.onCardSelectionRequest && s.exhaust.length > 0) {
+                e.onCardSelectionRequest('回収するカードを選択', s.exhaust, (card, index) => {
+                    if (card) {
+                        s.exhaust.splice(index, 1);
+                        s.hand.push(card);
+                        if (e.uiUpdateCallback) e.uiUpdateCallback();
+                    }
+                });
+            }
+        },
+        targetType: 'self',
+        upgradeData: {
+            cost: 0,
+            description: '廃棄置き場からカード1枚を手札に加える。廃棄。'
+        },
+        isExhaust: true
+    }),
 
-    INFLAME: new Card('inflame', '炎症', 1, 'power', 'uncommon', '筋力を2得る', (s, t) => {
-        s.addStatus('strength', 2);
-    }, 'self', false, {
-        description: '筋力を3得る',
-        effect: (s, t) => { s.addStatus('strength', 3); }
-    }, null, 0, null, 0, null, false, false, null, 'assets/images/cards/Inflame.png'),
-    METALLICIZE: new Card('metallicize', '金属音', 1, 'power', 'uncommon', 'ターン終了時に3ブロックを得る', (s, t) => {
-        s.addStatus('metallicize', 3);
-    }, 'self', false, {
-        description: 'ターン終了時に4ブロックを得る',
-        effect: (s, t) => { s.addStatus('metallicize', 4); }
+    INFLAME: new Card({
+        id: 'inflame',
+        name: '炎症',
+        cost: 1,
+        type: 'power',
+        rarity: 'uncommon',
+        description: '筋力を2得る',
+        effect: (s, t) => {
+            s.addStatus('strength', 2);
+        },
+        targetType: 'self',
+        upgradeData: {
+            description: '筋力を3得る',
+            effect: (s, t) => { s.addStatus('strength', 3); }
+        },
+        image: 'assets/images/cards/Inflame.png'
+    }),
+    METALLICIZE: new Card({
+        id: 'metallicize',
+        name: '金属音',
+        cost: 1,
+        type: 'power',
+        rarity: 'uncommon',
+        description: 'ターン終了時に3ブロックを得る',
+        effect: (s, t) => {
+            s.addStatus('metallicize', 3);
+        },
+        targetType: 'self',
+        upgradeData: {
+            description: 'ターン終了時に4ブロックを得る',
+            effect: (s, t) => { s.addStatus('metallicize', 4); }
+        }
     }),
 
     // Rare
-    BLUDGEON: new Card('bludgeon', 'ヘビーストライク', 3, 'attack', 'rare', '32ダメージを与える', async (s, t, e) => {
-        if (e && e.dealDamageWithEffect) {
-            await e.dealDamageWithEffect(s, t, s.calculateDamage(32));
-        } else {
-            t.takeDamage(s.calculateDamage(32), s);
-        }
-    }, 'single', false, {
-        description: '42ダメージを与える',
-        baseDamage: 42,
+    BLUDGEON: new Card({
+        id: 'bludgeon',
+        name: 'ヘビーストライク',
+        cost: 3,
+        type: 'attack',
+        rarity: 'rare',
+        description: '32ダメージを与える',
         effect: async (s, t, e) => {
             if (e && e.dealDamageWithEffect) {
-                await e.dealDamageWithEffect(s, t, s.calculateDamage(42));
+                await e.dealDamageWithEffect(s, t, s.calculateDamage(32));
             } else {
-                t.takeDamage(s.calculateDamage(42), s);
+                t.takeDamage(s.calculateDamage(32), s);
             }
+        },
+        targetType: 'single',
+        upgradeData: {
+            description: '42ダメージを与える',
+            baseDamage: 42,
+            effect: async (s, t, e) => {
+                if (e && e.dealDamageWithEffect) {
+                    await e.dealDamageWithEffect(s, t, s.calculateDamage(42));
+                } else {
+                    t.takeDamage(s.calculateDamage(42), s);
+                }
+            }
+        },
+        baseDamage: 32,
+        image: 'assets/images/cards/Bludgeon.png'
+    }),
+    IMPERVIOUS: new Card({
+        id: 'impervious',
+        name: '不動',
+        cost: 2,
+        type: 'skill',
+        rarity: 'rare',
+        description: '30ブロックを得る',
+        effect: (s, t) => {
+            s.addBlock(30);
+        },
+        targetType: 'self',
+        upgradeData: {
+            description: '40ブロックを得る',
+            baseBlock: 40,
+            effect: (s, t) => { s.addBlock(40); }
+        },
+        baseBlock: 30
+    }),
+    DEMON_FORM: new Card({
+        id: 'demon_form',
+        name: '悪魔化',
+        cost: 3,
+        type: 'power',
+        rarity: 'rare',
+        description: 'ターン開始時に筋力を2得る',
+        effect: (s, t) => {
+            s.addStatus('demon_form', 1); // 1スタック = 2筋力/ターンとする既存ロジック用
+        },
+        targetType: 'self',
+        upgradeData: {
+            description: 'ターン開始時に筋力を3得る',
+            effect: (s, t) => { s.addStatus('demon_form_plus', 1); } // 強化版用フラグ
         }
-    }, null, 32, null, 0, null, false, false, null, 'assets/images/cards/Bludgeon.png'),
-    IMPERVIOUS: new Card('impervious', '不動', 2, 'skill', 'rare', '30ブロックを得る', (s, t) => {
-        s.addBlock(30);
-    }, 'self', false, {
-        description: '40ブロックを得る',
-        baseBlock: 40,
-        effect: (s, t) => { s.addBlock(40); }
-    }, null, 0, null, 30),
-    DEMON_FORM: new Card('demon_form', '悪魔化', 3, 'power', 'rare', 'ターン開始時に筋力を2得る', (s, t) => {
-        s.addStatus('demon_form', 1); // 1スタック = 2筋力/ターンとする既存ロジック用
-    }, 'self', false, {
-        description: 'ターン開始時に筋力を3得る',
-        effect: (s, t) => { s.addStatus('demon_form_plus', 1); } // 強化版用フラグ
     }),
 
 
     // Status (ステータスカード - 戦闘中のみ)
-    WOUND: new Card('wound', '負傷', -1, 'curse', 'common', '使用できないカード。', (s, t) => {
-        // 使用不可
-    }, 'self', false, null),
-    DAZED: new Card('dazed', 'めまい', -1, 'curse', 'common', '使用できない。エセリアル。', (s, t) => {
-        // 使用不可
-    }, 'self', false, null, null, 0, null, 0, null, true),
-    BURN: new Card('burn', '火傷', -1, 'curse', 'common', '使用できない。ターン終了時に手札にあると2ダメージ。', (s, t) => {
-        // 使用不可
-    }, 'self', false, null),
+    WOUND: new Card({
+        id: 'wound',
+        name: '負傷',
+        cost: -1,
+        type: 'curse', // 'status' might be better but type is union string. existing says 'curse', 'common' (or 'status' in logic?). Existing code: 'curse', 'common'.
+        rarity: 'common',
+        description: '使用できないカード。',
+        effect: (s, t) => {
+            // 使用不可
+        },
+        targetType: 'self'
+    }),
+    DAZED: new Card({
+        id: 'dazed',
+        name: 'めまい',
+        cost: -1,
+        type: 'curse',
+        rarity: 'common',
+        description: '使用できない。エセリアル。',
+        effect: (s, t) => {
+            // 使用不可
+        },
+        targetType: 'self',
+        isEthereal: true
+    }),
+    BURN: new Card({
+        id: 'burn',
+        name: '火傷',
+        cost: -1,
+        type: 'curse',
+        rarity: 'common',
+        description: '使用できない。ターン終了時に手札にあると2ダメージ。',
+        effect: (s, t) => {
+            // 使用不可
+        },
+        targetType: 'self'
+    }),
 
     // Curse (呪いカード)
-    INJURY: new Card('injury', '怪我', -1, 'curse', 'curse', '消耗。何もしない。', (s, t) => {
-        // 何もしない
-    }, 'self', false, null),
-    DOUBT: new Card('doubt', '疑念', -1, 'curse', 'curse', '何もしない。', (s, t) => {
-        // 何もしない
-    }, 'self', false, null),
-    REGRET: new Card('regret', '後悔', -1, 'curse', 'curse', '何もしない。', (s, t) => {
-        // 何もしない
-    }, 'self', false, null),
-    PARASITE: new Card('parasite', '寄生', -1, 'curse', 'curse', 'この呪いはデッキから削除できない。', (s, t) => {
-        // 特殊処理: 削除不可
-    }, 'self', false, null)
+    INJURY: new Card({
+        id: 'injury',
+        name: '怪我',
+        cost: -1,
+        type: 'curse',
+        rarity: 'curse',
+        description: '消耗。何もしない。',
+        effect: (s, t) => {
+            // 何もしない
+        },
+        targetType: 'self'
+    }),
+    DOUBT: new Card({
+        id: 'doubt',
+        name: '疑念',
+        cost: -1,
+        type: 'curse',
+        rarity: 'curse',
+        description: '何もしない。',
+        effect: (s, t) => {
+            // 何もしない
+        },
+        targetType: 'self'
+    }),
+    REGRET: new Card({
+        id: 'regret',
+        name: '後悔',
+        cost: -1,
+        type: 'curse',
+        rarity: 'curse',
+        description: '何もしない。',
+        effect: (s, t) => {
+            // 何もしない
+        },
+        targetType: 'self'
+    }),
+    PARASITE: new Card({
+        id: 'parasite',
+        name: '寄生',
+        cost: -1,
+        type: 'curse',
+        rarity: 'curse',
+        description: 'この呪いはデッキから削除できない。',
+        effect: (s, t) => {
+            // 特殊処理: 削除不可
+        },
+        targetType: 'self'
+    })
 };
 

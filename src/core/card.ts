@@ -1440,12 +1440,29 @@ export const CardLibrary = {
         type: 'skill',
         rarity: 'uncommon',
         description: '山札の一番上のカードをプレイして廃棄する。',
-        effect: (s, t, e) => {
+        effect: async (s, t, e) => {
             if (e && e.player.deck.length > 0) {
                 const card = e.player.deck.pop();
                 if (card) {
+                    // StSのHavocは山札の一番上のカードをプレイする。
+                    // ターゲットが必要な場合はランダムに選択。
+                    let target = t;
+                    if (card.targetType === 'single') {
+                        const aliveEnemies = e.enemies.filter(enemy => !enemy.isDead());
+                        if (aliveEnemies.length > 0) {
+                            target = aliveEnemies[Math.floor(Math.random() * aliveEnemies.length)];
+                        }
+                    }
+
+                    // 強制的に廃棄フラグを立てる
                     card.isExhaust = true;
-                    e.player.hand.push(card);
+
+                    // プレイ（コスト無料）
+                    await card.play(e.player, target, e, true);
+
+                    // プレイ後に廃棄パイルへ
+                    e.player.exhaustCard(card, e);
+
                     if (e.uiUpdateCallback) e.uiUpdateCallback();
                 }
             }

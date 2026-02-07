@@ -96,6 +96,23 @@ export class EffectManager {
             case 'impact':
                 effectEl.innerHTML = '💥';
                 break;
+            case 'block':
+                effectEl.innerHTML = '🛡️';
+                break;
+            case 'skill':
+                // 緑色の波紋エフェクト（CSSで制御）
+                break;
+            case 'power':
+                // 金色のオーラと火花
+                for (let i = 0; i < 8; i++) {
+                    const spark = document.createElement('div');
+                    spark.className = 'power-aura-spark';
+                    const angle = (360 / 8) * i;
+                    spark.style.setProperty('--angle', `${angle}deg`);
+                    spark.style.animationDelay = `${Math.random() * 0.2}s`;
+                    effectEl.appendChild(spark);
+                }
+                break;
             default:
                 effectEl.innerHTML = '✨';
                 break;

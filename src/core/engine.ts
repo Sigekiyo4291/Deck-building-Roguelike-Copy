@@ -117,6 +117,15 @@ export class BattleEngine {
                     return;
                 }
 
+                // カードタイプに応じたエフェクトを表示
+                if (card.type === 'skill') {
+                    this.showEffectForPlayer('skill');
+                } else if (card.type === 'power') {
+                    this.showEffectForPlayer('power');
+                }
+
+                const oldBlock = this.player.block;
+
                 // 激怒 (Rage) の効果: アタック使用時にブロック獲得
                 if (card.type === 'attack') {
                     const rageValue = this.player.getStatusValue('rage');
@@ -127,6 +136,11 @@ export class BattleEngine {
 
                 this.player.hand.splice(cardIndex, 1);
                 await card.play(this.player, target, this);
+
+                // ブロックが増えたらエフェクトを表示
+                if (this.player.block > oldBlock) {
+                    this.showEffectForPlayer('block');
+                }
 
                 // ダブルタップ (Double Tap) の処理
                 if (card.type === 'attack') {
@@ -143,7 +157,11 @@ export class BattleEngine {
 
                         if (newTarget || card.targetType !== 'single') {
                             await new Promise(resolve => setTimeout(resolve, 300));
+                            const oldBlockDT = this.player.block;
                             await card.play(this.player, newTarget, this, true);
+                            if (this.player.block > oldBlockDT) {
+                                this.showEffectForPlayer('block');
+                            }
                         }
                     }
                 }
@@ -163,6 +181,21 @@ export class BattleEngine {
         } finally {
             this.isProcessing = false;
             console.log('BattleEngine: Processing finished (isProcessing = false)');
+        }
+    }
+
+    // プレイヤーにエフェクトを表示
+    showEffectForPlayer(effectType, callback = null) {
+        if (!this.effectManager) {
+            if (callback) callback();
+            return;
+        }
+
+        const playerElement = document.getElementById('player');
+        if (playerElement) {
+            this.effectManager.showAttackEffect(playerElement, effectType, callback);
+        } else if (callback) {
+            callback();
         }
     }
 
@@ -272,7 +305,10 @@ export class BattleEngine {
 
         // 金属音 (metallicize) の処理
         const metCount = this.player.getStatusValue('metallicize');
-        if (metCount > 0) this.player.addBlock(metCount);
+        if (metCount > 0) {
+            this.player.addBlock(metCount);
+            this.showEffectForPlayer('block');
+        }
 
         // ステータス更新（持続時間減少）
         this.player.updateStatus();

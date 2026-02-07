@@ -66,6 +66,11 @@ export class BattleEngine {
     }
 
     drawCards(count) {
+        if (this.player.hasStatus('no_draw')) {
+            console.log("ドロー不可ステータスが付与されているため、ドローできません。");
+            return;
+        }
+
         for (let i = 0; i < count; i++) {
             if (this.player.deck.length === 0) {
                 if (this.player.discard.length === 0) break;

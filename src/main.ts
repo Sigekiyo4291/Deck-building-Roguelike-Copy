@@ -25,6 +25,9 @@ const STATUS_INFO = {
   curl_up: { name: '丸まり', desc: '攻撃を受けた際、ブロックを得る。' },
   malleable: { name: '柔軟', desc: '攻撃を受けるたび、ブロックを得る。' },
   strength_down: { name: 'フレックス', desc: 'ターン終了時、筋力を失う。' },
+  no_draw: { name: 'ドロー不可', desc: 'カードを引くことができない。' },
+  rage: { name: '激怒', desc: 'アタックカードをプレイするたび、ブロックを得る。' },
+  double_tap: { name: 'ダブルタップ', desc: '次にプレイするアタックカードが2回発動する。' },
 };
 
 
@@ -975,6 +978,9 @@ class Game {
       if (status.type === 'demon_form_plus') iconChar = '👹';
       if (status.type === 'ritual') iconChar = '🐦';
       if (status.type === 'entangled') iconChar = '🕸️';
+      if (status.type === 'no_draw') iconChar = '🚫';
+      if (status.type === 'rage') iconChar = '💢';
+      if (status.type === 'double_tap') iconChar = '⚔️';
 
       // ツールチップ設定
       const info = STATUS_INFO[status.type];

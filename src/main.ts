@@ -42,6 +42,7 @@ class Game {
   effectManager: EffectManager;
   elDeckCount: HTMLElement | null;
   elDiscardCount: HTMLElement | null;
+  elExhaustCount: HTMLElement | null;
   elEndTurnBtn: HTMLElement | null;
   elHand: HTMLElement | null;
   selectedCardIndex: number;
@@ -66,6 +67,7 @@ class Game {
     // UI Elements
     this.elDeckCount = document.getElementById('deck-count');
     this.elDiscardCount = document.getElementById('discard-count');
+    this.elExhaustCount = document.getElementById('exhaust-count');
     this.elEndTurnBtn = document.getElementById('end-turn-btn');
     this.elHand = document.getElementById('hand');
 
@@ -78,6 +80,24 @@ class Game {
         if (this.battleEngine && !this.battleEngine.isProcessing) {
           this.deselectCard();
           this.battleEngine.endTurn();
+        }
+      };
+    }
+
+    // 廃棄パイルのクリックイベント
+    const exhaustPile = document.getElementById('exhaust-pile');
+    if (exhaustPile) {
+      exhaustPile.onclick = () => {
+        if (this.player.exhaust.length > 0) {
+          const overlay = document.getElementById('deck-selection-overlay');
+          this.showCardSelectionFromPile('廃棄カード一覧', this.player.exhaust, null);
+          const closeBtn = document.getElementById('close-deck-selection-btn');
+          if (closeBtn && overlay) {
+            closeBtn.style.display = 'block'; // 一覧を見るだけなので閉じるボタンを出す
+            closeBtn.onclick = () => {
+              overlay.style.display = 'none';
+            };
+          }
         }
       };
     }
@@ -939,6 +959,9 @@ class Game {
       document.getElementById('energy-value').textContent = String(player.energy);
       document.getElementById('deck-count').textContent = String(player.deck.length);
       document.getElementById('discard-count').textContent = String(player.discard.length);
+      if (this.elExhaustCount) {
+        this.elExhaustCount.textContent = String(player.exhaust.length);
+      }
 
       // --- Hand ---
       this.elHand.innerHTML = '';

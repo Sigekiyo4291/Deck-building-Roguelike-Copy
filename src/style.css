@@ -253,6 +253,53 @@ body {
   transform: scale(1.1);
 }
 
+.exhaust-pile {
+  position: absolute;
+  bottom: 110px;
+  right: 30px;
+  width: 40px;
+  height: 40px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid #555;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #fff;
+  font-family: 'Crimson Text', serif;
+  pointer-events: auto;
+  transition: transform 0.2s;
+  z-index: 150;
+  cursor: pointer;
+}
+
+.exhaust-pile:hover {
+  transform: scale(1.1);
+  background: rgba(50, 50, 50, 0.8);
+  border-color: #888;
+}
+
+.exhaust-pile::before {
+  content: '🗑️';
+  font-size: 20px;
+}
+
+.exhaust-pile .pile-count {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  font-size: 14px;
+  background: #c0392b;
+  border: 1px solid #fff;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-shadow: none;
+}
+
 .pile-label {
   display: none;
 }
@@ -421,7 +468,7 @@ body {
 /* ターン終了ボタン配置 (ID指定で確実に行う) */
 #end-turn-btn {
   position: absolute;
-  bottom: 120px;
+  bottom: 170px;
   right: 20px;
   margin: 0;
   pointer-events: auto;

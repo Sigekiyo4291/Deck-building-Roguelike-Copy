@@ -1187,10 +1187,10 @@ export const CardLibrary = {
             }
         }
     }),
-    RAGE: new Card('rage', '激怒', 0, 'skill', 'uncommon', 'アタックカードをプレイする度に3ブロックを得る。', (s, t, e) => {
+    RAGE: new Card('rage', '激怒', 0, 'skill', 'uncommon', 'このターン、アタックカードをプレイする度に3ブロックを得る。', (s, t, e) => {
         s.addStatus('rage', 3);
     }, 'self', false, {
-        description: 'アタックカードをプレイする度に5ブロックを得る。',
+        description: 'このターン、アタックカードをプレイする度に5ブロックを得る。',
         effect: (s, t, e) => { s.addStatus('rage', 5); }
     }),
     DISARM: new Card('disarm', '武装解除', 1, 'skill', 'uncommon', '敵の筋力を2減らす。廃棄。', (s, t) => {

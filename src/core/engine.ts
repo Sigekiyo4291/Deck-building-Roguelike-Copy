@@ -116,6 +116,14 @@ export class BattleEngine {
                     return;
                 }
 
+                // 激怒 (Rage) の効果: アタック使用時にブロック獲得
+                if (card.type === 'attack') {
+                    const rageValue = this.player.getStatusValue('rage');
+                    if (rageValue > 0) {
+                        this.player.addBlock(rageValue);
+                    }
+                }
+
                 this.player.hand.splice(cardIndex, 1);
                 await card.play(this.player, target, this);
 

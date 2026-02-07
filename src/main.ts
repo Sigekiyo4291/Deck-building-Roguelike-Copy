@@ -119,6 +119,27 @@ class Game {
         }
       };
     }
+
+    // 山札パイルのクリックイベント
+    const deckPile = document.getElementById('deck-pile');
+    if (deckPile) {
+      deckPile.onclick = () => {
+        if (this.player.deck.length > 0) {
+          const overlay = document.getElementById('deck-selection-overlay');
+          // 実際の引き順を秘匿するため、コピーして名前順にソート
+          const sortedDeck = [...this.player.deck].sort((a, b) => a.name.localeCompare(b.name, 'ja'));
+
+          this.showCardSelectionFromPile('山札一覧 (名前順)', sortedDeck, null);
+          const closeBtn = document.getElementById('close-deck-selection-btn');
+          if (closeBtn && overlay) {
+            closeBtn.style.display = 'block';
+            closeBtn.onclick = () => {
+              overlay.style.display = 'none';
+            };
+          }
+        }
+      };
+    }
   }
 
   start() {

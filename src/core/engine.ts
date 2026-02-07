@@ -50,6 +50,7 @@ export class BattleEngine {
 
     startPlayerTurn() {
         this.phase = 'player';
+        this.player.onTurnStart();
 
         // 悪魔化 (demon_form) の処理
         const dfCount = this.player.getStatusValue('demon_form');

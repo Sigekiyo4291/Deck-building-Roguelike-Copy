@@ -1259,24 +1259,16 @@ export const CardLibrary = {
         }
     }),
     SHOCKWAVE: new Card('shockwave', '衝撃波', 2, 'skill', 'uncommon', '全ての敵に脱力(3)と脆弱(3)を付与する。廃棄。', (s, t, e) => {
-        if (e) {
-            e.enemies.forEach(enemy => {
-                if (!enemy.isDead()) {
-                    enemy.addStatus('weak', 3);
-                    enemy.addStatus('vulnerable', 3);
-                }
-            });
+        if (t && !t.isDead()) {
+            t.addStatus('weak', 3);
+            t.addStatus('vulnerable', 3);
         }
     }, 'all', false, {
         description: '全ての敵に脱力(5)と脆弱(5)を付与する。廃棄。',
         effect: (s, t, e) => {
-            if (e) {
-                e.enemies.forEach(enemy => {
-                    if (!enemy.isDead()) {
-                        enemy.addStatus('weak', 5);
-                        enemy.addStatus('vulnerable', 5);
-                    }
-                });
+            if (t && !t.isDead()) {
+                t.addStatus('weak', 5);
+                t.addStatus('vulnerable', 5);
             }
         }
     }, null, 0, null, 0, null, false, true),

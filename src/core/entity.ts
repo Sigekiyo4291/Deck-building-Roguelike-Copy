@@ -63,16 +63,14 @@ export class Entity {
       this.hpLossCount = (this.hpLossCount || 0) + 1;
     }
 
-    // トゲ(Thorns)処理
+    // トゲ(Thorns) & 炎の障壁(Flame Barrier) 処理
     const thorns = this.getStatusValue('thorns');
-    if (thorns > 0 && source && remainingDamage < amount && source !== this) {
-      // ブロックで完全に防がれた場合はトゲ発動しない（Spireの仕様によるが、今回は「攻撃を受けたら」とするためブロック貫通でも発動とする）
-      // Spire wiki: "When attacked, deals damage back to the attacker." (Attacked = attack card played against)
-      // ここでは簡易的に「ダメージ計算が発生したら」返す
-      source.takeDamage(thorns, null);
-    } else if (thorns > 0 && source && source !== this) {
-      // ダメージを受けた、またはブロックで防いだ
-      source.takeDamage(thorns, null);
+    const flameBarrier = this.getStatusValue('flame_barrier');
+    const totalReflect = thorns + flameBarrier;
+
+    if (totalReflect > 0 && source && source !== this) {
+      // 攻撃者に反射ダメージを与える
+      source.takeDamage(totalReflect, null);
     }
 
     return remainingDamage;
@@ -189,6 +187,11 @@ export class Entity {
     });
     // 値が0のものを削除
     this.statusEffects = this.statusEffects.filter(s => s.value !== 0);
+  }
+
+  onTurnStart() {
+    // ターン開始時に解除されるステータス
+    this.removeStatus('flame_barrier');
   }
 
   resetStatus() {

@@ -1787,7 +1787,7 @@ export const CardLibrary = {
         description: '12ブロックを得る。攻撃を受けると攻撃者に4ダメージを与える。',
         effect: (s, t) => {
             s.addBlock(12);
-            s.addStatus('thorns', 4);
+            s.addStatus('flame_barrier', 4);
         },
         targetType: 'self',
         upgradeData: {
@@ -1795,7 +1795,7 @@ export const CardLibrary = {
             baseBlock: 16,
             effect: (s, t) => {
                 s.addBlock(16);
-                s.addStatus('thorns', 6);
+                s.addStatus('flame_barrier', 6);
             }
         },
         baseBlock: 12

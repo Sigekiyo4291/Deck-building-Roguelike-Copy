@@ -273,6 +273,14 @@ export class BattleEngine {
         // ステータス更新（持続時間減少）
         this.player.updateStatus();
 
+        // 一時的なコスト変更をクリア
+        const allCards = [...this.player.hand, ...this.player.deck, ...this.player.discard, ...this.player.exhaust];
+        allCards.forEach(card => {
+            if (card && card.temporaryCost !== null && card.temporaryCost !== undefined) {
+                card.temporaryCost = null;
+            }
+        });
+
         this.phase = 'enemy';
         this.uiUpdateCallback();
 

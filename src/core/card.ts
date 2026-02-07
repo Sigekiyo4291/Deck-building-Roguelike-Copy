@@ -46,6 +46,7 @@ export class Card {
     image: string | null;
     effectType: string;
     onExhaust: any;
+    temporaryCost: number | null;
 
     constructor(params: CardInitParams) {
         this.id = params.id;
@@ -76,9 +77,14 @@ export class Card {
         this.image = params.image || null;
         this.effectType = params.effectType || 'slash';
         this.onExhaust = params.onExhaust || null;
+        this.temporaryCost = null;
     }
 
     getCost(source) {
+        // temporaryCost が設定されている場合は優先
+        if (this.temporaryCost !== null && this.temporaryCost !== undefined) {
+            return this.temporaryCost;
+        }
         if (this.costCalculator) {
             return this.costCalculator(source, this);
         }
@@ -1896,7 +1902,7 @@ export const CardLibrary = {
             if (e) {
                 const attackCards = Object.values(CardLibrary).filter((c: any) => c.type === 'attack');
                 const randomCard = attackCards[Math.floor(Math.random() * attackCards.length)].clone();
-                randomCard.cost = 0;
+                randomCard.temporaryCost = 0; // ターン終了時にリセットされる一時的なコスト変更
                 s.hand.push(randomCard);
                 if (e.uiUpdateCallback) e.uiUpdateCallback();
             }

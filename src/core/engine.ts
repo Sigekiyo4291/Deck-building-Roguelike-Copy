@@ -128,7 +128,7 @@ export class BattleEngine {
                 await card.play(this.player, target, this);
 
                 if (card.isExhaust) {
-                    this.player.exhaust.push(card);
+                    this.player.exhaustCard(card, this);
                 } else {
                     this.player.discard.push(card);
                 }

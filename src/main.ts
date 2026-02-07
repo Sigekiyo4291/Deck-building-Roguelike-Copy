@@ -101,6 +101,24 @@ class Game {
         }
       };
     }
+
+    // 捨て札パイルのクリックイベント
+    const discardPile = document.getElementById('discard-pile');
+    if (discardPile) {
+      discardPile.onclick = () => {
+        if (this.player.discard.length > 0) {
+          const overlay = document.getElementById('deck-selection-overlay');
+          this.showCardSelectionFromPile('捨て札一覧', this.player.discard, null);
+          const closeBtn = document.getElementById('close-deck-selection-btn');
+          if (closeBtn && overlay) {
+            closeBtn.style.display = 'block';
+            closeBtn.onclick = () => {
+              overlay.style.display = 'none';
+            };
+          }
+        }
+      };
+    }
   }
 
   start() {

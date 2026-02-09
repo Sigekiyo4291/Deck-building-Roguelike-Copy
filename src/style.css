@@ -1615,3 +1615,40 @@ body {
     opacity: 0;
   }
 }
+
+/* バンプアニメーション（体当たり） */
+.bump-right {
+  animation: bump-right-anim 0.3s ease-out;
+}
+
+.bump-left {
+  animation: bump-left-anim 0.3s ease-out;
+}
+
+@keyframes bump-right-anim {
+  0% {
+    transform: translateX(0);
+  }
+
+  50% {
+    transform: translateX(30px);
+  }
+
+  100% {
+    transform: translateX(0);
+  }
+}
+
+@keyframes bump-left-anim {
+  0% {
+    transform: translateX(0);
+  }
+
+  50% {
+    transform: translateX(-30px);
+  }
+
+  100% {
+    transform: translateX(0);
+  }
+}

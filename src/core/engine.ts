@@ -199,6 +199,15 @@ export class BattleEngine {
         }
     }
 
+    // エンティティに関連付けられたDOM要素を取得
+    getEntityElement(entity) {
+        if (entity === this.player) {
+            return document.getElementById('player');
+        }
+        // 敵のUUIDから検索
+        return document.querySelector(`.entity.enemy[data-id="${entity.uuid}"]`) as HTMLElement;
+    }
+
     // ターゲットにエフェクトを表示
     showEffectForTarget(targetIndex, card, callback) {
         // targetIndexは使わず、enemies[targetIndex]からUUIDを取得してDOMを引く
@@ -209,7 +218,7 @@ export class BattleEngine {
             return;
         }
 
-        const enemyElement = document.querySelector(`.entity.enemy[data-id="${target.uuid}"]`);
+        const enemyElement = this.getEntityElement(target);
         if (enemyElement) {
             const effectType = card.effectType || 'slash';
             this.effectManager.showAttackEffect(enemyElement, effectType, callback);
@@ -251,9 +260,19 @@ export class BattleEngine {
             targetIndex = this.enemies.indexOf(target);
         }
 
-        // エフェクトを表示
+        // バンプアニメーションを表示（攻撃側が動く）
         if (this.effectManager) {
-            const enemyElement = document.querySelector(`.entity.enemy[data-id="${target.uuid}"]`);
+            const sourceElement = this.getEntityElement(source);
+            if (sourceElement) {
+                // プレイヤーなら右へ、敵なら左へ
+                const direction = source === this.player ? 'right' : 'left';
+                this.effectManager.showBumpAnimation(sourceElement, direction);
+            }
+        }
+
+        // 斬撃などのエフェクトを表示
+        if (this.effectManager) {
+            const enemyElement = this.getEntityElement(target);
             if (enemyElement) {
                 await this.effectManager.showAttackEffectAsync(enemyElement, 'slash');
             }
@@ -358,39 +377,49 @@ export class BattleEngine {
         }
     }
 
-    enemyTurn() {
+    async enemyTurn() {
         if (this.isEnded) return;
-        // 全ての生存している敵が行動
-        this.enemies.forEach(enemy => {
-            if (!enemy.isDead()) {
-                enemy.resetBlock();
 
-                // 敵の行動実行
-                if (enemy.nextMove) {
-                    // 特殊アクション（分裂、逃走など）の場合は engine を渡す
-                    // 攻撃処理（ダメージがある場合）
-                    if (enemy.nextMove.value > 0) {
-                        const damage = enemy.calculateDamage(enemy.nextMove.value);
-                        const times = enemy.nextMove.times || 1;
-                        for (let i = 0; i < times; i++) {
-                            this.player.takeDamage(damage, enemy);
+        this.isProcessing = true; // 敵の行動中も処理中フラグを立てる
+        try {
+            // 全ての生存している敵が行動
+            for (const enemy of this.enemies) {
+                if (!enemy.isDead()) {
+                    enemy.resetBlock();
+
+                    // 敵の行動実行
+                    if (enemy.nextMove) {
+                        // 特殊アクション（分裂、逃走など）の場合は engine を渡す
+                        // 攻撃処理（ダメージがある場合）
+                        if (enemy.nextMove.value > 0) {
+                            const damage = enemy.calculateDamage(enemy.nextMove.value);
+                            const times = enemy.nextMove.times || 1;
+                            for (let i = 0; i < times; i++) {
+                                // 攻撃エフェクト付きで実行
+                                await this.attackWithEffect(enemy, this.player, damage);
+                                if (times > 1) await new Promise(resolve => setTimeout(resolve, 200));
+                            }
+                        }
+
+                        // 特殊効果（バフ、デバフ、ブロック、分裂など）
+                        if (enemy.nextMove.effect) {
+                            enemy.nextMove.effect(enemy, this.player, this);
                         }
                     }
 
-                    // 特殊効果（バフ、デバフ、ブロック、分裂など）
-                    if (enemy.nextMove.effect) {
-                        enemy.nextMove.effect(enemy, this.player, this);
-                    }
+                    enemy.updateStatus();
+                    await new Promise(resolve => setTimeout(resolve, 500)); // 敵ごとの行動間隔
                 }
-
-                enemy.updateStatus();
             }
-        });
 
-        this.turn++;
-        this.checkBattleEnd();
-        if (!this.isEnded && !this.player.isDead()) {
-            this.startPlayerTurn();
+            this.turn++;
+            this.checkBattleEnd();
+            if (!this.isEnded && !this.player.isDead()) {
+                this.startPlayerTurn();
+            }
+        } finally {
+            this.isProcessing = false;
+            this.uiUpdateCallback();
         }
     }
 

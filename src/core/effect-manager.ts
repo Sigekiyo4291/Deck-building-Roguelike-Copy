@@ -146,4 +146,35 @@ export class EffectManager {
         });
         this.activeEffects = [];
     }
+
+    /**
+     * エンティティを相手方向に動かすバンプアニメーション（体当たり）を表示
+     * @param {HTMLElement} element - アニメーションさせる要素
+     * @param {'left' | 'right'} direction - 動く方向
+     * @param {Function} callback - 完了後のコールバック
+     */
+    showBumpAnimation(element, direction, callback = null) {
+        if (!element) {
+            if (callback) callback();
+            return;
+        }
+
+        const className = direction === 'right' ? 'bump-right' : 'bump-left';
+        element.classList.add(className);
+
+        const onEnd = () => {
+            element.removeEventListener('animationend', onEnd);
+            element.classList.remove(className);
+            if (callback) callback();
+        };
+
+        element.addEventListener('animationend', onEnd);
+
+        // フォールバック
+        setTimeout(() => {
+            if (element.classList.contains(className)) {
+                onEnd();
+            }
+        }, 500);
+    }
 }

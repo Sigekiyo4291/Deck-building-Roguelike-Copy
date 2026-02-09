@@ -147,18 +147,32 @@ class Game {
         }
       };
     }
+
+    // タイトル画面のスタートボタン
+    const startBtn = document.getElementById('game-start-btn');
+    if (startBtn) {
+      startBtn.onclick = () => {
+        this.onGameStart();
+      };
+    }
   }
 
   start() {
-    // マップ生成（初回のみ）
+    this.audioManager.playBgm('title'); // タイトルBGMがあれば再生（なければマップなど）
+    this.sceneManager.showTitle();
+  }
+
+  async onGameStart() {
+    // マップ生成（初回のみ、あるいはリセット）
     if (!this.map) {
       this.map = MapGenerator.generate();
       this.map.updateAvailableNodes();
     }
 
     // マップシーン表示
+    await this.sceneManager.showMap();
     this.renderMap();
-    this.sceneManager.showMap();
+    this.audioManager.playBgm('map');
   }
 
   deselectCard() {
@@ -306,10 +320,10 @@ class Game {
   }
 
 
-  finishRest() {
+  async finishRest() {
     this.map.updateAvailableNodes();
+    await this.sceneManager.showMap();
     this.renderMap();
-    this.sceneManager.showMap();
   }
 
   // ===== イベント関連メソッド =====
@@ -366,12 +380,12 @@ class Game {
     }
   }
 
-  finishEvent() {
+  async finishEvent() {
     this.currentEvent = null;
     this.currentEventState = null;
     this.map.updateAvailableNodes();
+    await this.sceneManager.showMap();
     this.renderMap();
-    this.sceneManager.showMap();
   }
 
   // カード削除選択UI
@@ -530,10 +544,10 @@ class Game {
       relicsContainer.appendChild(wrapper);
     }
 
-    document.getElementById('shop-leave-btn').onclick = () => {
+    document.getElementById('shop-leave-btn').onclick = async () => {
       this.map.updateAvailableNodes();
+      await this.sceneManager.showMap();
       this.renderMap();
-      this.sceneManager.showMap();
     };
   }
 
@@ -768,13 +782,13 @@ class Game {
 
       const doneBtn = document.getElementById('reward-done-btn');
       if (doneBtn) {
-        doneBtn.onclick = () => {
+        doneBtn.onclick = async () => {
           // マップに戻る
           if (this.map) {
             this.map.updateAvailableNodes();
-            this.renderMap();
           }
-          this.sceneManager.showMap();
+          await this.sceneManager.showMap();
+          this.renderMap();
         };
       }
     } catch (e) {

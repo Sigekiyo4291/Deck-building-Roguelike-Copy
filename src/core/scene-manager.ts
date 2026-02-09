@@ -9,6 +9,7 @@ export class SceneManager {
     elShopScene: HTMLElement | null;
     elRestScene: HTMLElement | null;
     elEventScene: HTMLElement | null;
+    elTitleScene: HTMLElement | null; // タイトルシーン
 
     constructor(game) {
         this.game = game;
@@ -26,6 +27,10 @@ export class SceneManager {
             this.elApp.appendChild(this.elMapScene);
         }
 
+        // タイトルシーン
+        this.elTitleScene = document.getElementById('title-scene');
+
+
         // リワードシーン用のコンテナを取得
         this.elRewardScene = document.getElementById('reward-scene');
         // HTML側に追加するため、ここでは取得のみ試みる
@@ -34,7 +39,7 @@ export class SceneManager {
     currentScene: HTMLElement | null = null;
     isTransitioning: boolean = false;
 
-    // シーン切り替え（フェード効果付き - クロスフェード）
+    // シーン切り替え（フェード効果付き - 順次フェード）
     async switchScene(newScene: HTMLElement | null, showUi: boolean = false) {
         if (this.isTransitioning) return;
 
@@ -45,15 +50,18 @@ export class SceneManager {
         this.isTransitioning = true;
         const oldScene = this.currentScene;
 
-        // 1. フェードアウト開始
+        // 1. 古いシーンをフェードアウト
         if (oldScene) {
             oldScene.classList.remove('active');
+            // フェードアウト完了を待つ
+            await new Promise(resolve => setTimeout(resolve, 500));
+            oldScene.style.display = 'none';
         }
 
-        // 2. フェードイン開始
+        // 2. 新しいシーンをフェードイン
         if (newScene) {
             // 遷移に関係ないシーンを確実に隠す
-            this.hideOtherScenes(newScene, oldScene);
+            this.hideOtherScenes(newScene, null);
 
             newScene.style.display = 'flex';
             void newScene.offsetWidth; // Force Reflow
@@ -63,29 +71,16 @@ export class SceneManager {
         // UIレイヤーの制御
         if (this.elUiLayer) {
             if (showUi) {
-                // 表示する場合は即時
                 this.elUiLayer.style.display = 'flex';
             } else {
-                // 非表示にする場合はフェードアウトに合わせて遅延させる
-                setTimeout(() => {
-                    // 遷移がまだ続いていて、かつ現在のリクエストと一致する場合のみ実行したいが
-                    // isTransitioningブロック内なので単純に実行しても概ね問題ない
-                    // ただし、連続切り替えの考慮が必要ならここで再チェックが必要
-                    // 今回はシンプルに実行
-                    if (!showUi && this.elUiLayer) this.elUiLayer.style.display = 'none';
-                }, 500);
+                this.elUiLayer.style.display = 'none';
             }
         }
 
         this.currentScene = newScene;
 
-        // 3. トランジション待ち
+        // フェードイン完了を待つ
         await new Promise(resolve => setTimeout(resolve, 500));
-
-        // 4. 古いシーンを完全非表示
-        if (oldScene) {
-            oldScene.style.display = 'none';
-        }
 
         this.isTransitioning = false;
     }
@@ -100,6 +95,7 @@ export class SceneManager {
         if (!this.elShopScene) this.elShopScene = document.getElementById('shop-scene');
         if (!this.elRestScene) this.elRestScene = document.getElementById('rest-scene');
         if (!this.elEventScene) this.elEventScene = document.getElementById('event-scene');
+        if (!this.elTitleScene) this.elTitleScene = document.getElementById('title-scene'); // 追加
 
         const scenes = [
             this.elBattleScene,
@@ -108,7 +104,8 @@ export class SceneManager {
             this.elTreasureScene,
             this.elShopScene,
             this.elRestScene,
-            this.elEventScene
+            this.elEventScene,
+            this.elTitleScene // 追加
         ];
 
         scenes.forEach(scene => {
@@ -119,39 +116,44 @@ export class SceneManager {
         });
     }
 
+    showTitle() {
+        if (!this.elTitleScene) this.elTitleScene = document.getElementById('title-scene');
+        return this.switchScene(this.elTitleScene, false);
+    }
+
     showBattle() {
         if (!this.elBattleScene) this.elBattleScene = document.querySelector('.battle-scene');
-        if (this.elBattleScene) this.switchScene(this.elBattleScene, true);
+        return this.switchScene(this.elBattleScene, true);
     }
 
     showMap() {
         if (!this.elMapScene) this.elMapScene = document.getElementById('map-scene');
-        if (this.elMapScene) this.switchScene(this.elMapScene, false);
+        return this.switchScene(this.elMapScene, false);
     }
 
     showReward() {
         if (!this.elRewardScene) this.elRewardScene = document.getElementById('reward-scene');
-        if (this.elRewardScene) this.switchScene(this.elRewardScene, false);
+        return this.switchScene(this.elRewardScene, false);
     }
 
     showTreasure() {
         if (!this.elTreasureScene) this.elTreasureScene = document.getElementById('treasure-scene');
-        if (this.elTreasureScene) this.switchScene(this.elTreasureScene, false);
+        return this.switchScene(this.elTreasureScene, false);
     }
 
     showShop() {
         if (!this.elShopScene) this.elShopScene = document.getElementById('shop-scene');
-        if (this.elShopScene) this.switchScene(this.elShopScene, false);
+        return this.switchScene(this.elShopScene, false);
     }
 
     showRest() {
         if (!this.elRestScene) this.elRestScene = document.getElementById('rest-scene');
-        if (this.elRestScene) this.switchScene(this.elRestScene, false);
+        return this.switchScene(this.elRestScene, false);
     }
 
     showEvent() {
         if (!this.elEventScene) this.elEventScene = document.getElementById('event-scene');
-        if (this.elEventScene) this.switchScene(this.elEventScene, false);
+        return this.switchScene(this.elEventScene, false);
     }
 
     // 古いメソッドは廃止するか、後方互換のために残すなら以下のようにする

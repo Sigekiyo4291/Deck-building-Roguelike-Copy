@@ -15,7 +15,12 @@
 
 <body>
   <div id="app">
-    <div class="battle-scene">
+    <div id="title-scene" class="scene active" style="display: flex;">
+      <h1 class="game-title">StS Copy</h1>
+      <button id="game-start-btn" class="end-turn-btn large-btn">Game Start</button>
+    </div>
+
+    <div class="battle-scene" style="display: none;">
       <div id="relic-container" class="relic-container"></div>
       <!-- プレイヤー -->
       <div id="player" class="entity">
@@ -159,7 +164,7 @@
       </div>
     </div>
 
-    <div class="ui-layer">
+    <div class="ui-layer" style="display: none;">
       <div class="deck-info">
         <div id="deck-pile" class="deck-pile">
           <span class="pile-label">山札</span>

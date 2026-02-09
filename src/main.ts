@@ -9,6 +9,7 @@ import { RelicLibrary } from './core/relic';
 import { getRandomEvent } from './core/event-data';
 import { DebugManager } from './core/debug-manager';
 import { EffectManager } from './core/effect-manager';
+import { AudioManager } from './core/audio-manager';
 
 const STATUS_INFO = {
   vulnerable: { name: '脆弱', desc: '受けるダメージが50%増加する。' },
@@ -40,6 +41,7 @@ class Game {
   battleCount: number;
   debugManager: DebugManager;
   effectManager: EffectManager;
+  audioManager: AudioManager;
   elDeckCount: HTMLElement | null;
   elDiscardCount: HTMLElement | null;
   elExhaustCount: HTMLElement | null;
@@ -57,12 +59,17 @@ class Game {
     this.sceneManager = new SceneManager(this);
     this.selectedEnemyIndex = 0; // デフォルトターゲット初期化
     this.battleCount = 0; // 通常戦闘の回数をカウント
+    this.audioManager = new AudioManager(); // オーディオマネージャー初期化
 
     // Debug Manager
     this.debugManager = new DebugManager(this);
 
-    // Effect Manager
-    this.effectManager = new EffectManager();
+    // UI Event Listeners
+    // this.setupUI(); // 既存メソッドがないため削除
+    this.setupSettingsUI(); // 設定画面UIのセットアップ
+
+    // URLパラメータのデバッグモード確認
+    const urlParams = new URLSearchParams(window.location.search);
 
     // UI Elements
     this.elDeckCount = document.getElementById('deck-count');
@@ -199,8 +206,19 @@ class Game {
       deckBtn.onclick = () => this.showDeckView();
     }
 
+    const settingsBtn = document.getElementById('settings-btn');
+    if (settingsBtn) {
+      settingsBtn.onclick = () => {
+        const overlay = document.getElementById('settings-overlay');
+        if (overlay) overlay.style.display = 'flex';
+        // 現在の設定値をUIに反映
+        this.updateSettingsUI();
+      };
+    }
+
     if (this.map && this.sceneManager) {
       this.sceneManager.renderMap(this.map, (node) => this.onNodeSelect(node));
+      this.audioManager.playBgm('map'); // マップBGM再生
     }
   }
 
@@ -229,6 +247,7 @@ class Game {
 
   showRestScene() {
     this.sceneManager.showRest();
+    this.audioManager.playBgm('map'); // 休憩中もマップBGM
 
     // 休む (HP回復)
     document.getElementById('rest-heal-btn').onclick = () => {
@@ -429,6 +448,7 @@ class Game {
 
   showShopScene() {
     this.sceneManager.showShop();
+    this.audioManager.playBgm('map'); // ショップ中もマップBGM
     document.getElementById('shop-gold-value').textContent = String(this.player.gold);
 
     const cardsContainer = document.getElementById('shop-cards');
@@ -519,6 +539,7 @@ class Game {
 
   showTreasureScene() {
     this.sceneManager.showTreasure();
+    this.audioManager.playBgm('map'); // 宝箱画面もマップBGM
     const openBtn = document.getElementById('open-treasure-btn');
     const icon = document.getElementById('treasure-icon');
 
@@ -557,12 +578,14 @@ class Game {
         }
       },
       (title, pile, callback) => this.showCardSelectionFromPile(title, pile, callback),
-      this.effectManager // エフェクトマネージャーを渡す
+      this.effectManager, // エフェクトマネージャーを渡す
+      this.audioManager   // オーディオマネージャーを渡す
     );
     this.sceneManager.showBattle();
     this.battleEngine.start();
     this.updateBattleUI();
     this.updateRelicUI();
+    this.audioManager.playBgm('battle'); // デバッグバトルBGM
   }
 
   startDebugEvent(event) {
@@ -648,7 +671,8 @@ class Game {
         }
       },
       (title, pile, callback) => this.showCardSelectionFromPile(title, pile, callback),
-      this.effectManager // エフェクトマネージャーを渡す
+      this.effectManager, // エフェクトマネージャーを渡す
+      this.audioManager   // オーディオマネージャーを渡す
     );
 
     // シーン切り替え
@@ -656,6 +680,13 @@ class Game {
     this.battleEngine.start();
     this.updateBattleUI();
     this.updateRelicUI(); // 初期表示
+
+    // BGM再生
+    if (type === 'boss') {
+      this.audioManager.playBgm('boss');
+    } else {
+      this.audioManager.playBgm('battle');
+    }
   }
 
   onBattleWin() {
@@ -678,6 +709,7 @@ class Game {
 
   showRewardScene(isElite) {
     console.log('Game: showRewardScene called, isElite:', isElite);
+    this.audioManager.playBgm('map'); // リワード画面でマップBGMに戻す（勝利ファンファーレ実装まではこれで）
     try {
       this.sceneManager.showReward();
       console.log('Game: SceneManager.showReward finished, filling reward list...');
@@ -1240,6 +1272,63 @@ class Game {
       console.log(`Enemy clicked: ${enemyIndex}`);
       this.selectedEnemyIndex = enemyIndex;
       this.updateBattleUI();
+    }
+  }
+
+  updateSettingsUI() {
+    const bgmMuteCheck = document.getElementById('bgm-mute-check') as HTMLInputElement;
+    const bgmSlider = document.getElementById('bgm-volume-slider') as HTMLInputElement;
+    const seMuteCheck = document.getElementById('se-mute-check') as HTMLInputElement;
+    const seSlider = document.getElementById('se-volume-slider') as HTMLInputElement;
+
+    if (bgmMuteCheck) bgmMuteCheck.checked = this.audioManager.bgmMuted;
+    if (bgmSlider) bgmSlider.value = String(this.audioManager.bgmVolume);
+    if (seMuteCheck) seMuteCheck.checked = this.audioManager.seMuted;
+    if (seSlider) seSlider.value = String(this.audioManager.seVolume);
+  }
+
+  setupSettingsUI() {
+    const overlay = document.getElementById('settings-overlay');
+    const closeBtn = document.getElementById('close-settings-btn');
+    const bgmMuteCheck = document.getElementById('bgm-mute-check') as HTMLInputElement;
+    const bgmSlider = document.getElementById('bgm-volume-slider') as HTMLInputElement;
+    const seMuteCheck = document.getElementById('se-mute-check') as HTMLInputElement;
+    const seSlider = document.getElementById('se-volume-slider') as HTMLInputElement;
+
+    if (closeBtn && overlay) {
+      closeBtn.onclick = () => {
+        overlay.style.display = 'none';
+      };
+    }
+
+    if (bgmMuteCheck) {
+      bgmMuteCheck.onchange = (e: any) => {
+        this.audioManager.setBgmMute(e.target.checked);
+      };
+    }
+
+    if (bgmSlider) {
+      bgmSlider.oninput = (e: any) => {
+        this.audioManager.setBgmVolume(Number(e.target.value));
+      };
+    }
+
+    if (seMuteCheck) {
+      seMuteCheck.onchange = (e: any) => {
+        this.audioManager.setSeMute(e.target.checked);
+      };
+    }
+
+    if (seSlider) {
+      seSlider.oninput = (e: any) => {
+        this.audioManager.setSeVolume(Number(e.target.value));
+      };
+
+      seSlider.onchange = () => { // マウス離した時などに確認音
+        if (!this.audioManager.seMuted) {
+          this.audioManager.playSe('click');
+        }
+      };
     }
   }
 

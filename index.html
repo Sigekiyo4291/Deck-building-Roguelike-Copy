@@ -46,6 +46,7 @@
         <h2 class="scene-title">マップ選択</h2>
         <div class="header-status">
           <button id="map-deck-btn" class="utility-btn">🎴 デッキ</button>
+          <button id="settings-btn" class="utility-btn">⚙️ 設定</button>
           <div class="map-gold">💰 <span id="map-gold-value">0</span>G</div>
         </div>
       </div>
@@ -181,10 +182,38 @@
         <button id="end-turn-btn" class="end-turn-btn">Turn End</button>
       </div>
     </div>
+  </div>
 
+  <!-- 設定オーバーレイ -->
+  <div id="settings-overlay" class="overlay" style="display: none;">
+    <div class="card-reward-container large settings-modal">
+      <h2 class="scene-title" style="margin-bottom: 20px;">設定</h2>
 
+      <div class="settings-group">
+        <label class="settings-label">BGM</label>
+        <div class="settings-control">
+          <input type="checkbox" id="bgm-mute-check">
+          <label for="bgm-mute-check">OFF</label>
+          <input type="range" id="bgm-volume-slider" min="0" max="1" step="0.05" value="0.2">
+        </div>
+      </div>
 
-    <script type="module" src="src/main.ts"></script>
+      <div class="settings-group">
+        <label class="settings-label">SE</label>
+        <div class="settings-control">
+          <input type="checkbox" id="se-mute-check">
+          <label for="se-mute-check">OFF</label>
+          <input type="range" id="se-volume-slider" min="0" max="1" step="0.05" value="0.4">
+        </div>
+      </div>
+
+      <button id="close-settings-btn" class="end-turn-btn" style="margin-top: 30px;">閉じる</button>
+    </div>
+  </div>
+
+  <!-- ツールチップ等 -->
+  <div id="tooltip" class="tooltip"></div>
+  <script type="module" src="src/main.ts"></script>
 </body>
 
 </html>

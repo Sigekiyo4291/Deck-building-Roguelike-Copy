@@ -7,18 +7,20 @@ export class BattleEngine {
     onBattleEnd: any;
     onCardSelectionRequest: any;
     effectManager: any;
+    audioManager: any;
     turn: number;
     phase: string;
     isProcessing: boolean = false;
     isEnded: boolean = false;
 
-    constructor(player, enemies, uiUpdateCallback, onBattleEnd, onCardSelectionRequest, effectManager = null) {
+    constructor(player, enemies, uiUpdateCallback, onBattleEnd, onCardSelectionRequest, effectManager = null, audioManager = null) {
         this.player = player;
         this.enemies = enemies; // 配列で保持
         this.uiUpdateCallback = uiUpdateCallback;
         this.onBattleEnd = onBattleEnd;
         this.onCardSelectionRequest = onCardSelectionRequest;
         this.effectManager = effectManager; // エフェクト管理クラス
+        this.audioManager = audioManager;   // オーディオ管理クラス
         this.turn = 1;
         this.phase = 'player'; // 'player' or 'enemy'
     }
@@ -120,8 +122,12 @@ export class BattleEngine {
                 // カードタイプに応じたエフェクトを表示
                 if (card.type === 'skill') {
                     this.showEffectForPlayer('skill');
+                    if (this.audioManager) this.audioManager.playSe('skill'); // スキルSE
                 } else if (card.type === 'power') {
-                    this.showEffectForPlayer('power');
+                    this.showEffectForPlayer('power', () => {
+                        this.uiUpdateCallback(); // パワーエフェクト完了後にステータス更新
+                    });
+                    if (this.audioManager) this.audioManager.playSe('skill'); // パワーもスキルSE（または専用音）
                 }
 
                 const oldBlock = this.player.block;
@@ -140,6 +146,7 @@ export class BattleEngine {
                 // ブロックが増えたらエフェクトを表示
                 if (this.player.block > oldBlock) {
                     this.showEffectForPlayer('block');
+                    if (this.audioManager) this.audioManager.playSe('defense'); // ブロックSE
                 }
 
                 // ダブルタップ (Double Tap) の処理
@@ -160,7 +167,10 @@ export class BattleEngine {
                             const oldBlockDT = this.player.block;
                             await card.play(this.player, newTarget, this, true);
                             if (this.player.block > oldBlockDT) {
-                                this.showEffectForPlayer('block');
+                                if (this.player.block > oldBlockDT) {
+                                    this.showEffectForPlayer('block');
+                                    if (this.audioManager) this.audioManager.playSe('defense'); // ブロックSE
+                                }
                             }
                         }
                     }
@@ -258,6 +268,11 @@ export class BattleEngine {
         // ターゲットインデックスを取得
         if (targetIndex === null) {
             targetIndex = this.enemies.indexOf(target);
+        }
+
+        // 攻撃SE再生
+        if (this.audioManager) {
+            this.audioManager.playSe('attack');
         }
 
         // バンプアニメーションを表示（攻撃側が動く）

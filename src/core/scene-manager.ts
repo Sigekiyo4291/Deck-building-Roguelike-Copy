@@ -175,8 +175,31 @@ export class SceneManager {
     }
     */
 
+    renderMapLegend() {
+        if (!this.elMapScene) return;
+
+        // 既に存在する場合は再作成しない
+        if (this.elMapScene.querySelector('.map-legend')) return;
+
+        const legendEl = document.createElement('div');
+        legendEl.className = 'map-legend';
+        legendEl.innerHTML = `
+            <div class="legend-item"><span class="legend-icon enemy">⚔️</span> 敵</div>
+            <div class="legend-item"><span class="legend-icon elite">👿</span> エリート</div>
+            <div class="legend-item"><span class="legend-icon boss">👑</span> ボス</div>
+            <div class="legend-item"><span class="legend-icon shop">💰</span> 商人</div>
+            <div class="legend-item"><span class="legend-icon rest">🔥</span> 休憩</div>
+            <div class="legend-item"><span class="legend-icon treasure">💎</span> 宝箱</div>
+            <div class="legend-item"><span class="legend-icon event">❔</span> イベント</div>
+        `;
+
+        this.elMapScene.appendChild(legendEl);
+    }
+
     renderMap(map, onNodeSelect) {
         if (!this.elMapScene) return;
+
+        this.renderMapLegend(); // 凡例を表示
 
         const container = document.getElementById('map-container');
         if (!container) return;

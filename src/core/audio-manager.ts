@@ -15,15 +15,15 @@ export class AudioManager {
         this.currentBgmType = null;
 
         // BGMロード
-        this.loadBgm('map', '/assets/audio/bgm/map.mp3');
-        this.loadBgm('battle', '/assets/audio/bgm/battle.mp3');
-        this.loadBgm('boss', '/assets/audio/bgm/boss.mp3');
+        this.loadBgm('map', 'assets/audio/bgm/map.mp3');
+        this.loadBgm('battle', 'assets/audio/bgm/battle.mp3');
+        this.loadBgm('boss', 'assets/audio/bgm/boss.mp3');
 
         // SEロード
-        this.loadSe('attack', '/assets/audio/se/attack.mp3');
-        this.loadSe('defense', '/assets/audio/se/defense.mp3');
-        this.loadSe('skill', '/assets/audio/se/skill.mp3');
-        this.loadSe('click', '/assets/audio/se/click.mp3'); // 任意: UI音があれば
+        this.loadSe('attack', 'assets/audio/se/attack.mp3');
+        this.loadSe('defense', 'assets/audio/se/defense.mp3');
+        this.loadSe('skill', 'assets/audio/se/skill.mp3');
+        this.loadSe('click', 'assets/audio/se/click.mp3'); // 任意: UI音があれば
     }
 
     loadBgm(key: string, path: string) {

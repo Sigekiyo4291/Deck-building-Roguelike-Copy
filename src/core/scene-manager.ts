@@ -39,48 +39,59 @@ export class SceneManager {
     currentScene: HTMLElement | null = null;
     isTransitioning: boolean = false;
 
-    // シーン切り替え（フェード効果付き - 順次フェード）
+    // シーン切り替え（フェード効果付き - 同期型クロスフェード）
     async switchScene(newScene: HTMLElement | null, showUi: boolean = false) {
         if (this.isTransitioning) return;
 
-        if (this.currentScene === newScene && (!this.elUiLayer || (this.elUiLayer.style.display === (showUi ? 'flex' : 'none')))) {
+        if (this.currentScene === newScene && (!this.elUiLayer || (this.elUiLayer.classList.contains('active') === showUi))) {
             return;
         }
 
         this.isTransitioning = true;
         const oldScene = this.currentScene;
 
-        // 1. 古いシーンをフェードアウト
-        if (oldScene) {
-            oldScene.classList.remove('active');
-            // フェードアウト完了を待つ
-            await new Promise(resolve => setTimeout(resolve, 500));
-            oldScene.style.display = 'none';
-        }
-
-        // 2. 新しいシーンをフェードイン
+        // 1. 表示準備
         if (newScene) {
-            // 遷移に関係ないシーンを確実に隠す
-            this.hideOtherScenes(newScene, null);
-
+            this.hideOtherScenes(newScene, oldScene);
             newScene.style.display = 'flex';
             void newScene.offsetWidth; // Force Reflow
+        }
+
+        // 2. フェード処理開始（同時に実行）
+        if (oldScene) {
+            oldScene.classList.remove('active');
+        }
+
+        if (newScene) {
             newScene.classList.add('active');
         }
 
-        // UIレイヤーの制御
+        // UIレイヤーの同期
         if (this.elUiLayer) {
             if (showUi) {
                 this.elUiLayer.style.display = 'flex';
+                void this.elUiLayer.offsetWidth; // Force Reflow
+                this.elUiLayer.classList.add('active');
             } else {
-                this.elUiLayer.style.display = 'none';
+                this.elUiLayer.classList.remove('active');
+                // 非表示にする場合はフェード後にdisplay: none
+                setTimeout(() => {
+                    if (this.elUiLayer && !this.elUiLayer.classList.contains('active')) {
+                        this.elUiLayer.style.display = 'none';
+                    }
+                }, 500);
             }
         }
 
         this.currentScene = newScene;
 
-        // フェードイン完了を待つ
+        // トランジション待ち
         await new Promise(resolve => setTimeout(resolve, 500));
+
+        // 3. 古いシーンを完全非表示
+        if (oldScene && oldScene !== newScene) {
+            oldScene.style.display = 'none';
+        }
 
         this.isTransitioning = false;
     }

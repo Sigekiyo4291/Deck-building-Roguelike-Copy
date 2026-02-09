@@ -293,6 +293,13 @@ body {
   pointer-events: none;
   /* UIの下の要素（敵など）をクリック可能に */
   z-index: 100;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+.ui-layer.active {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 /* 山札・捨て札・エネルギーの共通リセット */
@@ -754,18 +761,7 @@ body {
   z-index: 10;
 }
 
-/* マップシーン */
-.scene {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
-  position: relative;
-}
-
+/* マップシーンタイトル等のスタイルは個別に維持 */
 .scene-title {
   color: var(--color-gold);
   text-shadow: 2px 2px 4px #000;

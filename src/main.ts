@@ -169,9 +169,10 @@ class Game {
       this.map.updateAvailableNodes();
     }
 
-    // マップシーン表示
-    await this.sceneManager.showMap();
-    this.renderMap();
+    // マップシーン表示（クロスフェード開始）
+    const transition = this.sceneManager.showMap();
+    this.renderMap(); // フェード中にレンダリングを済ませる
+    await transition;
     this.audioManager.playBgm('map');
   }
 
@@ -322,8 +323,9 @@ class Game {
 
   async finishRest() {
     this.map.updateAvailableNodes();
-    await this.sceneManager.showMap();
+    const transition = this.sceneManager.showMap();
     this.renderMap();
+    await transition;
   }
 
   // ===== イベント関連メソッド =====
@@ -384,8 +386,9 @@ class Game {
     this.currentEvent = null;
     this.currentEventState = null;
     this.map.updateAvailableNodes();
-    await this.sceneManager.showMap();
+    const transition = this.sceneManager.showMap();
     this.renderMap();
+    await transition;
   }
 
   // カード削除選択UI
@@ -546,8 +549,9 @@ class Game {
 
     document.getElementById('shop-leave-btn').onclick = async () => {
       this.map.updateAvailableNodes();
-      await this.sceneManager.showMap();
+      const transition = this.sceneManager.showMap();
       this.renderMap();
+      await transition;
     };
   }
 
@@ -787,8 +791,9 @@ class Game {
           if (this.map) {
             this.map.updateAvailableNodes();
           }
-          await this.sceneManager.showMap();
+          const transition = this.sceneManager.showMap();
           this.renderMap();
+          await transition;
         };
       }
     } catch (e) {

@@ -100,7 +100,7 @@ export class BattleEngine {
             if (!card) return;
 
             let target = this.enemies[targetIndex];
-            if (target && target.isDead()) {
+            if (!target || target.isDead()) {
                 target = this.enemies.find(e => !e.isDead());
             }
             if (!target) return;

@@ -579,6 +579,7 @@ class Game {
     // 敵データ生成
     let enemies = [];
     this.isEliteBattle = (type === 'elite');
+    this.selectedEnemyIndex = 0; // ターゲットインデックスをリセット
 
     if (type === 'boss') {
       // Act 1 ボスプール (Wiki準拠: 3パターン)
@@ -1213,14 +1214,9 @@ class Game {
       const target = this.battleEngine.enemies[targetIdx];
 
       if (!target || target.isDead()) {
-        // 念のため再検索
-        const firstAlive = this.battleEngine.enemies.find(e => !e.isDead());
-        if (!firstAlive) return; // 敵がいない
-        // aliveな敵のインデックスを探す（findだけだとindex取れないので配列操作が必要だが、engine側でよしなにやってくれるならtarget objectを渡したいが、engineはindexベース）
-        // 簡易的に現状のselectedEnemyIndexを信じる、ダメなら最初の生存敵
-        if (this.battleEngine.enemies[targetIdx] && this.battleEngine.enemies[targetIdx].isDead()) {
-          targetIdx = this.battleEngine.enemies.findIndex(e => !e.isDead());
-        }
+        // 現在のターゲットが無効な場合、最初の生存している敵を探す
+        targetIdx = this.battleEngine.enemies.findIndex(e => !e.isDead());
+        if (targetIdx === -1) return; // 生存している敵がいない場合は何もしない
       }
       this.battleEngine.playCard(index, targetIdx);
     } else {

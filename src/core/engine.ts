@@ -419,6 +419,25 @@ export class BattleEngine {
 
                         // 特殊効果（バフ、デバフ、ブロック、分裂など）
                         if (enemy.nextMove.effect) {
+                            // バフ・デバフ時のエフェクトを表示
+                            let effectType = 'skill';
+                            if (enemy.nextMove.type === 'buff') {
+                                const powerTraits = ['growth', 'ritual', 'enrage', 'bellow', '成長', '儀式', '激怒', '咆哮'];
+                                if (powerTraits.some(trait =>
+                                    (enemy.nextMove.id && enemy.nextMove.id.toLowerCase().includes(trait)) ||
+                                    (enemy.nextMove.name && enemy.nextMove.name.includes(trait))
+                                )) {
+                                    effectType = 'power';
+                                }
+                            }
+
+                            const enemyElement = this.getEntityElement(enemy);
+                            if (enemyElement && this.effectManager) {
+                                await new Promise<void>(resolve => {
+                                    this.effectManager.showAttackEffect(enemyElement, effectType, resolve);
+                                });
+                            }
+
                             enemy.nextMove.effect(enemy, this.player, this);
                         }
                     }

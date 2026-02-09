@@ -148,10 +148,6 @@ export class Entity {
 
   onTurnEnd() {
     // ターン終了時の処理
-    const metal = this.getStatusValue('metallicize');
-    if (metal > 0) {
-      this.addBlock(metal);
-    }
   }
 
   updateStatus() {

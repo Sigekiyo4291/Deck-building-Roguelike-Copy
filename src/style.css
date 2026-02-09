@@ -299,7 +299,7 @@ body {
 
 .ui-layer.active {
   opacity: 1;
-  pointer-events: auto;
+  pointer-events: none;
 }
 
 /* 山札・捨て札・エネルギーの共通リセット */

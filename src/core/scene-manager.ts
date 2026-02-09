@@ -31,49 +31,66 @@ export class SceneManager {
         // HTML側に追加するため、ここでは取得のみ試みる
     }
 
-    showBattle() {
-        this.hideAllScenes();
-        if (this.elBattleScene) this.elBattleScene.style.display = 'flex';
-        if (this.elUiLayer) this.elUiLayer.style.display = 'flex';
+    currentScene: HTMLElement | null = null;
+    isTransitioning: boolean = false;
+
+    // シーン切り替え（フェード効果付き - クロスフェード）
+    async switchScene(newScene: HTMLElement | null, showUi: boolean = false) {
+        if (this.isTransitioning) return;
+
+        if (this.currentScene === newScene && (!this.elUiLayer || (this.elUiLayer.style.display === (showUi ? 'flex' : 'none')))) {
+            return;
+        }
+
+        this.isTransitioning = true;
+        const oldScene = this.currentScene;
+
+        // 1. フェードアウト開始
+        if (oldScene) {
+            oldScene.classList.remove('active');
+        }
+
+        // 2. フェードイン開始
+        if (newScene) {
+            // 遷移に関係ないシーンを確実に隠す
+            this.hideOtherScenes(newScene, oldScene);
+
+            newScene.style.display = 'flex';
+            void newScene.offsetWidth; // Force Reflow
+            newScene.classList.add('active');
+        }
+
+        // UIレイヤーの制御
+        if (this.elUiLayer) {
+            if (showUi) {
+                // 表示する場合は即時
+                this.elUiLayer.style.display = 'flex';
+            } else {
+                // 非表示にする場合はフェードアウトに合わせて遅延させる
+                setTimeout(() => {
+                    // 遷移がまだ続いていて、かつ現在のリクエストと一致する場合のみ実行したいが
+                    // isTransitioningブロック内なので単純に実行しても概ね問題ない
+                    // ただし、連続切り替えの考慮が必要ならここで再チェックが必要
+                    // 今回はシンプルに実行
+                    if (!showUi && this.elUiLayer) this.elUiLayer.style.display = 'none';
+                }, 500);
+            }
+        }
+
+        this.currentScene = newScene;
+
+        // 3. トランジション待ち
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        // 4. 古いシーンを完全非表示
+        if (oldScene) {
+            oldScene.style.display = 'none';
+        }
+
+        this.isTransitioning = false;
     }
 
-    showMap() {
-        this.hideAllScenes();
-        if (this.elUiLayer) this.elUiLayer.style.display = 'none';
-        if (this.elMapScene) this.elMapScene.style.display = 'flex';
-    }
-
-    showReward() {
-        this.hideAllScenes();
-        if (!this.elRewardScene) this.elRewardScene = document.getElementById('reward-scene');
-        if (this.elRewardScene) this.elRewardScene.style.display = 'flex';
-    }
-
-    showTreasure() {
-        this.hideAllScenes();
-        if (!this.elTreasureScene) this.elTreasureScene = document.getElementById('treasure-scene');
-        if (this.elTreasureScene) this.elTreasureScene.style.display = 'flex';
-    }
-
-    showShop() {
-        this.hideAllScenes();
-        if (!this.elShopScene) this.elShopScene = document.getElementById('shop-scene');
-        if (this.elShopScene) this.elShopScene.style.display = 'flex';
-    }
-
-    showRest() {
-        this.hideAllScenes();
-        if (!this.elRestScene) this.elRestScene = document.getElementById('rest-scene');
-        if (this.elRestScene) this.elRestScene.style.display = 'flex';
-    }
-
-    showEvent() {
-        this.hideAllScenes();
-        if (!this.elEventScene) this.elEventScene = document.getElementById('event-scene');
-        if (this.elEventScene) this.elEventScene.style.display = 'flex';
-    }
-
-    hideAllScenes() {
+    hideOtherScenes(scene1: HTMLElement | null, scene2: HTMLElement | null = null) {
         // 安全のために再取得
         if (!this.elBattleScene) this.elBattleScene = document.querySelector('.battle-scene');
         if (!this.elUiLayer) this.elUiLayer = document.querySelector('.ui-layer');
@@ -95,13 +112,55 @@ export class SceneManager {
         ];
 
         scenes.forEach(scene => {
-            if (scene) {
+            if (scene && scene !== scene1 && scene !== scene2) {
                 scene.style.display = 'none';
+                scene.classList.remove('active');
             }
         });
+    }
 
+    showBattle() {
+        if (!this.elBattleScene) this.elBattleScene = document.querySelector('.battle-scene');
+        if (this.elBattleScene) this.switchScene(this.elBattleScene, true);
+    }
+
+    showMap() {
+        if (!this.elMapScene) this.elMapScene = document.getElementById('map-scene');
+        if (this.elMapScene) this.switchScene(this.elMapScene, false);
+    }
+
+    showReward() {
+        if (!this.elRewardScene) this.elRewardScene = document.getElementById('reward-scene');
+        if (this.elRewardScene) this.switchScene(this.elRewardScene, false);
+    }
+
+    showTreasure() {
+        if (!this.elTreasureScene) this.elTreasureScene = document.getElementById('treasure-scene');
+        if (this.elTreasureScene) this.switchScene(this.elTreasureScene, false);
+    }
+
+    showShop() {
+        if (!this.elShopScene) this.elShopScene = document.getElementById('shop-scene');
+        if (this.elShopScene) this.switchScene(this.elShopScene, false);
+    }
+
+    showRest() {
+        if (!this.elRestScene) this.elRestScene = document.getElementById('rest-scene');
+        if (this.elRestScene) this.switchScene(this.elRestScene, false);
+    }
+
+    showEvent() {
+        if (!this.elEventScene) this.elEventScene = document.getElementById('event-scene');
+        if (this.elEventScene) this.switchScene(this.elEventScene, false);
+    }
+
+    // 古いメソッドは廃止するか、後方互換のために残すなら以下のようにする
+    /*
+    hideAllScenes() {
+        this.hideOtherScenes(null);
         if (this.elUiLayer) this.elUiLayer.style.display = 'none';
     }
+    */
 
     renderMap(map, onNodeSelect) {
         if (!this.elMapScene) return;

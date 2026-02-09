@@ -42,6 +42,14 @@ body {
   align-items: center;
   background: rgba(0, 0, 0, 0.85);
   z-index: 500;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+}
+
+.scene.active {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 /* オーバーレイ共通スタイル */
@@ -68,7 +76,16 @@ body {
   position: relative;
   padding: 50px 20px 300px 20px;
   /* 下部に300pxのスペースを確保 */
+  /* 下部に300pxのスペースを確保 */
   box-sizing: border-box;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+}
+
+.battle-scene.active {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .entity {

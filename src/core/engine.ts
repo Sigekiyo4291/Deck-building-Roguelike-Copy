@@ -397,6 +397,7 @@ export class BattleEngine {
                             for (let i = 0; i < times; i++) {
                                 // 攻撃エフェクト付きで実行
                                 await this.attackWithEffect(enemy, this.player, damage);
+                                this.uiUpdateCallback(); // 攻撃ごとにUI（HP/ブロック）を更新
                                 if (times > 1) await new Promise(resolve => setTimeout(resolve, 200));
                             }
                         }

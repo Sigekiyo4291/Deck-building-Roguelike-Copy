@@ -1455,7 +1455,7 @@ body {
 .attack-effect {
   position: fixed;
   pointer-events: none;
-  z-index: 1000;
+  z-index: 9999;
   transform: translate(-50%, -50%);
   width: 400px;
   height: 400px;
@@ -1590,7 +1590,7 @@ body {
 .block-effect {
   position: fixed;
   pointer-events: none;
-  z-index: 1000;
+  z-index: 9999;
   transform: translate(-50%, -50%);
   width: 150px;
   height: 150px;
@@ -1626,7 +1626,7 @@ body {
 .skill-effect {
   position: fixed;
   pointer-events: none;
-  z-index: 1000;
+  z-index: 9999;
   transform: translate(-50%, -50%);
   width: 200px;
   height: 200px;
@@ -1659,7 +1659,7 @@ body {
 .power-effect {
   position: fixed;
   pointer-events: none;
-  z-index: 1000;
+  z-index: 9999;
   transform: translate(-50%, -50%);
   width: 250px;
   height: 250px;

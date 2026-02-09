@@ -60,6 +60,7 @@ class Game {
     this.selectedEnemyIndex = 0; // デフォルトターゲット初期化
     this.battleCount = 0; // 通常戦闘の回数をカウント
     this.audioManager = new AudioManager(); // オーディオマネージャー初期化
+    this.effectManager = new EffectManager(); // エフェクトマネージャー初期化
 
     // Debug Manager
     this.debugManager = new DebugManager(this);

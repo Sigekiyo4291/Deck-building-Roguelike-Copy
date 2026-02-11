@@ -440,18 +440,17 @@ export const CardLibrary = {
         rarity: 'common',
         description: '3ダメージを3回与える(対象ランダム)',
         effect: async (s, t, e) => {
-            if (e && e.attackWithEffect) {
-                for (let i = 0; i < 3; i++) {
-                    const aliveEnemies = e.enemies.filter(enemy => !enemy.isDead());
-                    if (aliveEnemies.length === 0) break;
-                    const randomTarget = aliveEnemies[Math.floor(Math.random() * aliveEnemies.length)];
-                    const targetIndex = e.enemies.indexOf(randomTarget);
-                    await e.attackWithEffect(s, randomTarget, s.calculateDamage(3), targetIndex);
+            if (e && e.attackRandomEnemy) {
+                const count = (s.isUpgraded) ? 4 : 3;
+                const damage = s.calculateDamage(3);
+                for (let i = 0; i < count; i++) {
+                    await e.attackRandomEnemy(damage);
                 }
             } else {
-                t.takeDamage(s.calculateDamage(3), s);
-                t.takeDamage(s.calculateDamage(3), s);
-                t.takeDamage(s.calculateDamage(3), s);
+                const damage = s.calculateDamage(3);
+                t.takeDamage(damage, s);
+                t.takeDamage(damage, s);
+                t.takeDamage(damage, s);
             }
         },
         targetType: 'random',
@@ -459,16 +458,14 @@ export const CardLibrary = {
             description: '3ダメージを4回与える(対象ランダム)',
             baseDamage: 3,
             effect: async (s, t, e) => {
-                if (e && e.attackWithEffect) {
+                if (e && e.attackRandomEnemy) {
+                    const damage = s.calculateDamage(3);
                     for (let i = 0; i < 4; i++) {
-                        const aliveEnemies = e.enemies.filter(enemy => !enemy.isDead());
-                        if (aliveEnemies.length === 0) break;
-                        const randomTarget = aliveEnemies[Math.floor(Math.random() * aliveEnemies.length)];
-                        const targetIndex = e.enemies.indexOf(randomTarget);
-                        await e.attackWithEffect(s, randomTarget, s.calculateDamage(3), targetIndex);
+                        await e.attackRandomEnemy(damage);
                     }
                 } else {
-                    for (let i = 0; i < 4; i++) t.takeDamage(s.calculateDamage(3), s);
+                    const damage = s.calculateDamage(3);
+                    for (let i = 0; i < 4; i++) t.takeDamage(damage, s);
                 }
             }
         },
@@ -1459,9 +1456,9 @@ export const CardLibrary = {
                     // ターゲットが必要な場合はランダムに選択。
                     let target = t;
                     if (card.targetType === 'single') {
-                        const aliveEnemies = e.enemies.filter(enemy => !enemy.isDead());
-                        if (aliveEnemies.length > 0) {
-                            target = aliveEnemies[Math.floor(Math.random() * aliveEnemies.length)];
+                        const randomTarget = e.getRandomAliveEnemy();
+                        if (randomTarget) {
+                            target = randomTarget;
                         }
                     }
 

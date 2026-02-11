@@ -358,11 +358,17 @@ export class BattleEngine {
         }
     }
 
+    // 生存している敵からランダムに1体取得
+    getRandomAliveEnemy() {
+        const aliveEnemies = this.enemies.filter(e => !e.isDead());
+        if (aliveEnemies.length === 0) return null;
+        return aliveEnemies[Math.floor(Math.random() * aliveEnemies.length)];
+    }
+
     // ランダムな敵にダメージを与える
     async attackRandomEnemy(damage) {
-        const aliveEnemies = this.enemies.filter(e => !e.isDead());
-        if (aliveEnemies.length === 0) return;
-        const target = aliveEnemies[Math.floor(Math.random() * aliveEnemies.length)];
+        const target = this.getRandomAliveEnemy();
+        if (!target) return;
         await this.attackWithEffect(this.player, target, damage);
         this.uiUpdateCallback();
     }

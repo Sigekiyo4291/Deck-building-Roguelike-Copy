@@ -29,6 +29,17 @@ const STATUS_INFO = {
   no_draw: { name: 'ドロー不可', desc: 'カードを引くことができない。' },
   rage: { name: '激怒', desc: 'アタックカードをプレイするたび、ブロックを得る。' },
   double_tap: { name: 'ダブルタップ', desc: '次にプレイするアタックカードが2回発動する。' },
+  fire_breathing: { name: '炎の吐息', desc: '状態異常や呪いカードを引くたび、敵全体にダメージを与える。' },
+  feel_no_pain: { name: '無痛', desc: 'カードを廃棄するたび、ブロックを得る。' },
+  combust: { name: '燃焼', desc: 'ターン終了時、HPを1失い敵全体にダメージを与える。' },
+  rupture: { name: '破裂', desc: 'カードの効果でHPを失うたび、筋力を得る。' },
+  evolve: { name: '進化', desc: '状態異常カードを引くたび、追加でカードを引く。' },
+  dark_embrace: { name: '闇の抱擁', desc: 'カードが廃棄されるたび、カードを1枚引く。' },
+  juggernaut: { name: 'ジャガーノート', desc: 'ブロックを獲得するたび、ランダムな敵にダメージを与える。' },
+  barricade: { name: 'バリケード', desc: 'ターン開始時にブロックが失われない。' },
+  corruption: { name: '堕落', desc: 'スキルカードのコストが0になる。使用したスキルは廃棄される。' },
+  brutality: { name: '残虐', desc: 'ターン開始時、HPを1失いカードを1枚引く。' },
+  berserk: { name: '狂戦士', desc: 'ターン開始時、エナジーを1得る。' },
 };
 
 
@@ -1096,6 +1107,17 @@ class Game {
       if (status.type === 'no_draw') iconChar = '🚫';
       if (status.type === 'rage') iconChar = '💢';
       if (status.type === 'double_tap') iconChar = '⚔️';
+      if (status.type === 'fire_breathing') iconChar = '🔥';
+      if (status.type === 'feel_no_pain') iconChar = '🦴';
+      if (status.type === 'combust') iconChar = '🧨';
+      if (status.type === 'rupture') iconChar = '⤴️';
+      if (status.type === 'evolve') iconChar = '🧬';
+      if (status.type === 'dark_embrace') iconChar = '👐';
+      if (status.type === 'juggernaut') iconChar = '💥';
+      if (status.type === 'barricade') iconChar = '🏰';
+      if (status.type === 'corruption') iconChar = '🔮';
+      if (status.type === 'brutality') iconChar = '🩸';
+      if (status.type === 'berserk') iconChar = '💢';
 
       // ツールチップ設定
       const info = STATUS_INFO[status.type];

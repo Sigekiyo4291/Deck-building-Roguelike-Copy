@@ -23,6 +23,11 @@ export class BattleEngine {
         this.audioManager = audioManager;   // オーディオ管理クラス
         this.turn = 1;
         this.phase = 'player'; // 'player' or 'enemy'
+
+        // ジャガーノート (Juggernaut) 等のためのフック設定
+        if (this.player) {
+            this.player.onGainBlock = () => this.handlePlayerGainBlock();
+        }
     }
 
     start() {
@@ -40,7 +45,14 @@ export class BattleEngine {
             this.player.deck.push(card.clone());
         });
 
-        this.shuffle(this.player.deck);
+        // 天賦 (Innate) カードの処理
+        const innateCards = this.player.deck.filter(card => card.isInnate);
+        const nonInnateCards = this.player.deck.filter(card => !card.isInnate);
+
+        this.shuffle(nonInnateCards);
+
+        // 天賦カードをデッキの末尾（pop()で先に取り出される方向）に配置
+        this.player.deck = [...nonInnateCards, ...innateCards];
 
         // レリック: onBattleStart
         this.player.relics.forEach(relic => {
@@ -50,9 +62,17 @@ export class BattleEngine {
         this.startPlayerTurn();
     }
 
-    startPlayerTurn() {
+    async startPlayerTurn() {
         this.phase = 'player';
         this.player.onTurnStart();
+
+        // 残虐 (Brutality) の処理
+        const brutalityCount = this.player.getStatusValue('brutality');
+        if (brutalityCount > 0) {
+            console.log(`残虐発動！ 1HPを失い ${brutalityCount} 枚ドロー。`);
+            this.player.loseHP(1);
+            await this.drawCards(brutalityCount);
+        }
 
         // 悪魔化 (demon_form) の処理
         const dfCount = this.player.getStatusValue('demon_form');
@@ -62,13 +82,18 @@ export class BattleEngine {
         if (dfPlusCount > 0) this.player.addStatus('strength', dfPlusCount * 3);
 
         this.player.resetEnergy();
-        this.player.resetBlock();
+        if (this.player.getStatusValue('berserk') > 0) {
+            this.player.energy += this.player.getStatusValue('berserk');
+        }
+        if (!this.player.hasStatus('barricade')) {
+            this.player.resetBlock();
+        }
         this.drawCards(5);
         this.updateIntent();
         this.uiUpdateCallback();
     }
 
-    drawCards(count) {
+    async drawCards(count) {
         if (this.player.hasStatus('no_draw')) {
             console.log("ドロー不可ステータスが付与されているため、ドローできません。");
             return;
@@ -81,7 +106,28 @@ export class BattleEngine {
                 this.player.discard = [];
                 this.shuffle(this.player.deck);
             }
-            this.player.hand.push(this.player.deck.pop());
+            const card = this.player.deck.pop();
+            if (!card) continue;
+            this.player.hand.push(card);
+
+            // 炎の吐息 (Fire Breathing) の処理
+            const fbDamage = this.player.getStatusValue('fire_breathing');
+            if (fbDamage > 0 && (card.type === 'curse' || card.isStatus)) {
+                console.log(`炎の吐息発動！ ${card.name} を引いたため ${fbDamage} ダメージ。`);
+                for (const enemy of this.enemies) {
+                    if (!enemy.isDead()) {
+                        await this.attackWithEffect(this.player, enemy, fbDamage);
+                    }
+                }
+                this.uiUpdateCallback();
+            }
+
+            // 進化 (Evolve) の処理
+            const evolveCount = this.player.getStatusValue('evolve');
+            if (evolveCount > 0 && card.isStatus) {
+                console.log(`進化発動！ ステータスカード ${card.name} を引いたため ${evolveCount} 枚カードを引く。`);
+                await this.drawCards(evolveCount);
+            }
         }
     }
 
@@ -179,7 +225,11 @@ export class BattleEngine {
                 if (card.type === 'power') {
                     // パワーカードは戦闘から取り除かれる（どこにも追加しない）
                     console.log(`${card.name} は戦闘から取り除かれました。`);
-                } else if (card.isExhaust) {
+                } else if (card.isExhaust || (this.player.hasStatus('corruption') && card.type === 'skill')) {
+                    // 堕落 (Corruption) または元々の廃棄属性
+                    if (this.player.hasStatus('corruption') && card.type === 'skill') {
+                        console.log(`堕落発動！ ${card.name} は廃棄されました。`);
+                    }
                     this.player.exhaustCard(card, this);
                 } else {
                     this.player.discard.push(card);
@@ -297,13 +347,33 @@ export class BattleEngine {
         target.takeDamage(damage, source);
     }
 
+    // プレイヤーがブロックを獲得した際の処理（ジャガーノート用）
+    async handlePlayerGainBlock() {
+        if (this.isEnded) return;
+        const juggernautDamage = this.player.getStatusValue('juggernaut');
+        if (juggernautDamage > 0) {
+            console.log(`ジャガーノート発動！ ブロック獲得により ${juggernautDamage} ダメージ。`);
+            await this.attackRandomEnemy(juggernautDamage);
+            this.checkBattleEnd();
+        }
+    }
+
+    // ランダムな敵にダメージを与える
+    async attackRandomEnemy(damage) {
+        const aliveEnemies = this.enemies.filter(e => !e.isDead());
+        if (aliveEnemies.length === 0) return;
+        const target = aliveEnemies[Math.floor(Math.random() * aliveEnemies.length)];
+        await this.attackWithEffect(this.player, target, damage);
+        this.uiUpdateCallback();
+    }
+
     // ダメージ処理をエフェクト付きで実行（単体攻撃用の簡易ヘルパー）
     async dealDamageWithEffect(source, target, damage) {
         const targetIndex = this.enemies.indexOf(target);
         await this.attackWithEffect(source, target, damage, targetIndex);
     }
 
-    endTurn() {
+    async endTurn() {
         if (this.phase !== 'player' || this.isEnded) return;
 
         // 手札にある火傷 (BURN) カードの枚数を確認
@@ -313,6 +383,19 @@ export class BattleEngine {
             for (let i = 0; i < burnCount; i++) {
                 this.player.takeDamage(2, null); // 敵ではなくカードからのダメージ
             }
+        }
+
+        // 燃焼 (Combust) の処理
+        const combustDamage = this.player.getStatusValue('combust');
+        if (combustDamage > 0) {
+            console.log(`燃焼発動！ 1 HPを失い、全体に ${combustDamage} ダメージ。`);
+            this.player.loseHP(1);
+            for (const enemy of this.enemies) {
+                if (!enemy.isDead()) {
+                    await this.attackWithEffect(this.player, enemy, combustDamage);
+                }
+            }
+            this.checkBattleEnd();
         }
 
         // 手札を全て捨てる（エセリアルは廃棄）
@@ -325,7 +408,7 @@ export class BattleEngine {
 
         if (etherealCards.length > 0) {
             etherealCards.forEach(c => {
-                this.player.exhaust.push(c);
+                this.player.exhaustCard(c, this);
                 console.log(`${c.name} (エセリアル) が廃棄されました。`);
             });
         }

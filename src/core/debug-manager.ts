@@ -208,15 +208,40 @@ export class DebugManager {
     // --- Card Tab ---
     initCardTab() {
         const listContainer = document.getElementById('debug-card-list');
-        Object.values(CardLibrary).forEach(card => {
-            const btn = document.createElement('button');
-            btn.textContent = `[${card.cost}] ${card.name}`; // baseName might be better but name is fine
-            btn.className = 'debug-item-btn ' + card.rarity;
-            btn.onclick = () => {
-                this.game.player.masterDeck.push(card.clone());
-                alert(`Added ${card.name} to deck`);
-            };
-            listContainer.appendChild(btn);
+        const cards = Object.values(CardLibrary);
+
+        const types = ['attack', 'skill', 'power', 'status', 'curse'];
+        const typeLabels = {
+            attack: '⚔️ Attack',
+            skill: '🧪 Skill',
+            power: '⚡ Power',
+            status: '🛑 Status',
+            curse: '💀 Curse'
+        };
+
+        types.forEach(type => {
+            const typeCards = cards.filter(c => c.type === type);
+            if (typeCards.length === 0) return;
+
+            const header = document.createElement('h4');
+            header.textContent = typeLabels[type] || type;
+            header.className = 'debug-section-header';
+            listContainer.appendChild(header);
+
+            const groupContainer = document.createElement('div');
+            groupContainer.className = 'debug-group-container';
+
+            typeCards.forEach(card => {
+                const btn = document.createElement('button');
+                btn.textContent = `[${card.cost}] ${card.name}`;
+                btn.className = 'debug-item-btn ' + card.rarity;
+                btn.onclick = () => {
+                    this.game.player.masterDeck.push(card.clone());
+                    alert(`Added ${card.name} to deck`);
+                };
+                groupContainer.appendChild(btn);
+            });
+            listContainer.appendChild(groupContainer);
         });
     }
 

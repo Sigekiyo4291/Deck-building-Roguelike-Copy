@@ -9,6 +9,7 @@ export class Entity {
   sprite: string;
   statusEffects: { type: string, value: number }[];
   uuid: string;
+  onGainBlock?: () => void;
 
   constructor(name, maxHp, sprite) {
     this.name = name;
@@ -36,6 +37,13 @@ export class Entity {
     this.hp = Math.max(0, this.hp - amount);
     if (this.hp < prevHp && this instanceof Player) {
       this.hpLossCount = (this.hpLossCount || 0) + 1;
+
+      // 破裂 (Rupture) の処理
+      const ruptureVal = this.getStatusValue('rupture');
+      if (ruptureVal > 0) {
+        console.log(`破裂発動！ HPを失ったため筋力を ${ruptureVal} 得る。`);
+        this.addStatus('strength', ruptureVal);
+      }
     }
     return amount;
   }
@@ -56,11 +64,21 @@ export class Entity {
       }
     }
 
+    const prevHp = this.hp;
     this.hp = Math.max(0, this.hp - remainingDamage);
 
     // 被ダメージ回数のカウントアップ（血には血を用）
     if (remainingDamage > 0 && this instanceof Player) {
       this.hpLossCount = (this.hpLossCount || 0) + 1;
+
+      // 破裂 (Rupture) の処理 (カード起因のダメージ: sourceがnullの場合)
+      if (source === null || source === undefined) {
+        const ruptureVal = this.getStatusValue('rupture');
+        if (ruptureVal > 0) {
+          console.log(`破裂発動！ カード起因のダメージでHPを失ったため筋力を ${ruptureVal} 得る。`);
+          this.addStatus('strength', ruptureVal);
+        }
+      }
     }
 
     // トゲ(Thorns) & 炎の障壁(Flame Barrier) 処理
@@ -88,7 +106,13 @@ export class Entity {
   }
 
   addBlock(amount) {
-    this.block += this.calculateBlock(amount);
+    const blockGained = this.calculateBlock(amount);
+    if (blockGained > 0) {
+      this.block += blockGained;
+      if (this.onGainBlock) {
+        this.onGainBlock();
+      }
+    }
   }
 
   resetBlock() {
@@ -241,6 +265,24 @@ export class Player extends Entity {
 
   exhaustCard(card, engine) {
     this.exhaust.push(card);
+
+    // 無痛 (Feel No Pain) の処理
+    const fnpBlock = this.getStatusValue('feel_no_pain');
+    if (fnpBlock > 0) {
+      console.log(`無痛発動！ ${card.name} が廃棄されたため ${fnpBlock} ブロック獲得。`);
+      this.addBlock(fnpBlock);
+      if (engine && engine.showEffectForPlayer) {
+        engine.showEffectForPlayer('block');
+      }
+    }
+
+    // 闇の抱擁 (Dark Embrace) の処理
+    const deCount = this.getStatusValue('dark_embrace');
+    if (deCount > 0 && engine) {
+      console.log(`闇の抱擁発動！ ${card.name} が廃棄されたため ${deCount} 枚ドロー。`);
+      engine.drawCards(deCount);
+    }
+
     if (card.onExhaust && engine) {
       card.onExhaust(this, engine);
     }

@@ -930,15 +930,44 @@ class Game {
 
   createRewardCardElement(card) {
     const cardEl = document.createElement('div');
-    cardEl.className = `card ${card.rarity}`;
-    const imageHtml = card.image ? `<img src="${card.image}" class="card-illustration" />` : '';
+    const charClass = (card.type === 'curse' || card.isStatus) ? 'curse' : 'ironclad';
+    const upgradedClass = card.isUpgraded ? 'upgraded' : '';
+    cardEl.className = `card ${card.rarity} card-${card.type} ${charClass} ${upgradedClass}`;
+    const imagePath = card.image || 'assets/images/cards/NoImage.png';
+    const typeNames = { attack: 'アタック', skill: 'スキル', power: 'パワー', curse: '呪い', status: '状態異常' };
+    const typeName = typeNames[card.type] || card.type;
+
     cardEl.innerHTML = `
-            ${imageHtml}
-            <div class="card-cost">${card.cost}</div>
-            <div class="card-title">${card.name}</div>
-            <div class="card-desc">${card.description}</div>
-            <div class="card-type">${card.type}</div>
-      `;
+      <div class="card-frame"></div>
+      <div class="card-illustration-container">
+        <img src="${imagePath}" class="card-illustration" />
+        <div class="inner-frame"></div>
+        <div class="card-type-label">${typeName}</div>
+      </div>
+      <div class="card-banner">
+        <div class="card-title">${card.name}</div>
+      </div>
+      <div class="card-cost-icon">${card.cost}</div>
+      <div class="card-description-container">
+        <div class="card-desc">${card.description}</div>
+      </div>
+    `;
+
+    // カードタイトルの文字数に応じてフォントサイズを調整
+    const titleEl = cardEl.querySelector('.card-title') as HTMLElement;
+    if (titleEl) {
+      const nameLength = card.name.length;
+      if (nameLength <= 4) {
+        titleEl.style.fontSize = '1.1em';
+      } else if (nameLength <= 6) {
+        titleEl.style.fontSize = '1em';
+      } else if (nameLength <= 8) {
+        titleEl.style.fontSize = '0.9em';
+      } else {
+        titleEl.style.fontSize = '0.8em';
+      }
+    }
+
     return cardEl;
   }
 
@@ -1140,7 +1169,9 @@ class Game {
 
   createCardElement(card, index) {
     const cardEl = document.createElement('div');
-    cardEl.className = `card ${card.rarity}`;
+    const charClass = (card.type === 'curse' || card.isStatus) ? 'curse' : 'ironclad';
+    const upgradedClass = card.isUpgraded ? 'upgraded' : '';
+    cardEl.className = `card ${card.rarity} card-${card.type} ${charClass} ${upgradedClass}`;
 
     let description = card.description;
     if (this.battleEngine) {
@@ -1165,7 +1196,7 @@ class Game {
         description = description.replace(finalDamage.toString(), `<span class="dynamic-value ${colorClass}">${finalDamage}</span>`);
       }
 
-      // ブブロック表示の更新
+      // ブロック表示の更新
       if (card.type === 'skill' || card.baseBlock > 0) {
         const finalBlock = card.getBlock(this.player, this.battleEngine);
 
@@ -1174,24 +1205,52 @@ class Game {
           ? card.upgradeData.baseBlock
           : card.baseBlock;
 
-        if (finalBlock > baseVal) colorClass = 'damage-plus'; // 緑 (汎用利用)
-        else if (finalBlock < baseVal) colorClass = 'damage-minus'; // 赤 (汎用利用)
+        if (finalBlock > baseVal) colorClass = 'damage-plus';
+        else if (finalBlock < baseVal) colorClass = 'damage-minus';
 
-        // descriptionの中の「数字 + ブロック」のパターンを置換
         description = description.replace(/(\d+)(ブロック)/, `<span class="dynamic-value ${colorClass}">${finalBlock}</span>$2`);
       }
     }
 
     const currentCost = card.getCost(this.player);
     const displayCost = currentCost === 'X' ? 'X' : (currentCost < 0 ? '' : currentCost);
-    const imageHtml = card.image ? `<img src="${card.image}" class="card-illustration" />` : '';
+    const imagePath = card.image || 'assets/images/cards/NoImage.png';
+
+    // タイプ名表示用
+    const typeNames = { attack: 'アタック', skill: 'スキル', power: 'パワー', curse: '呪い', status: '状態異常' };
+    const typeName = typeNames[card.type] || card.type;
+
     cardEl.innerHTML = `
-              ${imageHtml}
-              <div class="card-cost">${displayCost}</div>
-              <div class="card-title">${card.name}</div>
-              <div class="card-desc">${description}</div>
-              <div class="card-type">${card.type}</div>
-      `;
+      <div class="card-frame"></div>
+      <div class="card-illustration-container">
+        <img src="${imagePath}" class="card-illustration" />
+        <div class="inner-frame"></div>
+        <div class="card-type-label">${typeName}</div>
+      </div>
+      <div class="card-banner">
+        <div class="card-title">${card.name}</div>
+      </div>
+      <div class="card-cost-icon">${displayCost}</div>
+      <div class="card-description-container">
+        <div class="card-desc">${description}</div>
+      </div>
+    `;
+
+    // カードタイトルの文字数に応じてフォントサイズを調整
+    const titleEl = cardEl.querySelector('.card-title') as HTMLElement;
+    if (titleEl) {
+      const nameLength = card.name.length;
+      if (nameLength <= 4) {
+        titleEl.style.fontSize = '1.1em';
+      } else if (nameLength <= 6) {
+        titleEl.style.fontSize = '1em';
+      } else if (nameLength <= 8) {
+        titleEl.style.fontSize = '0.9em';
+      } else {
+        titleEl.style.fontSize = '0.8em';
+      }
+    }
+
 
     // ドラッグ処理変数の初期化
     let isDragging = false;

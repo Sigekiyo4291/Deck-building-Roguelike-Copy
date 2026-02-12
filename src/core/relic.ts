@@ -93,7 +93,7 @@ export const RelicLibrary = {
         }
     },
     ODDLY_SMOOTH_STONE: new class extends Relic {
-        constructor() { super('oddly_smooth_stone', '奇妙なスムーズストーン', '戦闘開始時、敏捷性1を得る。', 'common'); }
+        constructor() { super('oddly_smooth_stone', 'すべすべ石', '戦闘開始時、敏捷性1を得る。', 'common'); }
         onBattleStart(owner, engine) {
             owner.addStatus('dexterity', 1);
         }

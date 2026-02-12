@@ -472,17 +472,17 @@ body {
 .card {
   width: var(--card-width);
   height: var(--card-height);
-  background: url('assets/images/cards/card_bg.png') no-repeat center/165% 115%;
-  border-radius: 8px;
   position: relative;
   cursor: pointer;
   transition: transform 0.2s ease, z-index 0s;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
   display: flex;
   flex-direction: column;
-  padding: 12px;
   box-sizing: border-box;
   pointer-events: auto;
+  border: none;
+  background: #c9c18a;
+  border-radius: 18px;
 }
 
 .card:hover {
@@ -492,48 +492,222 @@ body {
 
 .card.dragging {
   transition: none !important;
-  /* ドラッグ中は遅延なしで追従 */
   z-index: 1000 !important;
   opacity: 0.9;
   cursor: grabbing;
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
 }
 
-.card-cost {
+/* カード外枠 */
+.card-frame {
   position: absolute;
-  top: 5px;
-  left: 5px;
-  width: 28px;
-  height: 28px;
-  background: #2980b9;
-  border-radius: 50%;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-size: 100% 100%;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.card.ironclad .card-frame {
+  background-image: url('assets/images/ui/card_frame_ironclad.png');
+}
+
+.card.neutral .card-frame {
+  background-image: url('assets/images/ui/card_frame_common.png');
+}
+
+.card.curse .card-frame,
+.card.status .card-frame {
+  background-image: url('assets/images/ui/card_frame_curse.png');
+}
+
+/* タイトルバナー */
+.card-banner {
+  position: absolute;
+  top: 0%;
+  width: 100%;
+  height: 22%;
+  background: url('assets/images/ui/card_title_banner_common.png') no-repeat center/contain;
+  z-index: 5;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  pointer-events: none;
+  padding-top: 4px;
+}
+
+/* レア度別バナー */
+.card.common .card-banner {
+  background-image: url('assets/images/ui/card_title_banner_common.png');
+}
+
+.card.uncommon .card-banner {
+  background-image: url('assets/images/ui/card_title_banner_ancommon.png');
+}
+
+.card.rare .card-banner {
+  background-image: url('assets/images/ui/card_title_banner_rare.png');
+}
+
+.card.curse .card-banner,
+.card.status .card-banner {
+  background-image: url('assets/images/ui/card_title_banner_common.png');
+  filter: grayscale(100%) brightness(40%);
+}
+
+.card-title {
+  font-size: 1em;
+  font-weight: bold;
+  color: #fff;
+  text-shadow:
+    -1px -1px 0 #000,
+    1px -1px 0 #000,
+    -1px 1px 0 #000,
+    1px 1px 0 #000;
+  letter-spacing: 0.05em;
+  text-align: center;
+  max-width: 90%;
+}
+
+/* コストアイコン */
+.card-cost-icon {
+  position: absolute;
+  bottom: -5px;
+  right: -5px;
+  width: 35px;
+  height: 35px;
+  background: url('assets/images/ui/card_cost_icon.png') no-repeat center/contain;
+  z-index: 10;
   display: flex;
   justify-content: center;
   align-items: center;
   font-weight: bold;
-  border: 1px solid #fff;
+  font-size: 1.2em;
+  color: #fff;
+  text-shadow: 0 0 3px #000;
 }
 
-.card-title {
-  text-align: center;
-  font-size: 1.1em;
-  font-weight: bold;
-  margin-top: 15px;
-  color: #f1c40f;
-  -webkit-text-stroke: 1px #000;
-  paint-order: stroke fill;
-  /*text-shadow: 2px 2px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;*/
+/* イラストコンテナ */
+.card-illustration-container {
+  position: absolute;
+  top: 12%;
+  left: 7%;
+  width: 86%;
+  height: 42%;
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.card-illustration {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  -webkit-mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+}
+
+/* 内枠形状別マスクとフレーム */
+.inner-frame {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.card-attack .card-illustration {
+  -webkit-mask-image: url('assets/images/ui/inner_frame_attack_mask.png');
+  mask-image: url('assets/images/ui/inner_frame_attack_mask.png');
+}
+
+.card-attack .inner-frame {
+  background-image: url('assets/images/ui/inner_frame_attack.png');
+}
+
+.card-skill .card-illustration {
+  -webkit-mask-image: url('assets/images/ui/inner_frame_skill_mask.png');
+  mask-image: url('assets/images/ui/inner_frame_skill_mask.png');
+}
+
+.card-skill .inner-frame {
+  background-image: url('assets/images/ui/inner_frame_skill.png');
+}
+
+.card-power .card-illustration {
+  -webkit-mask-image: url('assets/images/ui/inner_frame_power_mask.png');
+  mask-image: url('assets/images/ui/inner_frame_power_mask.png');
+}
+
+.card-power .inner-frame {
+  background-image: url('assets/images/ui/inner_frame_power.png');
+}
+
+.card-curse .card-illustration,
+.card-status .card-illustration {
+  -webkit-mask-image: url('assets/images/ui/inner_frame_skill_mask.png');
+  mask-image: url('assets/images/ui/inner_frame_skill_mask.png');
+}
+
+/* カードタイプ表示 */
+.card-type-label {
+  position: absolute;
+  bottom: -10px;
+  /* 枠線の上に重なるように調整 */
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(60, 60, 60, 0.95);
+  padding: 2px 14px;
+  border: 1px solid #ccc;
+  border-radius: 12px;
+  font-size: 0.75em;
+  color: #fff;
+  z-index: 10;
+  white-space: nowrap;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* 説明文エリア */
+.card.upgraded .card-title {
+  color: #7fff00;
+  /* 明るい黄緑色。Slay the Spireのアップグレードカラーに準拠 */
+}
+
+.card-description-container {
+  position: absolute;
+  bottom: 5%;
+  left: 8%;
+  width: 84%;
+  height: 38%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 3px;
+  box-sizing: border-box;
+  color: #fff;
 }
 
 .card-desc {
-  font-size: 0.9em;
-  margin-top: auto;
-  margin-bottom: 8px;
+  font-size: 0.85em;
   text-align: center;
-  color: #333;
-  font-weight: bold;
-  -webkit-text-stroke: 1px #fff;
-  paint-order: stroke fill;
+  line-height: 1.2;
 }
 
 .dynamic-value {
@@ -543,13 +717,21 @@ body {
 
 .damage-plus {
   color: #27ae60 !important;
-  /* Green */
 }
 
 .damage-minus {
   color: #c0392b !important;
-  /* Red */
 }
+
+/* 旧来のクラス互換性・削除予定 */
+.card-type {
+  display: none;
+}
+
+.card-cost {
+  display: none;
+}
+
 
 /* 戦意（インテント） */
 .intent-icon {
@@ -721,15 +903,6 @@ body {
 .card.rare {
   border-color: #f1c40f;
   box-shadow: 0 4px 12px rgba(241, 196, 15, 0.6);
-
-}
-
-.card.rare .card-title {
-  color: #f1c40f;
-}
-
-.card.uncommon .card-title {
-  color: #3498db;
 }
 
 .card-reward-container {
@@ -1428,28 +1601,7 @@ body {
   background: #2ecc71;
 }
 
-/* Card Illustration */
-.card-illustration {
-  position: absolute;
-  top: 35px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 90px;
-  height: 90px;
-  object-fit: contain;
-  z-index: 1;
-  pointer-events: none;
-  border-radius: 4px;
-  /* border: 1px solid rgba(0,0,0,0.5); */
-  /* background: rgba(0,0,0,0.2); */
-}
-
-.card-title,
-.card-cost,
-.card-desc,
-.card-type {
-  z-index: 5;
-}
+/* 以前の古いルールを削除 */
 
 /* === 攻撃エフェクト === */
 .attack-effect {

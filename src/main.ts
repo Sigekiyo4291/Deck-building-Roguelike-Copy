@@ -1139,6 +1139,15 @@ class Game {
       const enemiesContainer = document.getElementById('enemies-container');
       enemiesContainer.innerHTML = '';
 
+      // 自動ターゲット変更: 現在のターゲットが死んでいるか無効な場合、生きている最初の敵を選択
+      const currentTarget = this.battleEngine.enemies[this.selectedEnemyIndex];
+      if (!currentTarget || currentTarget.isDead()) {
+        const firstAliveIndex = this.battleEngine.enemies.findIndex(e => !e.isDead());
+        if (firstAliveIndex !== -1) {
+          this.selectedEnemyIndex = firstAliveIndex;
+        }
+      }
+
       this.battleEngine.enemies.forEach((enemy, index) => {
         if (enemy.isDead()) return; // 死んだ敵は表示しない（あるいは死体表示）
 

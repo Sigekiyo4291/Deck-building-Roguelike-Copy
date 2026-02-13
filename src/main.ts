@@ -897,10 +897,16 @@ class Game {
     popup.style.left = `${x}px`;
     popup.style.top = `${y}px`;
 
-    // 飲むボタン
+    // 飲む/投げるボタン
     const drinkBtn = document.createElement('button');
     drinkBtn.className = 'potion-popup-btn';
-    drinkBtn.textContent = '🍺 飲む';
+
+    // ターゲットタイプに応じてテキストを変更
+    if (potion.targetType === 'single' || potion.targetType === 'all') {
+      drinkBtn.textContent = '🍺 投げる'; // アイコンは🍺のままだが、テキストを投げるに変更
+    } else {
+      drinkBtn.textContent = '🍺 飲む';
+    }
 
     const isCombat = !!this.battleEngine;
     const canUse = !potion.isCombatOnly || isCombat;
@@ -910,9 +916,9 @@ class Game {
       drinkBtn.title = '戦闘中のみ使用可能です';
     }
 
-    drinkBtn.onclick = () => {
-      this.handlePotionUse(index);
-      this.closePotionPopup();
+    drinkBtn.onclick = async () => {
+      this.closePotionPopup(); // 先に閉じる
+      await this.handlePotionUse(index);
     };
 
     // 捨てるボタン
@@ -949,7 +955,7 @@ class Game {
     }
   }
 
-  handlePotionUse(index) {
+  async handlePotionUse(index) {
     const potion = this.player.potions[index];
     if (!potion) return;
 
@@ -959,10 +965,10 @@ class Game {
       if (targetIdx === undefined || targetIdx === null || targetIdx < 0) {
         targetIdx = 0;
       }
-      this.battleEngine.usePotion(index, targetIdx);
+      await this.battleEngine.usePotion(index, targetIdx);
     } else if (!potion.isCombatOnly) {
       // 非戦闘中
-      potion.onUse(this.player, null, null);
+      await potion.onUse(this.player, null, null);
       this.player.potions[index] = null;
       this.updateGlobalStatusUI(); // ポーションUI更新も含まれる
     }

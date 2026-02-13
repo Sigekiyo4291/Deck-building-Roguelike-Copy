@@ -26,12 +26,12 @@ export const PotionLibrary = {
         constructor() {
             super('fire_potion', '火炎ポーション', 'ダメージ20を与える。', 'common', 'single', true);
         }
-        onUse(player: any, target: any, engine: any) {
+        async onUse(player: any, target: any, engine: any) {
             if (!target) return;
             const damage = 20 * this.getMultiplier(player);
             // Engineのヘルパーを使用してエフェクト付きダメージ
             if (engine) {
-                engine.attackWithEffect(player, target, damage);
+                await engine.attackWithEffect(player, target, damage);
             } else {
                 target.takeDamage(damage, player);
             }

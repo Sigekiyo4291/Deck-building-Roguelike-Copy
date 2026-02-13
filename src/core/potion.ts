@@ -32,7 +32,7 @@ export class Potion {
      * @param target ターゲット（敵またはnull）
      * @param engine バトルエンジン（非戦闘時はnullの場合がある）
      */
-    onUse(player: any, target: any, engine: any): void {
+    onUse(player: any, target: any, engine: any): Promise<void> | void {
         // 各ポーションでオーバーライド
     }
 

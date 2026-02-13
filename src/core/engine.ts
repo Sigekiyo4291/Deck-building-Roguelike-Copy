@@ -245,20 +245,60 @@ export class BattleEngine {
     }
 
     // ポーションの使用
-    usePotion(potionIndex: number, targetIndex: number = 0) {
-        const potion = this.player.potions[potionIndex];
-        if (!potion || !potion.onUse) return;
+    async usePotion(potionIndex: number, targetIndex: number = 0) {
+        if (this.isProcessing) return; // 二重実行防止
+        this.isProcessing = true;
 
-        const target = this.enemies[targetIndex] || this.enemies[0];
-        potion.onUse(this.player, target, this.enemies);
+        try {
+            const potion = this.player.potions[potionIndex];
+            if (!potion || !potion.onUse) return;
 
-        // 使用したのでスロットを空ける
-        this.player.potions[potionIndex] = null;
+            const target = this.enemies[targetIndex] || this.enemies[0];
 
-        if (this.audioManager) {
-            this.audioManager.playSe('click');
+            // ターゲットタイプに応じて演出を分岐
+            if (potion.targetType === 'single' || potion.targetType === 'all') {
+                // 投げる演出
+                const playerEl = this.getEntityElement(this.player);
+                const targetEl = this.getEntityElement(target);
+
+                // ポーションの色を簡易的に決定（レアリティなどから推測、あるいはデフォルト）
+                let color = 'white';
+                if (potion.id.includes('fire')) color = 'orange';
+                else if (potion.id.includes('explosive')) color = 'orange';
+                else if (potion.id.includes('poison')) color = 'purple';
+                else if (potion.id.includes('weak')) color = 'gray';
+                else if (potion.id.includes('vulnerable')) color = 'magenta';
+
+                if (this.effectManager && playerEl && targetEl) {
+                    await new Promise<void>(resolve => {
+                        this.effectManager.showProjectileEffect(playerEl, targetEl, color, resolve);
+                    });
+                }
+            } else {
+                // 飲む演出（音のみ、または既存のエフェクトがあれば）
+                // 必要であればここでthis.playerに発光エフェクトなどを入れる
+            }
+
+            // バグ修正: 第3引数を this.enemies から this (BattleEngine) に変更
+            await potion.onUse(this.player, target, this);
+
+            // 使用したのでスロットを空ける
+            this.player.potions[potionIndex] = null;
+
+            if (this.audioManager) {
+                if (potion.targetType === 'single' || potion.targetType === 'all') {
+                    // 着弾音（アタック音などで代用、あるいは専用SE）
+                    // ここでは attackWithEffect 内などでSEが鳴る可能性があるので重複に注意するが
+                    // Potion.onUseの実装次第。
+                } else {
+                    this.audioManager.playSe('click'); // 飲む音がないのでクリック音で代用... TODO: 飲むSE追加
+                }
+            }
+            this.checkBattleEnd();
+            this.uiUpdateCallback();
+        } finally {
+            this.isProcessing = false;
         }
-        this.uiUpdateCallback();
     }
 
     // プレイヤーにエフェクトを表示

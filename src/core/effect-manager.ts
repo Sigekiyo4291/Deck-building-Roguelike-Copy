@@ -177,4 +177,72 @@ export class EffectManager {
             }
         }, 500);
     }
+
+    /**
+     * 投擲物エフェクトを表示（ポーション投げる演出用）
+     * @param {HTMLElement} startElement - 開始位置の要素
+     * @param {HTMLElement} targetElement - 目標位置の要素
+     * @param {string} color - 投擲物の色 (CSS color string, default: 'white')
+     * @param {Function} callback - 完了後のコールバック
+     */
+    showProjectileEffect(startElement, targetElement, color = 'white', callback = null) {
+        if (!startElement || !targetElement) {
+            if (callback) callback();
+            return;
+        }
+
+        const startRect = startElement.getBoundingClientRect();
+        const targetRect = targetElement.getBoundingClientRect();
+
+        const startX = startRect.left + startRect.width / 2;
+        const startY = startRect.top + startRect.height / 3; // 少し上から
+        const targetX = targetRect.left + targetRect.width / 2;
+        const targetY = targetRect.top + targetRect.height / 2;
+
+        const projectile = document.createElement('div');
+        projectile.className = 'projectile-effect';
+        projectile.style.backgroundColor = color;
+        projectile.style.left = `${startX}px`;
+        projectile.style.top = `${startY}px`;
+
+        // CSS変数として終点を渡す（CSSアニメーションで制御する場合）
+        projectile.style.setProperty('--target-x', `${targetX - startX}px`);
+        projectile.style.setProperty('--target-y', `${targetY - startY}px`);
+
+        document.body.appendChild(projectile);
+        this.activeEffects.push(projectile);
+
+        // アニメーション (JSで簡易的な放物線を描く)
+        const duration = 500; // ms
+        const startTime = performance.now();
+
+        const animate = (time) => {
+            const elapsed = time - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+
+            // イージング (ease-out quad)
+            // const ease = 1 - (1 - progress) * (1 - progress); 
+            // 直線移動 + 高さの放物線
+
+            const currentX = startX + (targetX - startX) * progress;
+            // 高さの計算: 真ん中で一番高くなる (-100pxくらい)
+            const heightOffset = Math.sin(progress * Math.PI) * -150;
+            const currentY = startY + (targetY - startY) * progress + heightOffset;
+
+            projectile.style.left = `${currentX}px`;
+            projectile.style.top = `${currentY}px`;
+
+            // 回転
+            projectile.style.transform = `rotate(${progress * 720}deg)`;
+
+            if (progress < 1) {
+                requestAnimationFrame(animate);
+            } else {
+                this.removeEffect(projectile);
+                if (callback) callback();
+            }
+        };
+
+        requestAnimationFrame(animate);
+    }
 }

@@ -797,7 +797,33 @@ body {
   opacity: 0.5;
 }
 
-/* リワードシーン */
+/* 投擲物エフェクト */
+.projectile-effect {
+  position: fixed;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+  z-index: 2000;
+  pointer-events: none;
+  /* 尻尾のようなエフェクト（簡易的） */
+}
+
+.projectile-effect::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  background: inherit;
+  border-radius: inherit;
+  transform: translate(-50%, -50%) scale(1.5);
+  opacity: 0.3;
+  filter: blur(4px);
+  z-index: -1;
+}
+
 .reward-list {
   background: rgba(0, 0, 0, 0.6);
   padding: 20px;

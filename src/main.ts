@@ -147,7 +147,19 @@ class Game {
     // 山札パイルのクリックイベント
     const deckPile = document.getElementById('deck-pile');
     if (deckPile) {
-      deckPile.onclick = () => this.showDeckView();
+      deckPile.onclick = () => {
+        if (this.battleEngine) {
+          // 戦闘中は山札を表示 (順番がバレないようにソートして表示)
+          const sortedDeck = [...this.player.deck].sort((a, b) => {
+            if (a.type !== b.type) return a.type.localeCompare(b.type);
+            return a.name.localeCompare(b.name);
+          });
+          this.showCardSelectionFromPile('山札', sortedDeck, () => { });
+        } else {
+          // 非戦闘時はデッキ全体を表示
+          this.showDeckView();
+        }
+      };
     }
 
     // ヘッダーボタン（StSスタイルUI）

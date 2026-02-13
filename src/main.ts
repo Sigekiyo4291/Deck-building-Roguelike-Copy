@@ -1177,28 +1177,56 @@ class Game {
 
         // 意図アイコン
         let intentHtml = '';
+        let intentText = ''; // ホバー時に表示するテキスト
         if (enemy.nextMove) {
           const move = enemy.nextMove;
           let icons = [];
+          let hasAttack = false;
+          let hasBuff = false;
+          let hasDebuff = false;
+          let hasSpecial = false;
 
           if (move.type === 'attack') {
             const damage = enemy.calculateDamage(move.value);
             const times = move.times ? `x${move.times}` : '';
             icons.push(`<span class="intent-attack">🗡️${damage}${times}</span>`);
+            hasAttack = true;
           }
 
           if (move.type === 'buff' || (move.type === 'attack' && move.effect && !(move.id?.includes('rake')) && !(move.id?.includes('scrape')))) {
             // 純粋なバフ、または攻撃後の自身の強化
             icons.push('💪');
+            hasBuff = true;
           }
 
           if (move.type === 'debuff' || (move.effect && (move.id?.includes('rake') || move.id?.includes('scrape') || move.name?.includes('舐める')))) {
             icons.push('📉');
+            hasDebuff = true;
           }
 
           if (move.type === 'special') {
             const name = move.name || '✨';
             icons.push(`<span class="intent-special">${name}</span>`);
+            hasSpecial = true;
+          }
+
+          // 行動内容のテキストを判定
+          if (hasSpecial) {
+            intentText = '敵は特殊な行動予定';
+          } else if (hasAttack && hasBuff && hasDebuff) {
+            intentText = '敵はバフ・デバフと攻撃予定';
+          } else if (hasAttack && hasBuff) {
+            intentText = '敵はバフと攻撃予定';
+          } else if (hasAttack && hasDebuff) {
+            intentText = '敵はデバフと攻撃予定';
+          } else if (hasAttack) {
+            intentText = '敵は攻撃予定';
+          } else if (hasBuff && hasDebuff) {
+            intentText = '敵はバフ・デバフ予定';
+          } else if (hasBuff) {
+            intentText = '敵は強化行動予定';
+          } else if (hasDebuff) {
+            intentText = '敵は妨害行動予定';
           }
 
           if (icons.length > 0) {
@@ -1232,13 +1260,36 @@ class Game {
 
         enemiesContainer.appendChild(enemyEl);
 
-        // ホバー時に敵の名前を表示
+        // インテントアイコンにホバーイベントリスナーを追加
+        if (intentText) {
+          const intentIcon = enemyEl.querySelector('.intent-icon');
+          if (intentIcon) {
+            intentIcon.addEventListener('mouseenter', () => {
+              const tooltip = document.createElement('div');
+              tooltip.className = 'intent-tooltip';
+              tooltip.textContent = intentText;
+              intentIcon.appendChild(tooltip);
+            });
+
+            intentIcon.addEventListener('mouseleave', () => {
+              const tooltip = intentIcon.querySelector('.intent-tooltip');
+              if (tooltip) {
+                tooltip.remove();
+              }
+            });
+          }
+        }
+
+        // ホバー時に敵の名前を表示（HPバーの上に配置）
         enemyEl.addEventListener('mouseenter', () => {
-          const tooltip = document.createElement('div');
-          tooltip.className = 'enemy-name-tooltip';
-          tooltip.textContent = enemy.name;
-          tooltip.setAttribute('data-tooltip-id', enemy.uuid);
-          enemyEl.appendChild(tooltip);
+          const entityInfo = enemyEl.querySelector('.entity-info');
+          if (entityInfo) {
+            const tooltip = document.createElement('div');
+            tooltip.className = 'enemy-name-tooltip';
+            tooltip.textContent = enemy.name;
+            tooltip.setAttribute('data-tooltip-id', enemy.uuid);
+            entityInfo.appendChild(tooltip);
+          }
         });
 
         enemyEl.addEventListener('mouseleave', () => {

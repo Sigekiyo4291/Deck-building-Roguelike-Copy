@@ -285,7 +285,27 @@ body {
 /* 敵の名前ツールチップ */
 .enemy-name-tooltip {
   position: absolute;
-  top: -35px;
+  top: 150px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.85);
+  color: #fff;
+  padding: 3px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--color-gold);
+  font-size: 0.85em;
+  font-weight: bold;
+  white-space: nowrap;
+  z-index: 1000;
+  pointer-events: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  text-shadow: 1px 1px 2px #000;
+}
+
+/* インテント（行動予定）ツールチップ */
+.intent-tooltip {
+  position: absolute;
+  top: 0px;
   left: 50%;
   transform: translateX(-50%);
   background: rgba(0, 0, 0, 0.9);
@@ -293,10 +313,10 @@ body {
   padding: 8px 16px;
   border-radius: 8px;
   border: 2px solid var(--color-gold);
-  font-size: 1.1em;
+  font-size: 0.85em;
   font-weight: bold;
   white-space: nowrap;
-  z-index: 1000;
+  z-index: 1001;
   pointer-events: none;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
   text-shadow: 1px 1px 2px #000;

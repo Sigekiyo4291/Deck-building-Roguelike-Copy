@@ -244,6 +244,23 @@ export class BattleEngine {
         }
     }
 
+    // ポーションの使用
+    usePotion(potionIndex: number, targetIndex: number = 0) {
+        const potion = this.player.potions[potionIndex];
+        if (!potion || !potion.onUse) return;
+
+        const target = this.enemies[targetIndex] || this.enemies[0];
+        potion.onUse(this.player, target, this.enemies);
+
+        // 使用したのでスロットを空ける
+        this.player.potions[potionIndex] = null;
+
+        if (this.audioManager) {
+            this.audioManager.playSe('click');
+        }
+        this.uiUpdateCallback();
+    }
+
     // プレイヤーにエフェクトを表示
     showEffectForPlayer(effectType, callback = null) {
         if (!this.effectManager) {

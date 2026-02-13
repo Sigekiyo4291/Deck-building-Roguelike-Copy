@@ -7,6 +7,7 @@ import {
     FungiBeast, AcidSlimeL, SpikeSlimeL, BlueSlaver, RedSlaver, Looter,
     GremlinNob, Lagavulin, Sentry, SlimeBoss, Guardian, Hexaghost
 } from './entity';
+import { PotionLibrary } from './potion-data';
 
 export class DebugManager {
     game: any;
@@ -51,6 +52,7 @@ export class DebugManager {
                     <button class="debug-tab" data-tab="scene">Scene</button>
                     <button class="debug-tab" data-tab="card">Card</button>
                     <button class="debug-tab" data-tab="relic">Relic</button>
+                    <button class="debug-tab" data-tab="potion">Potion</button>
                 </div>
                 <div class="debug-content" id="debug-content-battle" style="display: block;">
                     <h3>Start Battle</h3>
@@ -75,6 +77,10 @@ export class DebugManager {
                 <div class="debug-content" id="debug-content-relic" style="display: none;">
                     <h3>Add Relic</h3>
                     <div class="debug-list" id="debug-relic-list"></div>
+                </div>
+                <div class="debug-content" id="debug-content-potion" style="display: none;">
+                    <h3>Add Potion</h3>
+                    <div class="debug-list" id="debug-potion-list"></div>
                 </div>
             </div>
         `;
@@ -104,6 +110,7 @@ export class DebugManager {
         this.initSceneTab();
         this.initCardTab();
         this.initRelicTab();
+        this.initPotionTab();
     }
 
     toggleOverlay() {
@@ -257,6 +264,29 @@ export class DebugManager {
                 if (relic.onObtain) relic.onObtain(this.game.player);
                 this.game.updateRelicUI();
                 alert(`Added ${relic.name}`);
+            };
+            listContainer.appendChild(btn);
+        });
+    }
+
+    // --- Potion Tab ---
+    initPotionTab() {
+        const listContainer = document.getElementById('debug-potion-list');
+        if (!listContainer) return;
+
+        Object.values(PotionLibrary).forEach(potion => {
+            const btn = document.createElement('button');
+            btn.textContent = potion.name;
+            btn.className = 'debug-item-btn ' + potion.rarity;
+            btn.onclick = () => {
+                const emptySlotIndex = this.game.player.potions.indexOf(null);
+                if (emptySlotIndex !== -1) {
+                    this.game.player.potions[emptySlotIndex] = potion.clone();
+                    this.game.updateGlobalStatusUI();
+                    alert(`Added ${potion.name}`);
+                } else {
+                    alert('No empty potion slots!');
+                }
             };
             listContainer.appendChild(btn);
         });

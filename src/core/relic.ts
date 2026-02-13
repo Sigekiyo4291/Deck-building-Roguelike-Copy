@@ -106,5 +106,22 @@ export const RelicLibrary = {
                 owner.addBlock(6);
             }
         }
+    },
+    // Potion Related
+    POTION_BELT: new class extends Relic {
+        constructor() { super('potion_belt', 'ポーションベルト', '拾った時、ポーションスロットを2つ得る。', 'common'); }
+        onObtain(owner) {
+            owner.potionSlots += 2;
+            owner.potions.push(null, null);
+        }
+    },
+    SACRED_BARK: new class extends Relic {
+        constructor() { super('sacred_bark', '聖樹皮', 'ポーションの効果が2倍になる。', 'boss'); }
+    },
+    SOZU: new class extends Relic {
+        constructor() { super('sozu', 'ししおどし', '毎ターンエナジーを1得る。ポーションを入手できなくなる。', 'boss'); }
+        onPlayerTurnStart(owner) {
+            owner.energy += 1;
+        }
     }
 };

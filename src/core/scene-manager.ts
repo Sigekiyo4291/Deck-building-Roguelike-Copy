@@ -10,6 +10,8 @@ export class SceneManager {
     elRestScene: HTMLElement | null;
     elEventScene: HTMLElement | null;
     elTitleScene: HTMLElement | null; // タイトルシーン
+    elGlobalHeader: HTMLElement | null; // トップバー
+    elRelicContainer: HTMLElement | null; // レリックコンテナ
 
     constructor(game) {
         this.game = game;
@@ -30,6 +32,9 @@ export class SceneManager {
         // タイトルシーン
         this.elTitleScene = document.getElementById('title-scene');
 
+        // グローバル要素
+        this.elGlobalHeader = document.getElementById('global-header');
+        this.elRelicContainer = document.getElementById('relic-container');
 
         // リワードシーン用のコンテナを取得
         this.elRewardScene = document.getElementById('reward-scene');
@@ -81,6 +86,15 @@ export class SceneManager {
                     }
                 }, 500);
             }
+        }
+
+        // トップバーとレリックコンテナの表示制御（タイトル画面のみ非表示）
+        const isTitle = (newScene === this.elTitleScene);
+        if (this.elGlobalHeader) {
+            this.elGlobalHeader.style.display = isTitle ? 'none' : 'flex';
+        }
+        if (this.elRelicContainer) {
+            this.elRelicContainer.style.display = isTitle ? 'none' : 'flex';
         }
 
         this.currentScene = newScene;

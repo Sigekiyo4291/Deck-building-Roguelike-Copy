@@ -10,6 +10,7 @@ import { getRandomEvent } from './core/event-data';
 import { DebugManager } from './core/debug-manager';
 import { EffectManager } from './core/effect-manager';
 import { AudioManager } from './core/audio-manager';
+import { getRandomPotion } from './core/potion-data';
 
 const STATUS_INFO = {
   vulnerable: { name: '脆弱', desc: '受けるダメージが50%増加する。' },
@@ -60,8 +61,11 @@ class Game {
   elHand: HTMLElement | null;
   selectedCardIndex: number;
   isEliteBattle: boolean = false;
+  potionDropChance: number = 40; // ポーションドロップ率 (%)
+  currentFloor: number = 1; // 現在の階層
   currentEvent: any;
   currentEventState: any;
+  private currentPotionPopup: HTMLElement | null = null;
 
   constructor() {
     this.player = new Player();
@@ -142,21 +146,19 @@ class Game {
     // 山札パイルのクリックイベント
     const deckPile = document.getElementById('deck-pile');
     if (deckPile) {
-      deckPile.onclick = () => {
-        if (this.player.deck.length > 0) {
-          const overlay = document.getElementById('deck-selection-overlay');
-          // 実際の引き順を秘匿するため、コピーして名前順にソート
-          const sortedDeck = [...this.player.deck].sort((a, b) => a.name.localeCompare(b.name, 'ja'));
+      deckPile.onclick = () => this.showDeckView();
+    }
 
-          this.showCardSelectionFromPile('山札一覧 (名前順)', sortedDeck, null);
-          const closeBtn = document.getElementById('close-deck-selection-btn');
-          if (closeBtn && overlay) {
-            closeBtn.style.display = 'block';
-            closeBtn.onclick = () => {
-              overlay.style.display = 'none';
-            };
-          }
-        }
+    // ヘッダーボタン（StSスタイルUI）
+    const headerDeckBtn = document.getElementById('header-deck-btn');
+    if (headerDeckBtn) headerDeckBtn.onclick = () => this.showDeckView();
+
+    const headerSettingsBtn = document.getElementById('header-settings-btn');
+    if (headerSettingsBtn) {
+      headerSettingsBtn.onclick = () => {
+        const overlay = document.getElementById('settings-overlay');
+        if (overlay) overlay.style.display = 'flex';
+        this.updateSettingsUI();
       };
     }
 
@@ -167,6 +169,9 @@ class Game {
         this.onGameStart();
       };
     }
+
+    // 初期UI表示
+    this.updateGlobalStatusUI();
   }
 
   start() {
@@ -225,31 +230,16 @@ class Game {
   }
 
   renderMap() {
-    const goldEl = document.getElementById('map-gold-value');
-    if (goldEl) goldEl.textContent = String(this.player.gold);
-
-    const deckBtn = document.getElementById('map-deck-btn');
-    if (deckBtn) {
-      deckBtn.onclick = () => this.showDeckView();
-    }
-
-    const settingsBtn = document.getElementById('settings-btn');
-    if (settingsBtn) {
-      settingsBtn.onclick = () => {
-        const overlay = document.getElementById('settings-overlay');
-        if (overlay) overlay.style.display = 'flex';
-        // 現在の設定値をUIに反映
-        this.updateSettingsUI();
-      };
-    }
-
     if (this.map && this.sceneManager) {
       this.sceneManager.renderMap(this.map, (node) => this.onNodeSelect(node));
+      this.updateGlobalStatusUI(); // グローバルステータスを更新（金貨等）
       this.audioManager.playBgm('map'); // マップBGM再生
     }
   }
 
   onNodeSelect(node) {
+    this.currentFloor++; // 階層を進める
+    this.updateGlobalStatusUI(); // UI更新
     this.map.currentNode = node;
     node.isClear = true;
 
@@ -503,7 +493,7 @@ class Game {
         if (this.player.gold >= price) {
           this.player.gold -= price;
           this.player.masterDeck.push(card);
-          document.getElementById('shop-gold-value').textContent = String(this.player.gold);
+          this.updateGlobalStatusUI(); // 全体UI更新
           wrapper.classList.add('sold-out');
           alert(`${(card as any).name} を購入しました！`);
         } else {
@@ -545,8 +535,7 @@ class Game {
           this.player.gold -= price;
           this.player.relics.push(relic);
           if (relic.onObtain) relic.onObtain(this.player);
-          document.getElementById('shop-gold-value').textContent = String(this.player.gold);
-          this.updateRelicUI();
+          this.updateGlobalStatusUI(); // 全体UI更新（レリック更新も含まれる）
           wrapper.classList.add('sold-out');
           alert(`${relic.name} を購入しました！`);
         } else {
@@ -709,7 +698,7 @@ class Game {
     this.sceneManager.showBattle();
     this.battleEngine.start();
     this.updateBattleUI();
-    this.updateRelicUI(); // 初期表示
+    this.updateGlobalStatusUI(); // 初期表示（レリック、ポーション等含む）
 
     // BGM再生
     if (type === 'boss') {
@@ -759,9 +748,23 @@ class Game {
       // カード
       rewards.push({ type: 'card', taken: false });
 
-      // ポーション（30%）
-      if (Math.random() < 0.3) {
-        rewards.push({ type: 'potion', taken: false });
+      // ポーション（ドロップ率チェック）
+      const hasSozu = this.player.relics.some(r => r.id === 'sozu');
+      if (!hasSozu) {
+        if (Math.random() * 100 < this.potionDropChance) {
+          // ドロップ成功
+          const potion = getRandomPotion();
+          rewards.push({ type: 'potion', data: potion, taken: false });
+          // ドロップ率は10%減少
+          this.potionDropChance = Math.max(0, this.potionDropChance - 10);
+          console.log(`Potion dropped! Next chance: ${this.potionDropChance}%`);
+        } else {
+          // ドロップ失敗時は10%増加
+          this.potionDropChance = Math.min(100, this.potionDropChance + 10);
+          console.log(`Potion NOT dropped. Next chance: ${this.potionDropChance}%`);
+        }
+      } else {
+        console.log('Sozu equipped. No potion for you!');
       }
 
       // レリック（エリート戦なら確定）
@@ -785,7 +788,7 @@ class Game {
         let text = '';
         if (reward.type === 'gold') text = `💰 ゴールド (${reward.value})`;
         if (reward.type === 'card') text = `🎴 カードを追加`;
-        if (reward.type === 'potion') text = `🧪 ポーション`;
+        if (reward.type === 'potion') text = `🧪 ポーション: ${reward.data.name}`;
         if (reward.type === 'relic') text = `💍 レリック: ${reward.data.name}`;
 
         itemEl.textContent = text;
@@ -822,14 +825,23 @@ class Game {
       reward.taken = true;
       itemEl.style.opacity = '0.5';
       itemEl.style.textDecoration = 'line-through';
-      this.updatePlayerStatsUI(); // 所持金表示更新
-    } else if (reward.type === 'card') {
+      this.updateGlobalStatusUI(); // 所持金表示更新
+    }
+    else if (reward.type === 'card') {
       this.showCardSelection(reward, itemEl);
     } else if (reward.type === 'potion') {
-      alert('ポーションを獲得しました（未実装）');
-      reward.taken = true;
-      itemEl.style.opacity = '0.5';
-      itemEl.style.textDecoration = 'line-through';
+      // 空きスロットを探す
+      const emptySlotIndex = this.player.potions.indexOf(null);
+      if (emptySlotIndex !== -1) {
+        this.player.potions[emptySlotIndex] = reward.data;
+        alert(`ポーション「${reward.data.name}」を獲得しました！`);
+        reward.taken = true;
+        itemEl.style.opacity = '0.5';
+        itemEl.style.textDecoration = 'line-through';
+        this.updateGlobalStatusUI(); // UI更新
+      } else {
+        alert('ポーションスロットがいっぱいです！');
+      }
     } else if (reward.type === 'relic') {
       const relic = reward.data;
       this.player.relics.push(relic);
@@ -839,7 +851,120 @@ class Game {
       reward.taken = true;
       itemEl.style.opacity = '0.5';
       itemEl.style.textDecoration = 'line-through';
-      this.updateRelicUI(); // UI更新
+      this.updateGlobalStatusUI(); // 全体UIも更新（レリック含む）
+    }
+  }
+
+  updatePotionUI() {
+    const container = document.getElementById('potion-container');
+    if (!container) return;
+    container.innerHTML = '';
+
+    this.player.potions.forEach((potion, index) => {
+      const slot = document.createElement('div');
+      slot.className = 'potion-slot';
+
+      if (potion) {
+        slot.classList.add('has-potion');
+        slot.textContent = '🧪'; // 代替アイコン
+        slot.setAttribute('data-tooltip', `${potion.name}\n\n${potion.description}\n\n[クリックで使用 / 右クリックで廃棄]`);
+
+        slot.onclick = (e) => {
+          e.stopPropagation();
+          this.showPotionPopup(index, e.clientX, e.clientY);
+        };
+
+        // 右クリックでのデフォルト動作を阻止（左クリックメニューに統合するため）
+        slot.oncontextmenu = (e) => {
+          e.preventDefault();
+          this.showPotionPopup(index, e.clientX, e.clientY);
+        };
+      } else {
+        slot.classList.add('empty');
+      }
+      container.appendChild(slot);
+    });
+  }
+
+  showPotionPopup(index, x, y) {
+    this.closePotionPopup();
+
+    const potion = this.player.potions[index];
+    if (!potion) return;
+
+    const popup = document.createElement('div');
+    popup.className = 'potion-popup';
+    popup.style.left = `${x}px`;
+    popup.style.top = `${y}px`;
+
+    // 飲むボタン
+    const drinkBtn = document.createElement('button');
+    drinkBtn.className = 'potion-popup-btn';
+    drinkBtn.textContent = '🍺 飲む';
+
+    const isCombat = !!this.battleEngine;
+    const canUse = !potion.isCombatOnly || isCombat;
+
+    if (!canUse) {
+      drinkBtn.disabled = true;
+      drinkBtn.title = '戦闘中のみ使用可能です';
+    }
+
+    drinkBtn.onclick = () => {
+      this.handlePotionUse(index);
+      this.closePotionPopup();
+    };
+
+    // 捨てるボタン
+    const discardBtn = document.createElement('button');
+    discardBtn.className = 'potion-popup-btn';
+    discardBtn.textContent = '🗑️ 捨てる';
+    discardBtn.onclick = () => {
+      if (confirm(`${potion.name} を捨てますか？`)) {
+        this.player.potions[index] = null;
+        this.updatePotionUI();
+        this.updateGlobalStatusUI();
+      }
+      this.closePotionPopup();
+    };
+
+    popup.appendChild(drinkBtn);
+    popup.appendChild(discardBtn);
+    document.body.appendChild(popup);
+    this.currentPotionPopup = popup;
+
+    // クリックイベントが即座に document に伝わって閉じないように
+    popup.onclick = (e) => e.stopPropagation();
+
+    // 画面外クリックでポップアップを閉じる (少し遅延させて、このクリックで即閉じないようにする)
+    setTimeout(() => {
+      document.addEventListener('click', () => this.closePotionPopup(), { once: true });
+    }, 0);
+  }
+
+  closePotionPopup() {
+    if (this.currentPotionPopup) {
+      this.currentPotionPopup.remove();
+      this.currentPotionPopup = null;
+    }
+  }
+
+  handlePotionUse(index) {
+    const potion = this.player.potions[index];
+    if (!potion) return;
+
+    if (this.battleEngine) {
+      // 戦闘中: ターゲットが必要な場合は現在の選択または先頭の敵を使用
+      let targetIdx = this.selectedEnemyIndex;
+      if (targetIdx === undefined || targetIdx === null || targetIdx < 0) {
+        targetIdx = 0;
+      }
+      this.battleEngine.usePotion(index, targetIdx);
+    } else if (!potion.isCombatOnly) {
+      // 非戦闘中
+      potion.onUse(this.player, null, null);
+      this.player.potions[index] = null;
+      this.updateGlobalStatusUI(); // ポーションUI更新も含まれる
     }
   }
 
@@ -983,26 +1108,22 @@ class Game {
     try {
       const player = this.player;
 
+      // グローバルステータス（トップバーのHP含む）を更新
+      this.updateGlobalStatusUI();
+
       // --- Player UI Update ---
-      const playerHpFill = document.getElementById('player-hp-fill');
-      const playerHpText = document.getElementById('player-hp-text');
       const playerBlock = document.getElementById('player-block');
       const playerBlockText = document.getElementById('player-block-text');
 
-      const playerHpPercent = (player.hp / player.maxHp) * 100;
-      playerHpFill.style.width = `${playerHpPercent}%`;
-      playerHpText.textContent = `${player.hp} / ${player.maxHp}`;
-
       if (player.block > 0) {
-        playerBlock.style.width = `${playerHpPercent}%`; // ブロックバーの表示ロジックは簡易的にHPバーと同じ幅に重ねる？
-        // ブロックはHPの上に加算表示するUIが多いが、ここでは簡易実装
-        // Slay the SpireではHPバーの左に盾アイコンが出る。
-        playerBlock.style.width = '0%'; // バー表示はやめて数値のみにする
-        playerBlockText.textContent = `🛡️${player.block}`;
-        playerBlockText.style.display = 'inline';
+        if (playerBlock) playerBlock.style.width = '0%'; // バー表示はやめて数値のみにする
+        if (playerBlockText) {
+          playerBlockText.textContent = `🛡️${player.block}`;
+          playerBlockText.style.display = 'inline';
+        }
       } else {
-        playerBlock.style.width = '0%';
-        playerBlockText.style.display = 'none';
+        if (playerBlock) playerBlock.style.width = '0%';
+        if (playerBlockText) playerBlockText.style.display = 'none';
       }
 
       // プレイヤーのステータス
@@ -1362,6 +1483,28 @@ class Game {
   // onHandCardClickは不要になるので削除またはコメントアウト
   onHandCardClick(index) {
     // no-op
+  }
+
+  // グローバルステータスバー（HP, Gold, Floor）の更新
+  updateGlobalStatusUI() {
+    const hpText = document.getElementById('header-hp-text');
+    if (hpText) hpText.textContent = `${this.player.hp}/${this.player.maxHp}`;
+
+    // HPバーのシンクロ（必要なら）
+    const hpFill = document.getElementById('player-hp-fill');
+    if (hpFill) hpFill.style.width = `${(this.player.hp / this.player.maxHp) * 100}%`;
+    const hpTextBattle = document.getElementById('player-hp-text');
+    if (hpTextBattle) hpTextBattle.textContent = `${this.player.hp} / ${this.player.maxHp}`;
+
+    const goldText = document.getElementById('header-gold-text');
+    if (goldText) goldText.textContent = String(this.player.gold);
+
+    const floorText = document.getElementById('header-floor-text');
+    if (floorText) floorText.textContent = String(this.currentFloor);
+
+    // ポーションとレリックのUIも更新
+    this.updatePotionUI();
+    this.updateRelicUI();
   }
 
   onEnemyClick(enemyIndex) {

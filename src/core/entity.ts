@@ -236,12 +236,13 @@ export class Player extends Entity {
   discard: any[];
   exhaust: any[];
   gold: number;
+  potionSlots: number;
   potions: any[];
   relics: any[];
   masterDeck: any[];
 
   constructor() {
-    super('Vanguard', 50, 'assets/player.png');
+    super('Vanguard', 80, 'assets/player.png');
     this.energy = 3;
     this.maxEnergy = 3;
     this.hpLossCount = 0; // 今戦闘中にHPを失った回数
@@ -250,7 +251,8 @@ export class Player extends Entity {
     this.discard = [];
     this.exhaust = [];
     this.gold = 100;
-    this.potions = [];
+    this.potionSlots = 3;
+    this.potions = new Array(3).fill(null); // 所持枠をnullで初期化
     this.relics = []; // レリック所持リスト
 
     // マスターデッキ（所持カード）の初期化

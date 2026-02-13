@@ -15,13 +15,38 @@
 
 <body>
   <div id="app">
+    <div id="global-header" class="global-header">
+      <div class="header-left">
+        <span id="header-player-name" class="header-item player-name">Ironclad</span>
+        <div class="header-item stat-hp">
+          <span class="stat-icon">❤️</span>
+          <span id="header-hp-text">50/50</span>
+        </div>
+        <div class="header-item stat-gold">
+          <span class="stat-icon">💰</span>
+          <span id="header-gold-text">0</span>
+        </div>
+        <div id="potion-container" class="potion-container"></div>
+      </div>
+
+      <div class="header-right">
+        <div class="header-item stat-floor">
+          <span class="stat-icon">🪜</span>
+          <span id="header-floor-text">1</span>
+        </div>
+        <div class="header-buttons">
+          <button id="header-deck-btn" class="header-btn" title="デッキ閲覧">🎴</button>
+          <button id="header-settings-btn" class="header-btn" title="設定">⚙️</button>
+        </div>
+      </div>
+    </div>
+    <div id="relic-container" class="relic-container"></div>
     <div id="title-scene" class="scene active" style="display: flex;">
       <h1 class="game-title">StS Copy</h1>
       <button id="game-start-btn" class="end-turn-btn large-btn">Game Start</button>
     </div>
 
     <div class="battle-scene" style="display: none;">
-      <div id="relic-container" class="relic-container"></div>
       <!-- プレイヤー -->
       <div id="player" class="entity">
         <div class="intent-icon" style="display: none;"></div>
@@ -47,14 +72,6 @@
     </div>
 
     <div id="map-scene" class="scene" style="display: none;">
-      <div class="map-header">
-        <h2 class="scene-title">マップ選択</h2>
-        <div class="header-status">
-          <button id="map-deck-btn" class="utility-btn">🎴 デッキ</button>
-          <button id="settings-btn" class="utility-btn">⚙️ 設定</button>
-          <div class="map-gold">💰 <span id="map-gold-value">0</span>G</div>
-        </div>
-      </div>
       <div id="map-container" class="map-container">
         <!-- マップノードがここに生成されます -->
       </div>

@@ -26,7 +26,8 @@ const STATUS_INFO = {
   entangled: { name: '絡みつき', desc: 'このターン、アタックカードを使用できない。' },
   curl_up: { name: '丸まり', desc: '攻撃を受けた際、ブロックを得る。' },
   malleable: { name: '柔軟', desc: '攻撃を受けるたび、ブロックを得る。' },
-  strength_down: { name: 'フレックス', desc: 'ターン終了時、筋力を失う。' },
+  strength_down: { name: '筋力消失', desc: 'ターン終了時、筋力を失う。' },
+  dexterity_down: { name: '俊敏性消失', desc: 'ターン終了時、俊敏性を失う。' },
   no_draw: { name: 'ドロー不可', desc: 'カードを引くことができない。' },
   rage: { name: '激怒', desc: 'アタックカードをプレイするたび、ブロックを得る。' },
   double_tap: { name: 'ダブルタップ', desc: '次にプレイするアタックカードが2回発動する。' },
@@ -62,7 +63,7 @@ class Game {
   selectedCardIndex: number;
   isEliteBattle: boolean = false;
   potionDropChance: number = 40; // ポーションドロップ率 (%)
-  currentFloor: number = 1; // 現在の階層
+  currentFloor: number = 0; // 現在の階層
   currentEvent: any;
   currentEventState: any;
   private currentPotionPopup: HTMLElement | null = null;
@@ -1260,6 +1261,8 @@ class Game {
       let iconChar = '❓';
       if (status.type === 'vulnerable') iconChar = '💔';
       if (status.type === 'strength') iconChar = '💪';
+      if (status.type === 'strength_down') iconChar = '🥱';
+      if (status.type === 'dexterity_down') iconChar = '🐢';
       if (status.type === 'weak') iconChar = '📉';
       if (status.type === 'frail') iconChar = '🥀';
       if (status.type === 'dexterity') iconChar = '👟';

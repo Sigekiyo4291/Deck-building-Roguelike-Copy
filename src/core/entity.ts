@@ -200,6 +200,12 @@ export class Entity {
         s.value = 0; // 値を0にして削除対象にする
       }
 
+      // スピード(dexterity_down): ターン終了時に敏捷性を失う
+      if (s.type === 'dexterity_down') {
+        this.addStatus('dexterity', -s.value);
+        s.value = 0; // 値を0にして削除対象にする
+      }
+
       // 儀式(ritual): ターン終了時に筋力を得る
       if (s.type === 'ritual') {
         this.addStatus('strength', s.value);

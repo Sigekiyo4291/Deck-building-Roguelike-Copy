@@ -282,6 +282,26 @@ body {
   text-shadow: 1px 1px 1px #000;
 }
 
+/* 敵の名前ツールチップ */
+.enemy-name-tooltip {
+  position: absolute;
+  top: -35px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.9);
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 2px solid var(--color-gold);
+  font-size: 1.1em;
+  font-weight: bold;
+  white-space: nowrap;
+  z-index: 1000;
+  pointer-events: none;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+  text-shadow: 1px 1px 2px #000;
+}
+
 
 /* --- UI Layer --- */
 .ui-layer {

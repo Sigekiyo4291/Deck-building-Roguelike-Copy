@@ -1232,6 +1232,22 @@ class Game {
 
         enemiesContainer.appendChild(enemyEl);
 
+        // ホバー時に敵の名前を表示
+        enemyEl.addEventListener('mouseenter', () => {
+          const tooltip = document.createElement('div');
+          tooltip.className = 'enemy-name-tooltip';
+          tooltip.textContent = enemy.name;
+          tooltip.setAttribute('data-tooltip-id', enemy.uuid);
+          enemyEl.appendChild(tooltip);
+        });
+
+        enemyEl.addEventListener('mouseleave', () => {
+          const tooltip = enemyEl.querySelector('.enemy-name-tooltip');
+          if (tooltip) {
+            tooltip.remove();
+          }
+        });
+
         // ステータスアイコン生成
         this.updateStatusUI(enemy, `enemy-status-${index}`);
       });

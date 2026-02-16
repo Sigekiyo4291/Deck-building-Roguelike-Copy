@@ -17,6 +17,15 @@ body {
   font-family: var(--font-main);
   overflow: hidden;
   user-select: none;
+  /* タッチデバイス用の設定 */
+  touch-action: manipulation;
+  /* ダブルタップズームを無効化 */
+  -webkit-tap-highlight-color: transparent;
+  /* タップ時のハイライトを除去 */
+  -webkit-touch-callout: none;
+  /* 長押しメニューを無効化 */
+  overscroll-behavior: none;
+  /* スクロールの跳ね返りを防止 */
 }
 
 #app {
@@ -523,6 +532,7 @@ body {
   border: none;
   background: #c9c18a;
   border-radius: 18px;
+  touch-action: none;
 }
 
 .card:hover {
@@ -2262,3 +2272,515 @@ body {
 }
 
 /* ツールチップの改善 */
+/* ========================================
+   モバイル・タブレット対応
+   ======================================== */
+
+/* 縦向き警告オーバーレイ */
+.orientation-warning {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.95);
+  z-index: 9999;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  color: white;
+  text-align: center;
+  padding: 20px;
+}
+
+.orientation-warning-icon {
+  font-size: 80px;
+  margin-bottom: 20px;
+  animation: rotate-phone 2s ease-in-out infinite;
+}
+
+@keyframes rotate-phone {
+
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+
+  50% {
+    transform: rotate(90deg);
+  }
+}
+
+.orientation-warning-text {
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.orientation-warning-subtext {
+  font-size: 1rem;
+  opacity: 0.8;
+}
+
+/* モバイル縦向き: 警告を表示 */
+@media (max-width: 768px) and (orientation: portrait) {
+  .orientation-warning {
+    display: flex;
+  }
+}
+
+/* タブレット・モバイル共通（横向き） */
+@media (max-width: 1024px) and (orientation: landscape) {
+  :root {
+    --card-width: 110px;
+    --card-height: 165px;
+  }
+
+  /* グローバルヘッダーの調整 */
+  .global-header {
+    padding: 5px 10px;
+    font-size: 0.85rem;
+  }
+
+  .header-item {
+    padding: 3px 8px;
+  }
+
+  .stat-icon {
+    font-size: 1rem;
+  }
+
+  /* レリックコンテナの調整 */
+  .relic-container {
+    gap: 3px;
+    padding: 3px 8px;
+  }
+
+  .relic-icon {
+    width: 28px;
+    height: 28px;
+    font-size: 0.7rem;
+  }
+
+  /* ポーションスロットの調整 */
+  .potion-slot {
+    width: 28px;
+    height: 28px;
+    font-size: 0.8rem;
+  }
+
+  /* バトルシーンの調整 */
+  .battle-scene {
+    padding: 30px 10px 200px 10px;
+  }
+
+  /* エンティティ（プレイヤー・敵）のサイズ調整 */
+  .entity-sprite {
+    width: 140px;
+    height: 140px;
+  }
+
+  .hp-bar-container {
+    width: 120px;
+    height: 12px;
+  }
+
+  .status-text {
+    font-size: 0.9rem;
+  }
+
+  /* 敵コンテナの調整 */
+  .enemies-container {
+    gap: 15px;
+    min-height: 200px;
+  }
+
+  /* インテントアイコンの調整 */
+  .intent-icon {
+    min-width: 35px;
+    height: 35px;
+    font-size: 1rem;
+  }
+
+  /* 手札エリアの調整 */
+  .hand {
+    height: 180px;
+    width: 90%;
+  }
+
+  /* カードの調整 */
+  .card {
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
+  }
+
+  .card:hover {
+    transform: translateY(-30px) scale(1.1);
+  }
+
+  .card-title {
+    font-size: 0.9em;
+  }
+
+  .card-desc {
+    font-size: 0.75em;
+  }
+
+  .card-cost-icon {
+    width: 30px;
+    height: 30px;
+    font-size: 1.1em;
+  }
+
+  .card-type-label {
+    font-size: 0.65em;
+    padding: 1px 10px;
+  }
+
+  /* UI要素の調整 */
+  .deck-pile,
+  .discard-pile {
+    width: 50px;
+    height: 70px;
+    bottom: 15px;
+  }
+
+  .deck-pile {
+    left: 15px;
+  }
+
+  .discard-pile {
+    right: 15px;
+  }
+
+  .exhaust-pile {
+    width: 35px;
+    height: 35px;
+    bottom: 95px;
+    right: 25px;
+  }
+
+  .pile-count {
+    font-size: 1.5em;
+  }
+
+  .energy-display {
+    width: 65px;
+    height: 65px;
+    bottom: 95px;
+    left: 30px;
+  }
+
+  .energy-display span {
+    font-size: 32px;
+  }
+
+  /* ターン終了ボタンの調整 */
+  #end-turn-btn {
+    bottom: 140px;
+    right: 15px;
+    padding: 8px 24px;
+    font-size: 1rem;
+  }
+
+  /* シーンタイトルの調整 */
+  .scene-title {
+    font-size: 1.8rem;
+  }
+
+  /* ボタンの調整（タッチしやすいサイズ） */
+  .end-turn-btn {
+    padding: 12px 28px;
+    font-size: 1.1rem;
+    min-height: 44px;
+    /* タッチターゲットの推奨サイズ */
+  }
+
+  /* マップノードの調整 */
+  .map-node {
+    width: 50px;
+    height: 50px;
+    font-size: 28px;
+  }
+
+  /* カード報酬の調整 */
+  .card-choices .card {
+    transform: scale(1);
+  }
+
+  .card-choices .card:hover {
+    transform: scale(1.1) translateY(-5px);
+  }
+
+  /* オーバーレイコンテナの調整 */
+  .card-reward-container {
+    max-width: 95%;
+  }
+
+  /* リワードリストの調整 */
+  .reward-list {
+    width: 90%;
+    max-width: 350px;
+  }
+
+  /* ショップの調整 */
+  .shop-item-wrapper {
+    transform: scale(0.9);
+  }
+
+  /* 休憩所の調整 */
+  .rest-option-btn {
+    padding: 15px;
+    font-size: 1rem;
+  }
+}
+
+/* スマートフォン（横向き）専用の追加調整 */
+@media (max-width: 768px) and (orientation: landscape) {
+  :root {
+    --card-width: 95px;
+    --card-height: 142px;
+  }
+
+  /* さらに小さい画面用の調整 */
+  .global-header {
+    font-size: 0.75rem;
+    padding: 3px 8px;
+  }
+
+  .header-item {
+    padding: 2px 6px;
+  }
+
+  .relic-icon {
+    width: 24px;
+    height: 24px;
+    font-size: 0.6rem;
+  }
+
+  .potion-slot {
+    width: 24px;
+    height: 24px;
+    font-size: 0.7rem;
+  }
+
+  .battle-scene {
+    padding: 20px 8px 170px 8px;
+  }
+
+  .entity-sprite {
+    width: 110px;
+    height: 110px;
+  }
+
+  .hp-bar-container {
+    width: 100px;
+    height: 10px;
+  }
+
+  .status-text {
+    font-size: 0.8rem;
+  }
+
+  .enemies-container {
+    gap: 10px;
+    min-height: 150px;
+  }
+
+  .intent-icon {
+    min-width: 30px;
+    height: 30px;
+    font-size: 0.9rem;
+  }
+
+  .hand {
+    height: 155px;
+    width: 95%;
+  }
+
+  .card-title {
+    font-size: 0.8em;
+  }
+
+  .card-desc {
+    font-size: 0.65em;
+    line-height: 1.1;
+  }
+
+  .card-cost-icon {
+    width: 26px;
+    height: 26px;
+    font-size: 1em;
+  }
+
+  .card-type-label {
+    font-size: 0.6em;
+    padding: 1px 8px;
+  }
+
+  .deck-pile,
+  .discard-pile {
+    width: 45px;
+    height: 60px;
+    bottom: 12px;
+  }
+
+  .deck-pile {
+    left: 12px;
+  }
+
+  .discard-pile {
+    right: 12px;
+  }
+
+  .exhaust-pile {
+    width: 30px;
+    height: 30px;
+    bottom: 80px;
+    right: 20px;
+  }
+
+  .pile-count {
+    font-size: 1.3em;
+  }
+
+  .energy-display {
+    width: 55px;
+    height: 55px;
+    bottom: 80px;
+    left: 25px;
+  }
+
+  .energy-display span {
+    font-size: 26px;
+  }
+
+  #end-turn-btn {
+    bottom: 120px;
+    right: 12px;
+    padding: 6px 20px;
+    font-size: 0.9rem;
+  }
+
+  .scene-title {
+    font-size: 1.5rem;
+  }
+
+  .end-turn-btn {
+    padding: 10px 24px;
+    font-size: 1rem;
+  }
+
+  .map-node {
+    width: 45px;
+    height: 45px;
+    font-size: 24px;
+  }
+
+  /* カード選択画面の調整 */
+  .card-choices {
+    gap: 10px;
+    margin: 20px 0;
+  }
+
+  .reward-list {
+    width: 95%;
+    max-width: 300px;
+    padding: 15px;
+  }
+
+  .reward-item {
+    padding: 10px;
+    font-size: 0.9rem;
+  }
+}
+
+/* タッチ操作の改善 */
+@media (hover: none) and (pointer: coarse) {
+  /* タッチデバイス専用のスタイル */
+
+  /* ホバー効果を無効化または調整 */
+  .card:hover {
+    transform: none;
+    /* タッチデバイスではホバー時の拡大を無効化 */
+  }
+
+  /* タップ時のアクティブ状態を追加 */
+  .card:active {
+    transform: scale(0.95);
+    opacity: 0.9;
+  }
+
+  .end-turn-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  }
+
+  .map-node:active {
+    transform: scale(0.95);
+  }
+
+  /* ボタンのタップ領域を拡大 */
+  .end-turn-btn,
+  .header-btn,
+  .rest-option-btn {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* ツールチップをタップで表示 */
+  .relic-icon:active::after,
+  .status-icon:active::after,
+  .potion-slot.has-potion:active::after {
+    display: block;
+  }
+}
+
+/* 超小型デバイス（iPhone SE等） */
+@media (max-width: 568px) and (orientation: landscape) {
+  :root {
+    --card-width: 85px;
+    --card-height: 127px;
+  }
+
+  .global-header {
+    font-size: 0.7rem;
+  }
+
+  .battle-scene {
+    padding: 15px 5px 150px 5px;
+  }
+
+  .entity-sprite {
+    width: 90px;
+    height: 90px;
+  }
+
+  .hand {
+    height: 140px;
+  }
+
+  .card-title {
+    font-size: 0.7em;
+  }
+
+  .card-desc {
+    font-size: 0.6em;
+  }
+
+  #end-turn-btn {
+    bottom: 105px;
+    padding: 5px 16px;
+    font-size: 0.85rem;
+  }
+
+  .energy-display {
+    width: 50px;
+    height: 50px;
+    bottom: 70px;
+  }
+
+  .energy-display span {
+    font-size: 22px;
+  }
+}

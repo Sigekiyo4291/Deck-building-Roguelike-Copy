@@ -5,7 +5,8 @@
   <meta charset="UTF-8" />
   <link rel="icon" type="image/svg+xml" href="vite.svg" />
   <link rel="stylesheet" href="src/style.css">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>Card Crawler Web</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,6 +15,13 @@
 </head>
 
 <body>
+  <!-- 縦向き警告オーバーレイ（モバイル専用） -->
+  <div class="orientation-warning">
+    <div class="orientation-warning-icon">📱</div>
+    <div class="orientation-warning-text">横向きでプレイすることを推奨します</div>
+    <div class="orientation-warning-subtext">デバイスを回転させてください</div>
+  </div>
+
   <div id="app">
     <div id="global-header" class="global-header">
       <div class="header-left">

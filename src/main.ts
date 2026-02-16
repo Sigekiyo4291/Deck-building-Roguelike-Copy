@@ -1477,14 +1477,16 @@ class Game {
 
     cardEl.onpointerdown = (e) => {
       if (this.battleEngine.phase !== 'player') return;
-      e.preventDefault();
-      e.stopPropagation();
 
       isDragging = true;
       startX = e.clientX;
       startY = e.clientY;
       cardEl.classList.add('dragging');
       cardEl.setPointerCapture(e.pointerId);
+
+      // preventDefaultは最後に配置（または必要な場合のみ）
+      if (e.cancelable) e.preventDefault();
+      e.stopPropagation();
     };
 
     cardEl.onpointermove = (e) => {
@@ -1503,7 +1505,9 @@ class Game {
       cardEl.releasePointerCapture(e.pointerId);
 
       const dy = e.clientY - startY;
-      const threshold = -150;
+      // 画面サイズに応じてスワイプ閾値を調整（モバイルでは感度を上げる）
+      const isMobile = window.innerWidth <= 768;
+      const threshold = isMobile ? -100 : -150;
 
       if (dy < threshold) {
         this.tryPlayCard(index);

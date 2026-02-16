@@ -661,8 +661,10 @@ class Game {
     removalPriceEl.textContent = `${removalPrice}`;
 
     removalBtn.onclick = () => {
+      // すでに売り切れ（1回使用済み）なら何もしない
+      if (removalWrapper.classList.contains('sold-out')) return;
+
       if (this.player.gold >= removalPrice) {
-        // カード削除UIを表示（既存のデッキ表示UIなどを利用）
         this.showCardRemovalUI(removalPrice, removalWrapper);
       } else {
         alert('ゴールドが足りません！');
@@ -672,6 +674,13 @@ class Game {
     removalWrapper.appendChild(removalBtn);
     removalWrapper.appendChild(removalPriceEl);
     removalServiceContainer.appendChild(removalWrapper);
+
+    // ショップコンテナの下部に余白を持たせ、ボタンの重なりを軽減
+    const shopContainer = document.querySelector('.shop-container') as HTMLElement;
+    if (shopContainer) {
+      shopContainer.style.paddingBottom = '120px';
+      shopContainer.style.position = 'relative';
+    }
 
     document.getElementById('shop-leave-btn').onclick = async () => {
       this.map.updateAvailableNodes();
@@ -698,16 +707,35 @@ class Game {
     list.className = 'deck-list';
 
     this.player.masterDeck.forEach((card, idx) => {
-      const cardEl = this.createCardElement(card, idx);
-      cardEl.onclick = () => {
+      // createCardElementはドラッグ等の複雑なイベントを持つため、シンプルな表示用のcreateRewardCardElementを使用
+      const cardEl = this.createRewardCardElement(card);
+      cardEl.style.cursor = 'pointer';
+
+      cardEl.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        console.log(`Card removal start: ${card.name}, idx: ${idx}, price: ${price}`);
+
         if (confirm(`${(card as any).name} を削除しますか？`)) {
+          // デッキから削除
           this.player.masterDeck.splice(idx, 1);
           this.player.gold -= price;
           this.player.cardRemovalCount = (this.player.cardRemovalCount || 0) + 1;
+
+          console.log(`Card removed. New gold: ${this.player.gold}, Count: ${this.player.cardRemovalCount}`);
+
           this.updateGlobalStatusUI();
-          document.getElementById('shop-gold-value').textContent = String(this.player.gold);
+          const goldVal = document.getElementById('shop-gold-value');
+          if (goldVal) goldVal.textContent = String(this.player.gold);
+
+          // ショップ側の表示を「売切」にする
           wrapper.classList.add('sold-out');
-          document.body.removeChild(overlay);
+
+          // UIを閉じる
+          if (overlay.parentNode) {
+            document.body.removeChild(overlay);
+          }
         }
       };
       list.appendChild(cardEl);
@@ -718,7 +746,13 @@ class Game {
     const closeBtn = document.createElement('button');
     closeBtn.className = 'end-turn-btn';
     closeBtn.textContent = 'キャンセル';
-    closeBtn.onclick = () => document.body.removeChild(overlay);
+    closeBtn.style.marginTop = '20px';
+    closeBtn.onclick = (e) => {
+      e.stopPropagation();
+      if (overlay.parentNode) {
+        document.body.removeChild(overlay);
+      }
+    };
     content.appendChild(closeBtn);
 
     overlay.appendChild(content);

@@ -1286,6 +1286,59 @@ body {
   flex-wrap: wrap;
   gap: 25px;
   justify-content: center;
+  padding-bottom: 80px;
+  /* 立ち去るボタンとの重なり防止 */
+}
+
+/* デッキオーバーレイ（カード削除UIなど） */
+.deck-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 5000;
+  backdrop-filter: blur(5px);
+}
+
+.deck-content {
+  background: #2c3e50;
+  border: 3px solid var(--color-gold);
+  border-radius: 15px;
+  width: 90%;
+  max-width: 1000px;
+  max-height: 85%;
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
+}
+
+.deck-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+  overflow-y: auto;
+  width: 100%;
+  margin: 20px 0;
+  padding: 10px;
+}
+
+.deck-list .card {
+  transform: scale(0.85);
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.deck-list .card:hover {
+  transform: scale(0.95) translateY(-10px);
+  filter: brightness(1.2);
 }
 
 .relic-potion-grid {
@@ -1334,32 +1387,50 @@ body {
   border-radius: 5px;
 }
 
+.shop-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 98%;
+  height: 95%;
+  max-width: 1400px;
+  background-color: #3b4d45;
+  /* 画像に近い深緑グレー */
+  background: radial-gradient(circle at center, #4a5d54 0%, #2c3933 100%);
+  padding: 30px;
+  border-radius: 20px;
+  border: 4px solid #5d4a3e;
+  /* 木枠のような色 */
+  box-shadow: 0 0 50px rgba(0, 0, 0, 0.9), inset 0 0 100px rgba(0, 0, 0, 0.5);
+  position: relative;
+  overflow-y: auto;
+  /* コンテンツが多い場合にスクロール可能に */
+  padding-bottom: 120px;
+  /* 立ち去るボタン用のスペース */
+}
+
 .leave-banner-btn {
   position: absolute;
-  bottom: 80px;
+  bottom: 30px;
   left: 0;
-  background: #872e24;
+  background: #c0392b;
   color: #fff;
-  font-size: 22px;
+  font-size: 24px;
   font-weight: bold;
-  padding: 12px 60px 12px 40px;
+  padding: 15px 70px 15px 50px;
   border: none;
   cursor: pointer;
   z-index: 200;
   clip-path: polygon(0 0, 85% 0, 100% 50%, 85% 100%, 0 100%);
-  box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.5);
-  transition: all 0.2s;
-  border-left: 5px solid #c0392b;
+  box-shadow: 4px 4px 15px rgba(0, 0, 0, 0.6);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  border-left: 8px solid #962d22;
 }
 
 .leave-banner-btn:hover {
-  padding-left: 50px;
-  background: #a93226;
-  filter: brightness(1.2);
-}
-
-.leave-banner-btn:active {
-  transform: scale(0.95);
+  padding-left: 70px;
+  background: #e74c3c;
+  transform: translateX(10px);
 }
 
 .shop-gold-display {
@@ -1387,8 +1458,8 @@ body {
 
 /* カード削除サービス */
 .card-removal-btn {
-  width: 180px;
-  height: 240px;
+  width: 140px;
+  height: 190px;
   background: rgba(255, 255, 255, 0.1);
   border: 2px dashed #aaa;
   border-radius: 10px;
@@ -1400,7 +1471,7 @@ body {
   transition: all 0.3s;
   color: #fff;
   text-align: center;
-  padding: 20px;
+  padding: 10px;
   background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('assets/images/ui/card_back.png');
   background-size: cover;
 }
@@ -1412,14 +1483,14 @@ body {
 }
 
 .card-removal-btn .title {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: bold;
-  margin-bottom: 10px;
+  margin-bottom: 5px;
   color: var(--color-gold);
 }
 
 .card-removal-btn .desc {
-  font-size: 14px;
+  font-size: 12px;
   opacity: 0.8;
 }
 

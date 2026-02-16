@@ -246,6 +246,7 @@ export class Player extends Entity {
   potions: any[];
   relics: any[];
   masterDeck: any[];
+  cardRemovalCount: number;
 
   constructor() {
     super('Vanguard', 80, 'assets/player.png');
@@ -260,6 +261,7 @@ export class Player extends Entity {
     this.potionSlots = 3;
     this.potions = new Array(3).fill(null); // 所持枠をnullで初期化
     this.relics = []; // レリック所持リスト
+    this.cardRemovalCount = 0;
 
     // マスターデッキ（所持カード）の初期化
     this.masterDeck = [];

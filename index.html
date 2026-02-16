@@ -115,22 +115,35 @@
     </div>
 
     <div id="shop-scene" class="scene" style="display: none;">
-      <h2 class="scene-title">商人</h2>
       <div class="shop-container">
-        <div class="shop-header">
-          <div class="shop-gold-display">所持金: <span id="shop-gold-value">0</span>G</div>
-          <button id="shop-leave-btn" class="end-turn-btn">立ち去る</button>
+        <!-- 上段: カード 5種類 -->
+        <div class="shop-row-top">
+          <div id="shop-cards-top" class="shop-item-list"></div>
         </div>
-        <div class="shop-sections">
-          <div class="shop-section">
-            <h3 class="shop-section-title">カード</h3>
-            <div id="shop-cards" class="shop-item-list"></div>
+
+        <!-- 下段: 共通カード、レリック、ポーション、カード削除 -->
+        <div class="shop-row-bottom">
+          <!-- 左下: 共通クラスカード 2種類 -->
+          <div class="shop-bottom-left">
+            <div id="shop-cards-bottom-left" class="shop-item-list"></div>
           </div>
-          <div class="shop-section">
-            <h3 class="shop-section-title">レリック</h3>
-            <div id="shop-relics" class="shop-item-list"></div>
+
+          <!-- 中央下: レリック 3つ & ポーション 3つ -->
+          <div class="shop-bottom-center">
+            <div id="shop-relics-center" class="shop-item-list relic-potion-grid"></div>
+            <div id="shop-potions-center" class="shop-item-list relic-potion-grid"></div>
+          </div>
+
+          <!-- 右下: カード削除 -->
+          <div class="shop-bottom-right">
+            <div id="shop-removal-service" class="shop-item-list"></div>
           </div>
         </div>
+
+        <div class="shop-footer">
+          <div class="shop-gold-display">💰 <span id="shop-gold-value">0</span></div>
+        </div>
+        <button id="shop-leave-btn" class="leave-banner-btn">立ち去る</button>
       </div>
     </div>
 

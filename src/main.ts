@@ -483,32 +483,47 @@ class Game {
     this.audioManager.playBgm('map'); // ショップ中もマップBGM
     document.getElementById('shop-gold-value').textContent = String(this.player.gold);
 
-    const cardsContainer = document.getElementById('shop-cards');
-    const relicsContainer = document.getElementById('shop-relics');
-    cardsContainer.innerHTML = '';
-    relicsContainer.innerHTML = '';
+    const cardsTopContainer = document.getElementById('shop-cards-top');
+    const cardsBottomLeftContainer = document.getElementById('shop-cards-bottom-left');
+    const relicsCenterContainer = document.getElementById('shop-relics-center');
+    const potionsCenterContainer = document.getElementById('shop-potions-center');
+    const removalServiceContainer = document.getElementById('shop-removal-service');
 
-    // カード商品の生成 (5枚)
+    // コンテナのクリア
+    [cardsTopContainer, cardsBottomLeftContainer, relicsCenterContainer, potionsCenterContainer, removalServiceContainer].forEach(c => {
+      if (c) c.innerHTML = '';
+    });
+
     const cardKeys = Object.keys(CardLibrary);
+
+    // 1. 上段カード商品の生成 (5枚)
     for (let i = 0; i < 5; i++) {
       const card = CardLibrary[cardKeys[Math.floor(Math.random() * cardKeys.length)]].clone();
-      const price = 50 + Math.floor(Math.random() * 30);
+      const price = 50 + Math.floor(Math.random() * 50); // 50-100G
 
       const wrapper = document.createElement('div');
       wrapper.className = 'shop-item-wrapper';
 
+      // 画像にあるような赤いセールタグを1枚だけに付ける例
+      if (i === 2) {
+        const saleTag = document.createElement('div');
+        saleTag.className = 'sale-tag';
+        saleTag.textContent = '特売';
+        wrapper.appendChild(saleTag);
+      }
+
       const cardEl = this.createRewardCardElement(card);
       const priceEl = document.createElement('div');
       priceEl.className = 'shop-price';
-      priceEl.textContent = `${price}G`;
+      priceEl.textContent = `${price}`;
 
       cardEl.onclick = () => {
         if (this.player.gold >= price) {
           this.player.gold -= price;
           this.player.masterDeck.push(card);
-          this.updateGlobalStatusUI(); // 全体UI更新
+          this.updateGlobalStatusUI();
           wrapper.classList.add('sold-out');
-          alert(`${(card as any).name} を購入しました！`);
+          document.getElementById('shop-gold-value').textContent = String(this.player.gold);
         } else {
           alert('ゴールドが足りません！');
         }
@@ -516,20 +531,50 @@ class Game {
 
       wrapper.appendChild(cardEl);
       wrapper.appendChild(priceEl);
-      cardsContainer.appendChild(wrapper);
+      cardsTopContainer.appendChild(wrapper);
     }
 
-    // レリック商品の生成 (2個)
+    // 2. 下段左: 共通クラスカード (2枚)
+    // 現在はランダムなカードをプレースホルダーとして使用
+    for (let i = 0; i < 2; i++) {
+      const card = CardLibrary[cardKeys[Math.floor(Math.random() * cardKeys.length)]].clone();
+      const price = 100 + Math.floor(Math.random() * 120); // 画像では高め（105, 211など）
+
+      const wrapper = document.createElement('div');
+      wrapper.className = 'shop-item-wrapper';
+      const cardEl = this.createRewardCardElement(card);
+      const priceEl = document.createElement('div');
+      priceEl.className = 'shop-price';
+      priceEl.textContent = `${price}`;
+
+      cardEl.onclick = () => {
+        if (this.player.gold >= price) {
+          this.player.gold -= price;
+          this.player.masterDeck.push(card);
+          this.updateGlobalStatusUI();
+          wrapper.classList.add('sold-out');
+          document.getElementById('shop-gold-value').textContent = String(this.player.gold);
+        } else {
+          alert('ゴールドが足りません！');
+        }
+      };
+
+      wrapper.appendChild(cardEl);
+      wrapper.appendChild(priceEl);
+      cardsBottomLeftContainer.appendChild(wrapper);
+    }
+
+    // 3. 下段中央: レリック (3個)
     const ownedIds = this.player.relics.map(r => r.id);
     const candidateRelics = Object.values(RelicLibrary).filter(r =>
       !ownedIds.includes(r.id) && r.rarity !== 'starter' && r.rarity !== 'boss'
     );
 
-    for (let i = 0; i < 2; i++) {
+    for (let i = 0; i < 3; i++) {
       if (candidateRelics.length === 0) break;
       const idx = Math.floor(Math.random() * candidateRelics.length);
       const relic = candidateRelics.splice(idx, 1)[0];
-      const price = 150 + Math.floor(Math.random() * 100);
+      const price = 150 + Math.floor(Math.random() * 180); // 150-330G
 
       const wrapper = document.createElement('div');
       wrapper.className = 'shop-item-wrapper';
@@ -541,16 +586,16 @@ class Game {
 
       const priceEl = document.createElement('div');
       priceEl.className = 'shop-price';
-      priceEl.textContent = `${price}G`;
+      priceEl.textContent = `${price}`;
 
       relicEl.onclick = () => {
         if (this.player.gold >= price) {
           this.player.gold -= price;
           this.player.relics.push(relic);
           if (relic.onObtain) relic.onObtain(this.player);
-          this.updateGlobalStatusUI(); // 全体UI更新（レリック更新も含まれる）
+          this.updateGlobalStatusUI();
           wrapper.classList.add('sold-out');
-          alert(`${relic.name} を購入しました！`);
+          document.getElementById('shop-gold-value').textContent = String(this.player.gold);
         } else {
           alert('ゴールドが足りません！');
         }
@@ -558,8 +603,75 @@ class Game {
 
       wrapper.appendChild(relicEl);
       wrapper.appendChild(priceEl);
-      relicsContainer.appendChild(wrapper);
+      relicsCenterContainer.appendChild(wrapper);
     }
+
+    // 4. 下段中央: ポーション (3個)
+    // ポーションライブラリがまだない場合はプレースホルダー
+    const potionLibrary = (window as any).PotionLibrary || {};
+    const potionKeys = Object.keys(potionLibrary);
+    for (let i = 0; i < 3; i++) {
+      const price = 50 + Math.floor(Math.random() * 40); // 50-90G
+      const wrapper = document.createElement('div');
+      wrapper.className = 'shop-item-wrapper';
+
+      const potionEl = document.createElement('div');
+      potionEl.className = 'potion-slot empty'; // プレースホルダー
+      potionEl.textContent = '🧪';
+
+      const priceEl = document.createElement('div');
+      priceEl.className = 'shop-price';
+      priceEl.textContent = `${price}`;
+
+      potionEl.onclick = () => {
+        if (this.player.gold >= price) {
+          if (this.player.potions.length < 3) {
+            this.player.gold -= price;
+            // 本来はポーションを生成して追加
+            this.updateGlobalStatusUI();
+            wrapper.classList.add('sold-out');
+            document.getElementById('shop-gold-value').textContent = String(this.player.gold);
+          } else {
+            alert('ポーションのスロットがいっぱいです！');
+          }
+        } else {
+          alert('ゴールドが足りません！');
+        }
+      };
+
+      wrapper.appendChild(potionEl);
+      wrapper.appendChild(priceEl);
+      potionsCenterContainer.appendChild(wrapper);
+    }
+
+    // 5. 下段右: カード削除サービス
+    const removalPrice = 75 + (this.player.cardRemovalCount || 0) * 25;
+    const removalWrapper = document.createElement('div');
+    removalWrapper.className = 'shop-item-wrapper';
+
+    const removalBtn = document.createElement('div');
+    removalBtn.className = 'card-removal-btn';
+    removalBtn.innerHTML = `
+      <div class="title">カード除去</div>
+      <div class="desc">デッキからカードを1枚取り除きます</div>
+    `;
+
+    const removalPriceEl = document.createElement('div');
+    removalPriceEl.className = 'shop-price';
+    removalPriceEl.textContent = `${removalPrice}`;
+
+    removalBtn.onclick = () => {
+      if (this.player.gold >= removalPrice) {
+        // カード削除UIを表示（既存のデッキ表示UIなどを利用）
+        this.showCardRemovalUI(removalPrice, removalWrapper);
+      } else {
+        alert('ゴールドが足りません！');
+      }
+    };
+
+    removalWrapper.appendChild(removalBtn);
+    removalWrapper.appendChild(removalPriceEl);
+    removalServiceContainer.appendChild(removalWrapper);
 
     document.getElementById('shop-leave-btn').onclick = async () => {
       this.map.updateAvailableNodes();
@@ -567,6 +679,50 @@ class Game {
       this.renderMap();
       await transition;
     };
+  }
+
+  // カード削除UIの表示
+  showCardRemovalUI(price: number, wrapper: HTMLElement) {
+    const overlay = document.createElement('div');
+    overlay.className = 'deck-overlay';
+
+    const content = document.createElement('div');
+    content.className = 'deck-content';
+
+    const title = document.createElement('h2');
+    title.textContent = '削除するカードを選択してください';
+    title.style.color = '#fff';
+    content.appendChild(title);
+
+    const list = document.createElement('div');
+    list.className = 'deck-list';
+
+    this.player.masterDeck.forEach((card, idx) => {
+      const cardEl = this.createCardElement(card, idx);
+      cardEl.onclick = () => {
+        if (confirm(`${(card as any).name} を削除しますか？`)) {
+          this.player.masterDeck.splice(idx, 1);
+          this.player.gold -= price;
+          this.player.cardRemovalCount = (this.player.cardRemovalCount || 0) + 1;
+          this.updateGlobalStatusUI();
+          document.getElementById('shop-gold-value').textContent = String(this.player.gold);
+          wrapper.classList.add('sold-out');
+          document.body.removeChild(overlay);
+        }
+      };
+      list.appendChild(cardEl);
+    });
+
+    content.appendChild(list);
+
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'end-turn-btn';
+    closeBtn.textContent = 'キャンセル';
+    closeBtn.onclick = () => document.body.removeChild(overlay);
+    content.appendChild(closeBtn);
+
+    overlay.appendChild(content);
+    document.body.appendChild(overlay);
   }
 
   showTreasureScene() {

@@ -2321,7 +2321,7 @@ export const CardLibrary = {
         id: 'wound',
         name: '負傷',
         cost: -1,
-        type: 'curse',
+        type: 'status',
         rarity: 'common',
         description: '使用できないカード。',
         isStatus: true,
@@ -2334,7 +2334,7 @@ export const CardLibrary = {
         id: 'dazed',
         name: 'めまい',
         cost: -1,
-        type: 'curse',
+        type: 'status',
         rarity: 'common',
         description: '使用できない。エセリアル。',
         isStatus: true,
@@ -2348,12 +2348,26 @@ export const CardLibrary = {
         id: 'burn',
         name: '火傷',
         cost: -1,
-        type: 'curse',
+        type: 'status',
         rarity: 'common',
         description: '使用できない。ターン終了時に手札にあると2ダメージ。',
         isStatus: true,
         effect: (s, t) => {
             // 使用不可
+        },
+        targetType: 'self'
+    }),
+    SLIMED: new Card({
+        id: 'slimed',
+        name: '粘液',
+        cost: 1,
+        type: 'status',
+        rarity: 'common',
+        description: '使用すると廃棄される。',
+        isStatus: true,
+        isExhaust: true,
+        effect: (s, t) => {
+            // 使用すると廃棄される（Card.playの共通処理でexhaustされる）
         },
         targetType: 'self'
     }),

@@ -143,6 +143,23 @@ export class BattleEngine {
         }
     }
 
+    // カードを捨て札に加える（状態異常など）
+    addCardsToDiscard(cardId, count = 1) {
+        const key = cardId.toUpperCase();
+        const template = CardLibrary[key];
+        if (!template) {
+            console.error(`Card template not found: ${cardId}`);
+            return;
+        }
+
+        for (let i = 0; i < count; i++) {
+            const card = template.clone();
+            this.player.discard.push(card);
+            console.log(`Added ${card.name} to discard pile.`);
+        }
+        this.uiUpdateCallback();
+    }
+
     async playCard(cardIndex, targetIndex = 0) {
         if (this.phase !== 'player' || this.isProcessing || this.isEnded) return;
 

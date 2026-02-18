@@ -27,6 +27,7 @@ const STATUS_INFO = {
   ritual: { name: '儀式', desc: 'ターン終了時、筋力を得る。' },
   entangled: { name: '絡みつき', desc: 'このターン、アタックカードを使用できない。' },
   curl_up: { name: '丸まり', desc: '攻撃を受けた際、ブロックを得る。' },
+  split: { name: '分裂', desc: 'HPが半分以下になると分裂する。' },
   malleable: { name: '柔軟', desc: '攻撃を受けるたび、ブロックを得る。' },
   strength_down: { name: '筋力消失', desc: 'ターン終了時、筋力を失う。' },
   dexterity_down: { name: '俊敏性消失', desc: 'ターン終了時、俊敏性を失う。' },
@@ -1679,6 +1680,7 @@ class Game {
       if (status.type === 'berserk') iconChar = '💢';
       if (status.type === 'curl_up') iconChar = '🐚';
       if (status.type === 'malleable') iconChar = '💠';
+      if (status.type === 'split') iconChar = '💖';
 
       // ツールチップ設定
       const info = STATUS_INFO[status.type];
@@ -1844,7 +1846,7 @@ class Game {
 
     console.log('Game: tryPlayCard for', card.name, 'at index', index);
 
-    // 1. 呪いカードチェック
+    // 1. 呪いカードチェック（ステータスカードは許可するように変更）
     if (card.type === 'curse') {
       alert('このカードは使用できません！');
       this.updateBattleUI();

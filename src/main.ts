@@ -10,7 +10,7 @@ import { getRandomEvent } from './core/event-data';
 import { DebugManager } from './core/debug-manager';
 import { EffectManager } from './core/effect-manager';
 import { AudioManager } from './core/audio-manager';
-import { getRandomPotion } from './core/potion-data';
+import { getRandomPotion, PotionLibrary } from './core/potion-data';
 
 const STATUS_INFO = {
   vulnerable: { name: '脆弱', desc: '受けるダメージが50%増加する。' },
@@ -493,18 +493,56 @@ class Game {
       if (c) c.innerHTML = '';
     });
 
-    const cardKeys = Object.keys(CardLibrary);
+    // 価格計算ヘルパー (±10%の変動)
+    const getPrice = (base: number) => {
+      const variation = base * 0.1;
+      const offset = (Math.random() * 2 - 1) * variation;
+      return Math.floor(base + offset);
+    };
 
-    // 1. 上段カード商品の生成 (5枚)
-    for (let i = 0; i < 5; i++) {
-      const card = CardLibrary[cardKeys[Math.floor(Math.random() * cardKeys.length)]].clone();
-      const price = 50 + Math.floor(Math.random() * 50); // 50-100G
+    // カードの収集
+    const allCards = Object.values(CardLibrary).filter(c => c.rarity !== 'basic' && c.rarity !== 'curse' && c.rarity !== 'status');
+    const attacks = allCards.filter(c => c.type === 'attack');
+    const skills = allCards.filter(c => c.type === 'skill');
+    const powers = allCards.filter(c => c.type === 'power');
+
+    const getCardPrice = (card) => {
+      if (card.rarity === 'common') return getPrice(50);
+      if (card.rarity === 'uncommon') return getPrice(75);
+      if (card.rarity === 'rare') return getPrice(150);
+      return getPrice(50);
+    };
+
+    const getRandomCards = (list, count) => {
+      const result = [];
+      const temp = [...list];
+      for (let i = 0; i < count; i++) {
+        if (temp.length === 0) break;
+        const idx = Math.floor(Math.random() * temp.length);
+        result.push(temp.splice(idx, 1)[0].clone());
+      }
+      return result;
+    };
+
+    // 1. 上段カード商品の生成 (アタック2, スキル2, パワー1)
+    const topCards = [
+      ...getRandomCards(attacks, 2),
+      ...getRandomCards(skills, 2),
+      ...getRandomCards(powers, 1)
+    ];
+
+    // セール対象の決定 (上列からランダムに1枚)
+    const saleIdx = Math.floor(Math.random() * topCards.length);
+
+    topCards.forEach((card, i) => {
+      let price = getCardPrice(card);
+      const isSale = i === saleIdx;
+      if (isSale) price = Math.floor(price / 2);
 
       const wrapper = document.createElement('div');
       wrapper.className = 'shop-item-wrapper';
 
-      // 画像にあるような赤いセールタグを1枚だけに付ける例
-      if (i === 2) {
+      if (isSale) {
         const saleTag = document.createElement('div');
         saleTag.className = 'sale-tag';
         saleTag.textContent = '特売';
@@ -517,6 +555,7 @@ class Game {
       priceEl.textContent = `${price}`;
 
       cardEl.onclick = () => {
+        if (wrapper.classList.contains('sold-out')) return;
         if (this.player.gold >= price) {
           this.player.gold -= price;
           this.player.masterDeck.push(card);
@@ -530,13 +569,25 @@ class Game {
       wrapper.appendChild(cardEl);
       wrapper.appendChild(priceEl);
       cardsTopContainer.appendChild(wrapper);
-    }
+    });
 
-    // 2. 下段左: 共通クラスカード (2枚)
-    // 現在はランダムなカードをプレースホルダーとして使用
-    for (let i = 0; i < 2; i++) {
-      const card = CardLibrary[cardKeys[Math.floor(Math.random() * cardKeys.length)]].clone();
-      const price = 100 + Math.floor(Math.random() * 120); // 画像では高め（105, 211など）
+    // 2. 下段左: 無色カード (アンコモン1, レア1)
+    // 現在は無色カードライブラリがないため、クラスカードのアンコモン/レアで代用 (TODO: 無色カード実装時に差し替え)
+    const uncommonCards = allCards.filter(c => c.rarity === 'uncommon');
+    const rareCards = allCards.filter(c => c.rarity === 'rare');
+
+    const colorlessPrice_Uncommon = getPrice(100);
+    const colorlessPrice_Rare = getPrice(200);
+
+    const bottomCards = [
+      { card: getRandomCards(uncommonCards, 1)[0], price: colorlessPrice_Uncommon },
+      { card: getRandomCards(rareCards, 1)[0], price: colorlessPrice_Rare }
+    ];
+
+    bottomCards.forEach(item => {
+      if (!item.card) return;
+      const card = item.card;
+      const price = item.price;
 
       const wrapper = document.createElement('div');
       wrapper.className = 'shop-item-wrapper';
@@ -546,6 +597,7 @@ class Game {
       priceEl.textContent = `${price}`;
 
       cardEl.onclick = () => {
+        if (wrapper.classList.contains('sold-out')) return;
         if (this.player.gold >= price) {
           this.player.gold -= price;
           this.player.masterDeck.push(card);
@@ -559,19 +611,30 @@ class Game {
       wrapper.appendChild(cardEl);
       wrapper.appendChild(priceEl);
       cardsBottomLeftContainer.appendChild(wrapper);
-    }
+    });
 
     // 3. 下段中央: レリック (3個)
-    const ownedIds = this.player.relics.map(r => r.id);
+    const ownedRelicIds = this.player.relics.map(r => r.id);
     const candidateRelics = Object.values(RelicLibrary).filter(r =>
-      !ownedIds.includes(r.id) && r.rarity !== 'starter' && r.rarity !== 'boss'
+      !ownedRelicIds.includes(r.id) && r.rarity !== 'starter' && r.rarity !== 'boss'
     );
 
+    const getRelicPrice = (rarity) => {
+      if (rarity === 'common') return getPrice(150);
+      if (rarity === 'uncommon') return getPrice(250);
+      if (rarity === 'rare') return getPrice(300);
+      if (rarity === 'shop') return getPrice(150);
+      return getPrice(150);
+    };
+
+    // 3つ選出。一番右は「ショップレリック」枠とするが、現在は通常レリックから選ぶ
     for (let i = 0; i < 3; i++) {
       if (candidateRelics.length === 0) break;
       const idx = Math.floor(Math.random() * candidateRelics.length);
       const relic = candidateRelics.splice(idx, 1)[0];
-      const price = 150 + Math.floor(Math.random() * 180); // 150-330G
+
+      // 一番右(i=2)はショップレリック価格を想定（今回は実装しないためレアリティに応じた価格）
+      const price = getRelicPrice(relic.rarity);
 
       const wrapper = document.createElement('div');
       wrapper.className = 'shop-item-wrapper';
@@ -586,6 +649,7 @@ class Game {
       priceEl.textContent = `${price}`;
 
       relicEl.onclick = () => {
+        if (wrapper.classList.contains('sold-out')) return;
         if (this.player.gold >= price) {
           this.player.gold -= price;
           this.player.relics.push(relic);
@@ -603,27 +667,40 @@ class Game {
     }
 
     // 4. 下段中央: ポーション (3個)
-    // ポーションライブラリがまだない場合はプレースホルダー
-    const potionLibrary = (window as any).PotionLibrary || {};
-    const potionKeys = Object.keys(potionLibrary);
+    const potionLibrary = (window as any).PotionLibrary || PotionLibrary;
+    const allPotions = Object.values(potionLibrary) as any[];
+
+    const getPotionPrice = (rarity) => {
+      if (rarity === 'common') return getPrice(50);
+      if (rarity === 'uncommon') return getPrice(75);
+      if (rarity === 'rare') return getPrice(100);
+      return getPrice(50);
+    };
+
     for (let i = 0; i < 3; i++) {
-      const price = 50 + Math.floor(Math.random() * 40); // 50-90G
+      if (allPotions.length === 0) break;
+      const potion = allPotions[Math.floor(Math.random() * allPotions.length)].clone();
+      const price = getPotionPrice(potion.rarity);
+
       const wrapper = document.createElement('div');
       wrapper.className = 'shop-item-wrapper';
 
       const potionEl = document.createElement('div');
-      potionEl.className = 'potion-slot empty'; // プレースホルダー
+      potionEl.className = 'potion-slot empty';
       potionEl.textContent = '🧪';
+      potionEl.setAttribute('data-tooltip', `${potion.name}\n${potion.rarity}\n\n${potion.description}`);
 
       const priceEl = document.createElement('div');
       priceEl.className = 'shop-price';
       priceEl.textContent = `${price}`;
 
       potionEl.onclick = () => {
+        if (wrapper.classList.contains('sold-out')) return;
         if (this.player.gold >= price) {
-          if (this.player.potions.length < 3) {
+          const emptySlot = this.player.potions.indexOf(null);
+          if (emptySlot !== -1) {
             this.player.gold -= price;
-            // 本来はポーションを生成して追加
+            this.player.potions[emptySlot] = potion;
             this.updateGlobalStatusUI();
             wrapper.classList.add('sold-out');
           } else {
@@ -656,9 +733,7 @@ class Game {
     removalPriceEl.textContent = `${removalPrice}`;
 
     removalBtn.onclick = () => {
-      // すでに売り切れ（1回使用済み）なら何もしない
       if (removalWrapper.classList.contains('sold-out')) return;
-
       if (this.player.gold >= removalPrice) {
         this.showCardRemovalUI(removalPrice, removalWrapper);
       } else {
@@ -670,7 +745,6 @@ class Game {
     removalWrapper.appendChild(removalPriceEl);
     removalServiceContainer.appendChild(removalWrapper);
 
-    // ショップコンテナの下部に余白を持たせ、ボタンの重なりを軽減
     const shopContainer = document.querySelector('.shop-container') as HTMLElement;
     if (shopContainer) {
       shopContainer.style.paddingBottom = '120px';

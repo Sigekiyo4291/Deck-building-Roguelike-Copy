@@ -703,10 +703,27 @@ export class SpikeSlimeL extends Enemy {
     this.history = [];
   }
 
-  decideNextMove() {
-    const roll = Math.random() * 100;
-    const lastMove = this.history[this.history.length - 1];
+  onBattleStart(player, engine) {
+    super.onBattleStart(player, engine);
+    this.addStatus('split', 1);
+  }
 
+  takeDamage(amount, source) {
+    const remainingDamage = super.takeDamage(amount, source);
+    // HPが50%以下になった時に即座に分裂をセット
+    if (this.hp > 0 && this.hp <= this.maxHp / 2 && (!this.nextMove || this.nextMove.id !== 'split')) {
+      this.setNextMove({
+        id: 'split',
+        type: 'special',
+        name: '分裂',
+        effect: (self, player, engine) => engine.splitEnemy(self, SpikeSlimeM)
+      });
+    }
+    return remainingDamage;
+  }
+
+  decideNextMove() {
+    // すでにHP50%以下なら常に分裂
     if (this.hp <= this.maxHp / 2) {
       this.setNextMove({
         id: 'split',
@@ -717,10 +734,30 @@ export class SpikeSlimeL extends Enemy {
       return;
     }
 
-    if (roll < 30 && lastMove !== 'lick') {
-      this.setNextMove({ id: 'lick', type: 'debuff', name: '舐める', effect: (self, player) => player.addStatus('vulnerable', 2) });
+    const roll = Math.random() * 100;
+    const lastMove = this.history[this.history.length - 1];
+
+    // 舐める (70%): 脆弱2
+    if (roll < 70) {
+      this.setNextMove({
+        id: 'lick',
+        type: 'debuff',
+        name: '舐める',
+        effect: (self, player) => player.addStatus('vulnerable', 2)
+      });
     } else {
-      this.setNextMove({ id: 'tackle', type: 'attack', value: 16, name: '炎の体当たり' });
+      // 炎の体当たり (30%): 16ダメ + 粘液2枚
+      this.setNextMove({
+        id: 'tackle',
+        type: 'attack',
+        value: 16,
+        name: '炎の体当たり',
+        effect: (self, player, engine) => {
+          if (engine && engine.addCardsToDiscard) {
+            engine.addCardsToDiscard('slimed', 2);
+          }
+        }
+      });
     }
     this.history.push(this.nextMove.id);
   }

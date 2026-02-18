@@ -1,3 +1,5 @@
+import { BOSS_DATA } from './boss-data';
+
 export class SceneManager {
     game: any;
     elApp: HTMLElement | null;
@@ -264,7 +266,20 @@ export class SceneManager {
                 else if (node.type === 'treasure') icon = '💎';
                 else if (node.type === 'event') icon = '❔';
 
-                nodeEl.textContent = icon;
+                if (node.type === 'boss') {
+                    const bossData = map.bossId ? BOSS_DATA[map.bossId] : null;
+                    if (bossData) {
+                        const img = document.createElement('img');
+                        img.src = bossData.image;
+                        nodeEl.innerHTML = '';
+                        nodeEl.appendChild(img);
+                    } else {
+                        nodeEl.textContent = '👑';
+                    }
+                } else {
+                    nodeEl.textContent = icon;
+                }
+
                 nodeEl.onclick = () => {
                     if (node.isAvailable) onNodeSelect(node);
                 };

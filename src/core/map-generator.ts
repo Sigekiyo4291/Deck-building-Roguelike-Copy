@@ -1,4 +1,5 @@
 import { MapNode, GameMap } from './map-data';
+import { ACT_BOSSES } from './boss-data';
 
 export class MapGenerator {
     static generate(layersCount = 15) {
@@ -60,6 +61,10 @@ export class MapGenerator {
                 }
             }
         }
+
+        // ボスの抽選
+        const bosses = ACT_BOSSES[1];
+        map.bossId = bosses[Math.floor(Math.random() * bosses.length)];
 
         return map;
     }

@@ -19,10 +19,12 @@ export class MapNode {
 export class GameMap {
     layers: MapNode[][];
     currentNode: MapNode | null;
+    bossId: string | null;
 
     constructor() {
         this.layers = []; // 各階層のノードリストの配列 [ [node, node], [node...], ... ]
         this.currentNode = null; // 現在プレイヤーがいるノード
+        this.bossId = null;
     }
 
     addLayer(nodes) {

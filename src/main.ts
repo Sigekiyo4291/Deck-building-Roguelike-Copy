@@ -2,6 +2,7 @@
 import { GameMap } from './core/map-data';
 import { MapGenerator } from './core/map-generator';
 import { SceneManager } from './core/scene-manager';
+import { BOSS_DATA } from './core/boss-data';
 import { Player, Enemy, Louse, Cultist, JawWorm, AcidSlimeM, SpikeSlimeM, AcidSlimeS, SpikeSlimeS, FungiBeast, AcidSlimeL, SpikeSlimeL, BlueSlaver, RedSlaver, Looter, GremlinNob, Lagavulin, Sentry, SlimeBoss, Guardian, Hexaghost } from './core/entity';
 import { CardLibrary } from './core/card';
 import { BattleEngine } from './core/engine';
@@ -894,14 +895,16 @@ class Game {
     this.selectedEnemyIndex = 0; // ターゲットインデックスをリセット
 
     if (type === 'boss') {
-      // Act 1 ボスプール (Wiki準拠: 3パターン)
-      const bossEncounters = [
-        () => [new SlimeBoss()],
-        () => [new Guardian()],
-        () => [new Hexaghost()]
-      ];
-      const index = Math.floor(Math.random() * bossEncounters.length);
-      enemies = bossEncounters[index]();
+      // マップ生成時に抽選されたボスを使用
+      const bossId = this.map.bossId;
+      const bossData = bossId ? BOSS_DATA[bossId] : null;
+
+      if (bossData) {
+        enemies = bossData.createEnemies();
+      } else {
+        // フォールバック
+        enemies = [new SlimeBoss()];
+      }
     } else if (type === 'elite') {
       // Act 1 エリートプール (Wiki準拠: 3パターン)
       const elites = [

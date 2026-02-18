@@ -212,6 +212,13 @@ export class BattleEngine {
                 this.player.hand.splice(cardIndex, 1);
                 await card.play(this.player, target, this);
 
+                // 敵にカードプレイを通知（激怒などの発動用）
+                this.enemies.forEach(enemy => {
+                    if (!enemy.isDead()) {
+                        enemy.onPlayerPlayCard(card, this.player, this);
+                    }
+                });
+
                 // ブロックが増えたらエフェクトを表示
                 if (this.player.block > oldBlock) {
                     this.showEffectForPlayer('block');

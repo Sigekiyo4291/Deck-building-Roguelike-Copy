@@ -47,6 +47,7 @@ const STATUS_INFO = {
   corruption: { name: '堕落', desc: 'スキルカードのコストが0になる。使用したスキルは廃棄される。' },
   brutality: { name: '残虐', desc: 'ターン開始時、HPを1失いカードを1枚引く。' },
   berserk: { name: '狂戦士', desc: 'ターン開始時、エナジーを1得る。' },
+  enrage_enemy: { name: '激怒', desc: 'スキルを1枚プレイするたび、筋力を得ます。' },
 };
 
 
@@ -1685,6 +1686,7 @@ class Game {
       if (status.type === 'split') iconChar = '💖';
       if (status.type === 'spore_cloud') iconChar = '🍄';
       if (status.type === 'thievery') iconChar = '💰';
+      if (status.type === 'enrage_enemy') iconChar = '💢';
 
       // ツールチップ設定
       const info = STATUS_INFO[status.type];

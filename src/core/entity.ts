@@ -919,12 +919,10 @@ export class Looter extends Enemy {
 
 export class GremlinNob extends Enemy {
   history: any[];
-  isEnraged: boolean;
 
   constructor() {
     super('グレムリンノブ', 82 + Math.floor(Math.random() * 5), 'assets/images/enemies/GremlinNob.png');
     this.history = [];
-    this.isEnraged = false;
   }
 
   decideNextMove() {
@@ -935,7 +933,7 @@ export class GremlinNob extends Enemy {
         type: 'buff',
         name: '激怒',
         effect: (self) => {
-          this.isEnraged = true;
+          this.addStatus('enrage_enemy', 2);
           console.log('Gremlin Nob is enraged! Skill play will buff him!');
         }
       });
@@ -951,9 +949,10 @@ export class GremlinNob extends Enemy {
   }
 
   onPlayerPlayCard(card) {
-    if (this.isEnraged && card.type === 'skill') {
-      this.addStatus('strength', 2);
-      console.log('Nob gets stronger from your skill!');
+    const enrageValue = this.getStatusValue('enrage_enemy');
+    if (enrageValue > 0 && card.type === 'skill') {
+      this.addStatus('strength', enrageValue);
+      console.log(`Nob gets stronger from your skill! (+${enrageValue} Strength)`);
     }
   }
 }

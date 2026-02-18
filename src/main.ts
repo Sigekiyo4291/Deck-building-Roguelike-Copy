@@ -481,7 +481,6 @@ class Game {
   showShopScene() {
     this.sceneManager.showShop();
     this.audioManager.playBgm('map'); // ショップ中もマップBGM
-    document.getElementById('shop-gold-value').textContent = String(this.player.gold);
 
     const cardsTopContainer = document.getElementById('shop-cards-top');
     const cardsBottomLeftContainer = document.getElementById('shop-cards-bottom-left');
@@ -523,7 +522,6 @@ class Game {
           this.player.masterDeck.push(card);
           this.updateGlobalStatusUI();
           wrapper.classList.add('sold-out');
-          document.getElementById('shop-gold-value').textContent = String(this.player.gold);
         } else {
           alert('ゴールドが足りません！');
         }
@@ -553,7 +551,6 @@ class Game {
           this.player.masterDeck.push(card);
           this.updateGlobalStatusUI();
           wrapper.classList.add('sold-out');
-          document.getElementById('shop-gold-value').textContent = String(this.player.gold);
         } else {
           alert('ゴールドが足りません！');
         }
@@ -595,7 +592,6 @@ class Game {
           if (relic.onObtain) relic.onObtain(this.player);
           this.updateGlobalStatusUI();
           wrapper.classList.add('sold-out');
-          document.getElementById('shop-gold-value').textContent = String(this.player.gold);
         } else {
           alert('ゴールドが足りません！');
         }
@@ -630,7 +626,6 @@ class Game {
             // 本来はポーションを生成して追加
             this.updateGlobalStatusUI();
             wrapper.classList.add('sold-out');
-            document.getElementById('shop-gold-value').textContent = String(this.player.gold);
           } else {
             alert('ポーションのスロットがいっぱいです！');
           }
@@ -726,8 +721,6 @@ class Game {
           console.log(`Card removed. New gold: ${this.player.gold}, Count: ${this.player.cardRemovalCount}`);
 
           this.updateGlobalStatusUI();
-          const goldVal = document.getElementById('shop-gold-value');
-          if (goldVal) goldVal.textContent = String(this.player.gold);
 
           // ショップ側の表示を「売切」にする
           wrapper.classList.add('sold-out');

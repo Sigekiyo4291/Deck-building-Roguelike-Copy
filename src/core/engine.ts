@@ -424,6 +424,11 @@ export class BattleEngine {
 
         // ダメージを与える
         target.takeDamage(damage, source);
+
+        // 死亡判定と死亡時処理
+        if (target.isDead()) {
+            if (target.onDeath) target.onDeath(source, this);
+        }
     }
 
     // プレイヤーがブロックを獲得した際の処理（ジャガーノート用）

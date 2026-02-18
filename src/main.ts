@@ -28,6 +28,7 @@ const STATUS_INFO = {
   entangled: { name: '絡みつき', desc: 'このターン、アタックカードを使用できない。' },
   curl_up: { name: '丸まり', desc: '攻撃を受けた際、ブロックを得る。' },
   split: { name: '分裂', desc: 'HPが半分以下になると分裂する。' },
+  spore_cloud: { name: '胞子の雲', desc: '死亡時、相手に脆弱を付与する。' },
   malleable: { name: '柔軟', desc: '攻撃を受けるたび、ブロックを得る。' },
   strength_down: { name: '筋力消失', desc: 'ターン終了時、筋力を失う。' },
   dexterity_down: { name: '俊敏性消失', desc: 'ターン終了時、俊敏性を失う。' },
@@ -1681,6 +1682,7 @@ class Game {
       if (status.type === 'curl_up') iconChar = '🐚';
       if (status.type === 'malleable') iconChar = '💠';
       if (status.type === 'split') iconChar = '💖';
+      if (status.type === 'spore_cloud') iconChar = '🍄';
 
       // ツールチップ設定
       const info = STATUS_INFO[status.type];

@@ -27,6 +27,7 @@ const STATUS_INFO = {
   ritual: { name: '儀式', desc: 'ターン終了時、筋力を得る。' },
   entangled: { name: '絡みつき', desc: 'このターン、アタックカードを使用できない。' },
   curl_up: { name: '丸まり', desc: '攻撃を受けた際、ブロックを得る。' },
+  thievery: { name: 'コソ泥', desc: 'この敵が攻撃するたび、ゴールドを強奪する。' },
   split: { name: '分裂', desc: 'HPが半分以下になると分裂する。' },
   spore_cloud: { name: '胞子の雲', desc: '死亡時、相手に脆弱を付与する。' },
   malleable: { name: '柔軟', desc: '攻撃を受けるたび、ブロックを得る。' },
@@ -1683,6 +1684,7 @@ class Game {
       if (status.type === 'malleable') iconChar = '💠';
       if (status.type === 'split') iconChar = '💖';
       if (status.type === 'spore_cloud') iconChar = '🍄';
+      if (status.type === 'thievery') iconChar = '💰';
 
       // ツールチップ設定
       const info = STATUS_INFO[status.type];

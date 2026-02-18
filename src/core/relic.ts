@@ -123,5 +123,26 @@ export const RelicLibrary = {
         onPlayerTurnStart(owner) {
             owner.energy += 1;
         }
+    },
+    VELVET_CHOKER: new class extends Relic {
+        constructor() { super('velvet_choker', 'ベルベットのチョーカー', '毎ターンエナジーを1得る。1ターンに6枚より多くのカードを使えない。', 'boss'); }
+        onPlayerTurnStart(owner) {
+            owner.energy += 1;
+        }
+        // カード使用制限はBattleEngine側でチェックする必要がある
+    },
+    CURSED_KEY: new class extends Relic {
+        constructor() { super('cursed_key', '呪いの鍵', '毎ターンエナジーを1得る。宝箱を開けるたびに呪いを得る。', 'boss'); }
+        onPlayerTurnStart(owner) {
+            owner.energy += 1;
+        }
+    },
+    SLAVERS_COLLAR: new class extends Relic {
+        constructor() { super('slavers_collar', 'スレイヴの首輪', 'エリート、またはボスとの戦闘中、毎ターンエナジーを1得る。', 'boss'); }
+        onPlayerTurnStart(owner, engine) {
+            if (engine.isElite || engine.isBoss) {
+                owner.energy += 1;
+            }
+        }
     }
 };

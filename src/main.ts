@@ -12,6 +12,7 @@ import { DebugManager } from './core/debug-manager';
 import { EffectManager } from './core/effect-manager';
 import { AudioManager } from './core/audio-manager';
 import { getRandomPotion, PotionLibrary } from './core/potion-data';
+import { ENCOUNTER_POOLS } from './core/encounter-data';
 
 const STATUS_INFO = {
   vulnerable: { name: '脆弱', desc: '受けるダメージが50%増加する。' },
@@ -63,7 +64,9 @@ class Game {
   elHand: HTMLElement | null;
   selectedCardIndex: number;
   isEliteBattle: boolean = false;
+  isBossBattle: boolean = false;
   potionDropChance: number = 40; // ポーションドロップ率 (%)
+  currentAct: number = 1; // 現在のAct
   currentFloor: number = 0; // 現在の階層
   currentEvent: any;
   currentEventState: any;
@@ -196,7 +199,7 @@ class Game {
   async onGameStart() {
     // マップ生成（初回のみ、あるいはリセット）
     if (!this.map) {
-      this.map = MapGenerator.generate();
+      this.map = MapGenerator.generate(this.currentAct);
       this.map.updateAvailableNodes();
     }
 
@@ -892,6 +895,7 @@ class Game {
     // 敵データ生成
     let enemies = [];
     this.isEliteBattle = (type === 'elite');
+    this.isBossBattle = (type === 'boss');
     this.selectedEnemyIndex = 0; // ターゲットインデックスをリセット
 
     if (type === 'boss') {
@@ -906,43 +910,18 @@ class Game {
         enemies = [new SlimeBoss()];
       }
     } else if (type === 'elite') {
-      // Act 1 エリートプール (Wiki準拠: 3パターン)
-      const elites = [
-        () => [new GremlinNob()],
-        () => [new Lagavulin()],
-        () => [new Sentry(0), new Sentry(1), new Sentry(2)]
-      ];
-      const index = Math.floor(Math.random() * elites.length);
-      enemies = elites[index]();
+      const pool = ENCOUNTER_POOLS[this.currentAct]?.elite || ENCOUNTER_POOLS[1].elite;
+      const index = Math.floor(Math.random() * pool.length);
+      enemies = pool[index]();
     } else {
-      // 通常戦闘（弱プール vs 強プール）
+      // 通常戦闘
+      const pools = ENCOUNTER_POOLS[this.currentAct] || ENCOUNTER_POOLS[1];
       if (this.battleCount < 3) {
-        // 弱プール (1-3戦目, Wiki準拠: 5パターン)
-        const encounters = [
-          () => [new Cultist()],
-          () => [new JawWorm()],
-          () => [new Louse('red'), new Louse('green')],
-          () => [new AcidSlimeM(), new SpikeSlimeM()],
-          () => [new AcidSlimeS(), new SpikeSlimeS(), new SpikeSlimeS()]
-        ];
-        const index = Math.floor(Math.random() * encounters.length);
-        enemies = encounters[index]();
+        const index = Math.floor(Math.random() * pools.weak.length);
+        enemies = pools.weak[index]();
       } else {
-        // 強プール (4戦目以降, Wiki準拠から主要なものを抜粋)
-        const encounters = [
-          () => [new AcidSlimeL()],
-          () => [new SpikeSlimeL()],
-          () => [new BlueSlaver()],
-          () => [new Looter()],
-          () => [new Louse('red'), new Louse('green'), new Louse('red')],
-          () => [new FungiBeast(), new FungiBeast()],
-          () => [new BlueSlaver(), new RedSlaver()],
-          () => [new Looter(), new Cultist()],
-          () => [new FungiBeast(), new JawWorm()],
-          () => [new Louse('green'), new AcidSlimeM(), new SpikeSlimeM()]
-        ];
-        const index = Math.floor(Math.random() * encounters.length);
-        enemies = encounters[index]();
+        const index = Math.floor(Math.random() * pools.strong.length);
+        enemies = pools.strong[index]();
       }
     }
 
@@ -991,16 +970,16 @@ class Game {
         this.battleCount++;
       }
 
-      console.log('Game: Calling showRewardScene, isElite: ' + this.isEliteBattle);
+      console.log('Game: Calling showRewardScene, isElite: ' + this.isEliteBattle + ', isBoss: ' + this.isBossBattle);
       // リワード画面表示
-      this.showRewardScene(this.isEliteBattle);
+      this.showRewardScene(this.isEliteBattle, this.isBossBattle);
     } catch (e) {
       console.error('onBattleWin Error:', e);
     }
   }
 
-  showRewardScene(isElite) {
-    console.log('Game: showRewardScene called, isElite:', isElite);
+  showRewardScene(isElite, isBoss = false) {
+    console.log('Game: showRewardScene called, isElite:', isElite, 'isBoss:', isBoss);
     this.audioManager.playBgm('map'); // リワード画面でマップBGMに戻す（勝利ファンファーレ実装まではこれで）
     try {
       this.sceneManager.showReward();
@@ -1016,10 +995,13 @@ class Game {
       // ランダム報酬生成
       const rewards = [];
       // ゴールド
-      rewards.push({ type: 'gold', value: 10 + Math.floor(Math.random() * 20) + (isElite ? 20 : 0), taken: false });
+      let goldValue = 10 + Math.floor(Math.random() * 20);
+      if (isElite) goldValue += 20;
+      if (isBoss) goldValue += 100;
+      rewards.push({ type: 'gold', value: goldValue, taken: false });
 
       // カード
-      rewards.push({ type: 'card', taken: false });
+      rewards.push({ type: 'card', isRare: isBoss, taken: false });
 
       // ポーション（ドロップ率チェック）
       const hasSozu = this.player.relics.some(r => r.id === 'sozu');
@@ -1075,13 +1057,18 @@ class Game {
       const doneBtn = document.getElementById('reward-done-btn');
       if (doneBtn) {
         doneBtn.onclick = async () => {
-          // マップに戻る
-          if (this.map) {
-            this.map.updateAvailableNodes();
+          if (isBoss) {
+            // ボスレリック選択へ
+            this.showBossRelicSelection();
+          } else {
+            // マップに戻る
+            if (this.map) {
+              this.map.updateAvailableNodes();
+            }
+            const transition = this.sceneManager.showMap();
+            this.renderMap();
+            await transition;
           }
-          const transition = this.sceneManager.showMap();
-          this.renderMap();
-          await transition;
         };
       }
     } catch (e) {
@@ -1301,7 +1288,10 @@ class Game {
     container.innerHTML = '';
 
     // ランダムなカード候補を3枚生成
-    const keys = Object.keys(CardLibrary).filter(k => CardLibrary[k].type !== 'curse');
+    let keys = Object.keys(CardLibrary).filter(k => CardLibrary[k].type !== 'curse');
+    if (rewardItem.isRare) {
+      keys = keys.filter(k => CardLibrary[k].rarity === 'rare');
+    }
 
     for (let i = 0; i < 3; i++) {
       // 全カード配列からランダム取得
@@ -1330,6 +1320,68 @@ class Game {
       itemEl.style.opacity = '0.5';
       itemEl.style.textDecoration = 'line-through';
     };
+  }
+
+  showBossRelicSelection() {
+    const overlay = document.getElementById('boss-relic-overlay');
+    const container = document.getElementById('boss-relic-choices');
+    if (!overlay || !container) return;
+
+    container.innerHTML = '';
+    overlay.style.display = 'flex';
+
+    // ボスレリックを3つ抽選
+    const ownedIds = this.player.relics.map(r => r.id);
+    const candidates = Object.values(RelicLibrary).filter(r =>
+      r.rarity === 'boss' && !ownedIds.includes(r.id)
+    );
+
+    // シャッフル
+    for (let i = candidates.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
+    }
+
+    const choices = candidates.slice(0, 3);
+    choices.forEach(relic => {
+      const relicEl = document.createElement('div');
+      relicEl.className = 'relic-choice';
+      relicEl.innerHTML = `
+        <div class="relic-choice-icon">${relic.name.charAt(0)}</div>
+        <div class="relic-choice-name">${relic.name}</div>
+        <div class="relic-choice-desc">${relic.description}</div>
+      `;
+      relicEl.onclick = () => {
+        this.player.relics.push(relic);
+        if (relic.onObtain) relic.onObtain(this.player);
+        overlay.style.display = 'none';
+        alert(`ボスレリック「${relic.name}」を獲得しました！`);
+        this.proceedToNextAct();
+      };
+      container.appendChild(relicEl);
+    });
+  }
+
+  proceedToNextAct() {
+    if (this.currentAct >= 3) {
+      alert('🎉 GAME CLEAR! 🎉\nおめでとうございます！あなたは3つのActを制覇しました！');
+      location.reload();
+      return;
+    }
+
+    this.currentAct++;
+    this.battleCount = 0;
+    // HP全快
+    this.player.heal(this.player.maxHp);
+
+    // 次のActのマップ生成
+    this.map = MapGenerator.generate(this.currentAct);
+    this.map.updateAvailableNodes();
+    this.renderMap();
+    this.sceneManager.showMap();
+    this.updateGlobalStatusUI();
+
+    alert(`Act ${this.currentAct} に到達しました。HPが全快しました。`);
   }
 
   createRewardCardElement(card) {

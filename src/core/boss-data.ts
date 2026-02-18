@@ -30,6 +30,6 @@ export const BOSS_DATA: Record<string, BossData> = {
 
 export const ACT_BOSSES: Record<number, string[]> = {
     1: ['slime_boss', 'guardian', 'hexaghost'],
-    2: [], // 今後追加予定
-    3: []  // 今後追加予定
+    2: ['slime_boss', 'guardian', 'hexaghost'], // 仮でAct 1と同じ
+    3: ['slime_boss', 'guardian', 'hexaghost']  // 仮でAct 1と同じ
 };

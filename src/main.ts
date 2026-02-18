@@ -686,7 +686,7 @@ class Game {
       wrapper.className = 'shop-item-wrapper';
 
       const potionEl = document.createElement('div');
-      potionEl.className = 'potion-slot empty';
+      potionEl.className = 'potion-slot has-potion';
       potionEl.textContent = '🧪';
       potionEl.setAttribute('data-tooltip', `${potion.name}\n${potion.rarity}\n\n${potion.description}`);
 

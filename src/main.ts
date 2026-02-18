@@ -1677,6 +1677,8 @@ class Game {
       if (status.type === 'corruption') iconChar = '🔮';
       if (status.type === 'brutality') iconChar = '🩸';
       if (status.type === 'berserk') iconChar = '💢';
+      if (status.type === 'curl_up') iconChar = '🐚';
+      if (status.type === 'malleable') iconChar = '💠';
 
       // ツールチップ設定
       const info = STATUS_INFO[status.type];

@@ -59,6 +59,11 @@ export class BattleEngine {
             if (relic.onBattleStart) relic.onBattleStart(this.player, this);
         });
 
+        // 敵: onBattleStart
+        this.enemies.forEach(enemy => {
+            if (enemy.onBattleStart) enemy.onBattleStart(this.player, this);
+        });
+
         this.startPlayerTurn();
     }
 

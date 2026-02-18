@@ -67,6 +67,17 @@ export class Entity {
     const prevHp = this.hp;
     this.hp = Math.max(0, this.hp - remainingDamage);
 
+    // まるくなる (Curl Up) の処理: ダメージを受けた時に一度だけブロック獲得
+    // HPが減少した場合に判定
+    if (this.hp < prevHp) {
+      const curlUpVal = this.getStatusValue('curl_up');
+      if (curlUpVal > 0) {
+        console.log(`${this.name} の「まるくなる」発動！ ${curlUpVal} ブロック獲得。`);
+        this.addBlock(curlUpVal);
+        this.removeStatus('curl_up');
+      }
+    }
+
     // 被ダメージ回数のカウントアップ（血には血を用）
     if (remainingDamage > 0 && this instanceof Player) {
       this.hpLossCount = (this.hpLossCount || 0) + 1;
@@ -231,6 +242,10 @@ export class Entity {
   onDeath(killer, engine) {
     // 死亡時に呼び出されるフック
   }
+
+  onBattleStart(player, engine) {
+    // 戦闘開始時に呼び出されるフック
+  }
 }
 
 export class Player extends Entity {
@@ -340,17 +355,14 @@ export class Louse extends Enemy {
     this.history = [];
   }
 
-  takeDamage(amount, source) {
-    const prevHp = this.hp;
-    const remainingDamage = super.takeDamage(amount, source);
+  onBattleStart(player, engine) {
+    super.onBattleStart(player, engine);
+    this.addStatus('curl_up', this.curlUpValue);
+    console.log(`${this.name} will curl up for ${this.curlUpValue} block.`);
+  }
 
-    // まるくなる (Curl Up): 最初にダメージを受けた時に一度だけブロック獲得
-    if (!this.hasCurledUp && this.hp < prevHp) {
-      this.addBlock(this.curlUpValue);
-      this.hasCurledUp = true;
-      console.log(`${this.name} curled up for ${this.curlUpValue} block!`);
-    }
-    return remainingDamage;
+  takeDamage(amount, source) {
+    return super.takeDamage(amount, source);
   }
 
   decideNextMove() {

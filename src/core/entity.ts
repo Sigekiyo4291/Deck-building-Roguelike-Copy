@@ -191,7 +191,7 @@ export class Entity {
     this.statusEffects.forEach(s => {
       // 筋力(strength)は自動減少しない
       // 脆弱(vulnerable)などはターン経過で減少
-      if (['vulnerable', 'weak', 'frail'].includes(s.type)) {
+      if (['vulnerable', 'weak', 'frail', 'entangled'].includes(s.type)) {
         if (s.value > 0) s.value--;
       }
 

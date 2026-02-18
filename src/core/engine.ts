@@ -176,6 +176,7 @@ export class BattleEngine {
             if (!target) return;
 
             if (this.player.hasStatus('entangled') && card.type === 'attack') {
+                alert("アタック不能！拘束されています。");
                 console.log("アタック不能！拘束されています。");
                 return;
             }

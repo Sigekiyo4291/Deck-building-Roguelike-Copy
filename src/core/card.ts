@@ -2355,7 +2355,10 @@ export const CardLibrary = {
         effect: (s, t) => {
             // 使用不可
         },
-        targetType: 'self'
+        targetType: 'self',
+        upgradeData: {
+            description: '使用できない。ターン終了時に手札にあると4ダメージ。'
+        }
     }),
     SLIMED: new Card({
         id: 'slimed',

@@ -144,7 +144,7 @@ export class BattleEngine {
     }
 
     // カードを捨て札に加える（状態異常など）
-    addCardsToDiscard(cardId, count = 1) {
+    addCardsToDiscard(cardId, count = 1, upgrade = false) {
         const key = cardId.toUpperCase();
         const template = CardLibrary[key];
         if (!template) {
@@ -154,6 +154,7 @@ export class BattleEngine {
 
         for (let i = 0; i < count; i++) {
             const card = template.clone();
+            if (upgrade) card.upgrade();
             this.player.discard.push(card);
             console.log(`Added ${card.name} to discard pile.`);
         }
@@ -475,12 +476,14 @@ export class BattleEngine {
         if (this.phase !== 'player' || this.isEnded) return;
 
         // 手札にある火傷 (BURN) カードの枚数を確認
-        const burnCount = this.player.hand.filter(c => c.id === 'burn').length;
-        if (burnCount > 0) {
-            console.log(`手札に火傷が ${burnCount} 枚あります。2x${burnCount} ダメージを受けます。`);
-            for (let i = 0; i < burnCount; i++) {
-                this.player.takeDamage(2, null); // 敵ではなくカードからのダメージ
-            }
+        const burnCards = this.player.hand.filter(c => c.id === 'burn');
+        if (burnCards.length > 0) {
+            let totalBurnDamage = 0;
+            burnCards.forEach(c => {
+                totalBurnDamage += c.isUpgraded ? 4 : 2;
+            });
+            console.log(`手札に火傷が ${burnCards.length} 枚あります。合計 ${totalBurnDamage} ダメージを受けます。`);
+            this.player.takeDamage(totalBurnDamage, null); // 敵ではなくカードからのダメージ
         }
 
         // 燃焼 (Combust) の処理

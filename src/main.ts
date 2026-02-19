@@ -1518,8 +1518,8 @@ class Game {
             hasBuff = true;
           }
 
-          // デバフ判定: 元のタイプがdebuff、またはステータス効果にデバフを含む
-          if (move.type === 'debuff' || nextMoveStatusEffects.some(s => isDebuff(s.type, s.value))) {
+          // デバフ判定: 元のタイプがdebuff、またはステータス効果にデバフを含む（burn カード追加も含む）
+          if (move.type === 'debuff' || nextMoveStatusEffects.some(s => isDebuff(s.type, s.value) || s.type === 'burn')) {
             icons.push('📉');
             hasDebuff = true;
           }

@@ -1116,7 +1116,16 @@ export class SlimeBoss extends Enemy {
     const turn = this.history.length + 1;
     const m = turn % 3;
     if (m === 1) {
-      this.setNextMove({ id: 'spray', type: 'debuff', name: '汚物スプレー', statusEffects: [{ type: 'slimed', value: 3 }], effect: () => console.log('Slimed!') });
+      this.setNextMove({
+        id: 'spray',
+        type: 'debuff',
+        name: '汚物スプレー',
+        effect: (self, player, engine) => {
+          if (engine && engine.addCardsToDiscard) {
+            engine.addCardsToDiscard('SLIMED', 3);
+          }
+        }
+      });
     } else if (m === 2) {
       this.setNextMove({ id: 'prepare', type: 'special', name: '準備' });
     } else {

@@ -49,6 +49,8 @@ const STATUS_INFO = {
   berserk: { name: '狂戦士', desc: 'ターン開始時、エナジーを1得る。' },
   enrage_enemy: { name: '激怒', desc: 'スキルを1枚プレイするたび、筋力を得ます。' },
   artifact: { name: 'アーティファクト', desc: '次に受けるデバフを無効化します。' },
+  mode_shift: { name: 'モードシフト', desc: 'この値がXになると、20ブロックを得て防御態勢に入る。ダメージを受けるたびに減少する。' },
+  sharp_hide: { name: 'シャープハイド', desc: 'アタックカードをプレイするたび、Xダメージを受ける。' },
 };
 
 

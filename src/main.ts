@@ -1503,6 +1503,8 @@ class Game {
           let hasDebuff = false;
           let hasSpecial = false;
 
+          const nextMoveStatusEffects = move.statusEffects || [];
+
           if (move.type === 'attack') {
             const damage = enemy.calculateDamage(move.value);
             const times = move.times ? `x${move.times}` : '';
@@ -1510,13 +1512,14 @@ class Game {
             hasAttack = true;
           }
 
-          if (move.type === 'buff' || (move.type === 'attack' && move.effect && !(move.id?.includes('rake')) && !(move.id?.includes('scrape')))) {
-            // 純粋なバフ、または攻撃後の自身の強化
+          // バフ判定: 元のタイプがbuff、またはステータス効果にバフを含む
+          if (move.type === 'buff' || nextMoveStatusEffects.some(s => isBuff(s.type, s.value))) {
             icons.push('💪');
             hasBuff = true;
           }
 
-          if (move.type === 'debuff' || (move.effect && (move.id?.includes('rake') || move.id?.includes('scrape') || move.name?.includes('舐める')))) {
+          // デバフ判定: 元のタイプがdebuff、またはステータス効果にデバフを含む
+          if (move.type === 'debuff' || nextMoveStatusEffects.some(s => isDebuff(s.type, s.value))) {
             icons.push('📉');
             hasDebuff = true;
           }
@@ -1527,23 +1530,18 @@ class Game {
             hasSpecial = true;
           }
 
-          // 行動内容のテキストを判定
+          // 行動内容のテキストを自動判定
           if (hasSpecial) {
             intentText = '敵は特殊な行動予定';
-          } else if (hasAttack && hasBuff && hasDebuff) {
-            intentText = '敵はバフ・デバフと攻撃予定';
-          } else if (hasAttack && hasBuff) {
-            intentText = '敵はバフと攻撃予定';
-          } else if (hasAttack && hasDebuff) {
-            intentText = '敵はデバフと攻撃予定';
-          } else if (hasAttack) {
-            intentText = '敵は攻撃予定';
-          } else if (hasBuff && hasDebuff) {
-            intentText = '敵はバフ・デバフ予定';
-          } else if (hasBuff) {
-            intentText = '敵は強化行動予定';
-          } else if (hasDebuff) {
-            intentText = '敵は妨害行動予定';
+          } else {
+            const parts = [];
+            if (hasBuff) parts.push('バフ');
+            if (hasDebuff) parts.push('デバフ');
+            if (hasAttack) parts.push('攻撃');
+
+            if (parts.length > 0) {
+              intentText = `敵は${parts.join('・')}予定`;
+            }
           }
 
           if (icons.length > 0) {

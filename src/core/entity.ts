@@ -414,12 +414,14 @@ export class Louse extends Enemy {
         this.setNextMove({
           type: 'buff',
           name: '成長',
+          statusEffects: [{ type: 'strength', value: 3 }],
           effect: (self) => self.addStatus('strength', 3)
         });
       } else {
         this.setNextMove({
           type: 'debuff',
           name: 'スパイトウェブ',
+          statusEffects: [{ type: 'weak', value: 2 }],
           effect: (self, player) => player.addStatus('weak', 2)
         });
       }
@@ -445,6 +447,7 @@ export class AcidSlimeM extends Enemy {
         id: 'lick',
         type: 'debuff',
         name: '舐める',
+        statusEffects: [{ type: 'weak', value: 1 }],
         effect: (self, player) => player.addStatus('weak', 1)
       });
     } else if (roll < 60) {
@@ -786,6 +789,7 @@ export class SpikeSlimeL extends Enemy {
         id: 'lick',
         type: 'debuff',
         name: '舐める',
+        statusEffects: [{ type: 'vulnerable', value: 2 }],
         effect: (self, player) => player.addStatus('vulnerable', 2)
       });
     } else {
@@ -819,7 +823,7 @@ export class BlueSlaver extends Enemy {
     const lastMove = this.history[this.history.length - 1];
 
     if (roll < 40 && lastMove !== 'rake') {
-      this.setNextMove({ id: 'rake', type: 'attack', value: 7, name: 'レーキ', effect: (self, player) => player.addStatus('weak', 1) });
+      this.setNextMove({ id: 'rake', type: 'attack', value: 7, name: 'レーキ', statusEffects: [{ type: 'weak', value: 1 }], effect: (self, player) => player.addStatus('weak', 1) });
     } else {
       this.setNextMove({ id: 'stab', type: 'attack', value: 12, name: '突き' });
     }
@@ -847,13 +851,14 @@ export class RedSlaver extends Enemy {
         id: 'entangle',
         type: 'debuff',
         name: '絡めとる',
+        statusEffects: [{ type: 'entangled', value: 1 }],
         effect: (self, player) => {
           player.addStatus('entangled', 1);
           this.hasEntangled = true;
         }
       });
     } else if (roll < 50 && lastMove !== 'scrape') {
-      this.setNextMove({ id: 'scrape', type: 'attack', value: 8, name: '引っ掻き', effect: (self, player) => player.addStatus('vulnerable', 1) });
+      this.setNextMove({ id: 'scrape', type: 'attack', value: 8, name: '引っ掻き', statusEffects: [{ type: 'vulnerable', value: 1 }], effect: (self, player) => player.addStatus('vulnerable', 1) });
     } else {
       this.setNextMove({ id: 'stab', type: 'attack', value: 13, name: '突き' });
     }
@@ -970,6 +975,7 @@ export class GremlinNob extends Enemy {
         id: 'enrage',
         type: 'buff',
         name: '激怒',
+        statusEffects: [{ type: 'enrage_enemy', value: 2 }],
         effect: (self) => {
           this.addStatus('enrage_enemy', 2);
           console.log('Gremlin Nob is enraged! Skill play will buff him!');
@@ -978,7 +984,7 @@ export class GremlinNob extends Enemy {
     } else {
       const roll = Math.random() * 100;
       if (roll < 33) {
-        this.setNextMove({ id: 'bash', type: 'attack', value: 6, name: 'スカルバッシュ', effect: (self, player) => player.addStatus('weak', 2) });
+        this.setNextMove({ id: 'bash', type: 'attack', value: 6, name: 'スカルバッシュ', statusEffects: [{ type: 'weak', value: 2 }], effect: (self, player) => player.addStatus('weak', 2) });
       } else {
         this.setNextMove({ id: 'rush', type: 'attack', value: 14, name: 'ラッシュ' });
       }
@@ -1047,7 +1053,7 @@ export class Lagavulin extends Enemy {
       this.setNextMove({ id: 'attack', type: 'attack', value: 18, name: '攻撃' });
     } else {
       this.setNextMove({
-        id: 'siphon', type: 'debuff', name: '魂抽出', effect: (self, player) => {
+        id: 'siphon', type: 'debuff', name: '魂抽出', statusEffects: [{ type: 'strength', value: -1 }, { type: 'dexterity', value: -1 }], effect: (self, player) => {
           player.addStatus('strength', -1);
           player.addStatus('dexterity', -1);
         }
@@ -1110,7 +1116,7 @@ export class SlimeBoss extends Enemy {
     const turn = this.history.length + 1;
     const m = turn % 3;
     if (m === 1) {
-      this.setNextMove({ id: 'spray', type: 'debuff', name: '汚物スプレー', effect: () => console.log('Slimed!') });
+      this.setNextMove({ id: 'spray', type: 'debuff', name: '汚物スプレー', statusEffects: [{ type: 'slimed', value: 3 }], effect: () => console.log('Slimed!') });
     } else if (m === 2) {
       this.setNextMove({ id: 'prepare', type: 'special', name: '準備' });
     } else {
@@ -1186,7 +1192,7 @@ export class Guardian extends Enemy {
       this.setNextMove({ id: 'bash', type: 'attack', value: 32, name: 'フィアースバッシュ' });
     } else {
       this.setNextMove({
-        id: 'vent', type: 'debuff', name: '蒸気解放', effect: (self, player) => {
+        id: 'vent', type: 'debuff', name: '蒸気解放', statusEffects: [{ type: 'weak', value: 2 }, { type: 'vulnerable', value: 2 }], effect: (self, player) => {
           player.addStatus('weak', 2);
           player.addStatus('vulnerable', 2);
         }
@@ -1221,7 +1227,7 @@ export class Hexaghost extends Enemy {
         { id: 'sear', type: 'attack', value: 6, name: 'シアー' },
         { id: 'tackle', type: 'attack', value: 5, times: 2, name: '二連撃' },
         { id: 'sear', type: 'attack', value: 6, name: 'シアー' },
-        { id: 'ignite', type: 'buff', name: '発火', effect: (self) => { self.addStatus('strength', 2); self.addBlock(12); } },
+        { id: 'ignite', type: 'buff', name: '発火', statusEffects: [{ type: 'strength', value: 2 }], effect: (self) => { self.addStatus('strength', 2); self.addBlock(12); } },
         { id: 'tackle', type: 'attack', value: 5, times: 2, name: '二連撃' },
         { id: 'sear', type: 'attack', value: 6, name: 'シアー' },
         { id: 'inferno', type: 'attack', value: 3, times: 6, name: 'インフェルノ' }

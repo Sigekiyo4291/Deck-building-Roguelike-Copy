@@ -3,7 +3,7 @@ import { GameMap } from './core/map-data';
 import { MapGenerator } from './core/map-generator';
 import { SceneManager } from './core/scene-manager';
 import { BOSS_DATA } from './core/boss-data';
-import { Player, Enemy, Louse, Cultist, JawWorm, AcidSlimeM, SpikeSlimeM, AcidSlimeS, SpikeSlimeS, FungiBeast, AcidSlimeL, SpikeSlimeL, BlueSlaver, RedSlaver, Looter, GremlinNob, Lagavulin, Sentry, SlimeBoss, Guardian, Hexaghost } from './core/entity';
+import { Player, Enemy, Louse, Cultist, JawWorm, AcidSlimeM, SpikeSlimeM, AcidSlimeS, SpikeSlimeS, FungiBeast, AcidSlimeL, SpikeSlimeL, BlueSlaver, RedSlaver, Looter, GremlinNob, Lagavulin, Sentry, SlimeBoss, Guardian, Hexaghost, DEBUFF_TYPES, BUFF_TYPES, isDebuff, isBuff } from './core/entity';
 import { CardLibrary } from './core/card';
 import { BattleEngine } from './core/engine';
 import { RelicLibrary } from './core/relic';
@@ -48,6 +48,7 @@ const STATUS_INFO = {
   brutality: { name: '残虐', desc: 'ターン開始時、HPを1失いカードを1枚引く。' },
   berserk: { name: '狂戦士', desc: 'ターン開始時、エナジーを1得る。' },
   enrage_enemy: { name: '激怒', desc: 'スキルを1枚プレイするたび、筋力を得ます。' },
+  artifact: { name: 'アーティファクト', desc: '次に受けるデバフを無効化します。' },
 };
 
 
@@ -1687,6 +1688,7 @@ class Game {
       if (status.type === 'spore_cloud') iconChar = '🍄';
       if (status.type === 'thievery') iconChar = '💰';
       if (status.type === 'enrage_enemy') iconChar = '💢';
+      if (status.type === 'artifact') iconChar = '💎';
 
       // ツールチップ設定
       const info = STATUS_INFO[status.type];

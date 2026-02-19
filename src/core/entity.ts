@@ -1,6 +1,34 @@
 import { CardLibrary } from './card';
 import { RelicLibrary } from './relic';
 
+export const DEBUFF_TYPES = [
+  'vulnerable', 'weak', 'frail', 'entangled', 'no_draw',
+  'strength_down', 'dexterity_down'
+];
+
+export const BUFF_TYPES = [
+  'strength', 'dexterity', 'thorns', 'metallicize', 'demon_form',
+  'demon_form_plus', 'ritual', 'double_tap', 'fire_breathing',
+  'feel_no_pain', 'combust', 'rupture', 'evolve', 'dark_embrace',
+  'juggernaut', 'barricade', 'corruption', 'brutality', 'berserk',
+  'curl_up', 'malleable', 'artifact', 'rage', 'enrage_enemy',
+  'split', 'spore_cloud', 'thievery'
+];
+
+export function isDebuff(type: string, value: number): boolean {
+  if (DEBUFF_TYPES.includes(type)) return value > 0;
+  if (type === 'strength' || type === 'dexterity') return value < 0;
+  return false;
+}
+
+export function isBuff(type: string, value: number): boolean {
+  if (BUFF_TYPES.includes(type)) {
+    if (type === 'strength' || type === 'dexterity') return value > 0;
+    return value > 0;
+  }
+  return false;
+}
+
 export class Entity {
   name: string;
   maxHp: number;
@@ -160,6 +188,16 @@ export class Entity {
 
   // ステータス操作
   addStatus(type, value) {
+    // アーティファクトの処理
+    if (isDebuff(type, value)) {
+      const artifactVal = this.getStatusValue('artifact');
+      if (artifactVal > 0) {
+        console.log(`${this.name} はアーティファクトで ${type} を防いだ！`);
+        this.addStatus('artifact', -1);
+        return;
+      }
+    }
+
     const existing = this.statusEffects.find(s => s.type === type);
     if (existing) {
       existing.value += value;
@@ -1039,7 +1077,10 @@ export class Sentry extends Enemy {
     } else {
       this.setNextMove({
         id: 'dazed', type: 'debuff', name: 'めまい', effect: (self, player, engine) => {
-          console.log("Dazed added to discard!"); // 本来はカード追加
+          if (engine && engine.addCardsToDiscard) {
+            engine.addCardsToDiscard('DAZED', 3);
+          }
+          console.log("3x Dazed added to discard!");
         }
       });
     }

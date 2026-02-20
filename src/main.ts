@@ -51,6 +51,9 @@ const STATUS_INFO = {
   artifact: { name: 'アーティファクト', desc: '次に受けるデバフを無効化します。' },
   mode_shift: { name: 'モードシフト', desc: 'この値がXになると、20ブロックを得て防御態勢に入る。ダメージを受けるたびに減少する。' },
   sharp_hide: { name: 'シャープハイド', desc: 'アタックカードをプレイするたび、Xダメージを受ける。' },
+  plated_armor: { name: 'プレートアーマー', desc: 'ターン終了時、この数値分のブロックを得る。アタックダメージを受けると数値が1減少する。' },
+  regeneration: { name: '再生', desc: 'ターン終了時、この数値分のHPを回復する。ターン経過で数値が1減少する。' },
+  duplication: { name: '複製', desc: '次にプレイするポーションやカードの効果が2回発動する。' },
 };
 
 
@@ -872,12 +875,14 @@ class Game {
       (result) => {
         if (result === 'win') {
           this.onBattleWin();
+        } else if (result === 'escape') {
+          this.onBattleEscape();
         } else {
           alert('Game Over...');
           location.reload();
         }
       },
-      (title, pile, callback) => this.showCardSelectionFromPile(title, pile, callback),
+      (title, pile, callback, options) => this.showCardSelectionFromPile(title, pile, callback, options),
       this.effectManager, // エフェクトマネージャーを渡す
       this.audioManager   // オーディオマネージャーを渡す
     );
@@ -943,18 +948,21 @@ class Game {
       (result) => {
         if (result === 'win') {
           this.onBattleWin();
+        } else if (result === 'escape') {
+          this.onBattleEscape();
         } else {
           alert('Game Over...');
           location.reload();
         }
       },
-      (title, pile, callback) => this.showCardSelectionFromPile(title, pile, callback),
+      (title, pile, callback, options) => this.showCardSelectionFromPile(title, pile, callback, options),
       this.effectManager, // エフェクトマネージャーを渡す
       this.audioManager   // オーディオマネージャーを渡す
     );
 
     // シーン切り替え
     this.sceneManager.showBattle();
+    this.battleEngine.isBossBattle = this.isBossBattle; // ボス戦フラグをエンジンに渡す
     this.battleEngine.start();
     this.updateBattleUI();
     this.updateGlobalStatusUI(); // 初期表示（レリック、ポーション等含む）
@@ -965,6 +973,16 @@ class Game {
     } else {
       this.audioManager.playBgm('battle');
     }
+  }
+
+  async onBattleEscape() {
+    alert('戦闘から逃走しました！');
+    if (this.map) {
+      this.map.updateAvailableNodes();
+    }
+    const transition = this.sceneManager.showMap();
+    this.renderMap();
+    await transition;
   }
 
   onBattleWin() {
@@ -1255,7 +1273,7 @@ class Game {
     });
   }
 
-  showCardSelectionFromPile(title, pile, callback) {
+  showCardSelectionFromPile(title, pile, callback, options: any = {}) {
     const overlay = document.getElementById('deck-selection-overlay');
     const container = document.getElementById('deck-selection-list');
     const titleEl = document.getElementById('deck-selection-title');
@@ -1266,22 +1284,60 @@ class Game {
     titleEl.textContent = title;
     container.innerHTML = '';
     overlay.style.display = 'flex';
-    closeBtn.style.display = 'none'; // 効果中は閉じられないようにする
+
+    const isMultiSelect = options && options.multiSelect;
+
+    if (isMultiSelect) {
+      closeBtn.style.display = 'block';
+      closeBtn.textContent = '完了';
+    } else {
+      closeBtn.style.display = 'none'; // 効果中は閉じられないようにする
+    }
 
     if (pile.length === 0) {
       setTimeout(() => {
         overlay.style.display = 'none';
-        if (callback) callback(null);
+        if (callback) {
+          if (isMultiSelect) callback([], []);
+          else callback(null);
+        }
       }, 1000);
       container.innerHTML = '<div style="color: white; font-size: 1.5em; text-align: center; width: 100%;">対象となるカードがありません</div>';
       return;
     }
 
+    let selectedIndices: number[] = [];
+    let selectedCards: any[] = [];
+
+    if (isMultiSelect) {
+      closeBtn.onclick = () => {
+        overlay.style.display = 'none';
+        if (callback) callback(selectedCards, selectedIndices);
+        closeBtn.textContent = '閉じる'; // リセット用（他で使う場合）
+        closeBtn.onclick = null;
+      };
+    }
+
     pile.forEach((card, index) => {
       const cardEl = this.createRewardCardElement(card);
       cardEl.onclick = () => {
-        overlay.style.display = 'none';
-        if (callback) callback(card, index);
+        if (isMultiSelect) {
+          const idx = selectedIndices.indexOf(index);
+          if (idx === -1) {
+            selectedIndices.push(index);
+            selectedCards.push(card);
+            cardEl.classList.add('selected');
+            cardEl.style.boxShadow = '0 0 15px 5px #ffeb3b'; // 選択状態の強調
+          } else {
+            selectedIndices.splice(idx, 1);
+            selectedCards.splice(idx, 1);
+            cardEl.classList.remove('selected');
+            cardEl.style.boxShadow = ''; // 選択解除
+          }
+        } else {
+          overlay.style.display = 'none';
+          if (callback) callback(card, index);
+        }
       };
       container.appendChild(cardEl);
     });

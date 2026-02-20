@@ -12,6 +12,7 @@ export class BattleEngine {
     phase: string;
     isProcessing: boolean = false;
     isEnded: boolean = false;
+    isBossBattle: boolean = false;
 
     constructor(player, enemies, uiUpdateCallback, onBattleEnd, onCardSelectionRequest, effectManager = null, audioManager = null) {
         this.player = player;
@@ -226,29 +227,36 @@ export class BattleEngine {
                     if (this.audioManager) this.audioManager.playSe('defense'); // ブロックSE
                 }
 
-                // ダブルタップ (Double Tap) の処理
-                if (card.type === 'attack') {
-                    const doubleTapStatus = this.player.statusEffects.find(s => s.type === 'double_tap');
-                    if (doubleTapStatus && doubleTapStatus.value > 0) {
-                        this.player.addStatus('double_tap', -1);
-                        console.log('Double Tap triggered!');
+                // 複製 (Duplication) および ダブルタップ (Double Tap) の処理
+                const duplicationStatus = this.player.statusEffects.find(s => s.type === 'duplication');
+                const doubleTapStatus = this.player.statusEffects.find(s => s.type === 'double_tap');
 
-                        // ターゲットの再取得（もし死んでいたら）
-                        let newTarget = target;
-                        if (card.targetType === 'single' && (!newTarget || newTarget.isDead())) {
-                            newTarget = this.enemies.find(e => !e.isDead());
-                        }
+                let shouldPlayAgain = false;
 
-                        if (newTarget || card.targetType !== 'single') {
-                            await new Promise(resolve => setTimeout(resolve, 300));
-                            const oldBlockDT = this.player.block;
-                            await card.play(this.player, newTarget, this, true);
-                            if (this.player.block > oldBlockDT) {
-                                if (this.player.block > oldBlockDT) {
-                                    this.showEffectForPlayer('block');
-                                    if (this.audioManager) this.audioManager.playSe('defense'); // ブロックSE
-                                }
-                            }
+                if (duplicationStatus && duplicationStatus.value > 0) {
+                    this.player.addStatus('duplication', -1);
+                    console.log('Duplication triggered!');
+                    shouldPlayAgain = true;
+                } else if (card.type === 'attack' && doubleTapStatus && doubleTapStatus.value > 0) {
+                    this.player.addStatus('double_tap', -1);
+                    console.log('Double Tap triggered!');
+                    shouldPlayAgain = true;
+                }
+
+                if (shouldPlayAgain) {
+                    // ターゲットの再取得（もし死んでいたら）
+                    let newTarget = target;
+                    if (card.targetType === 'single' && (!newTarget || newTarget.isDead())) {
+                        newTarget = this.enemies.find(e => !e.isDead());
+                    }
+
+                    if (newTarget || card.targetType !== 'single') {
+                        await new Promise(resolve => setTimeout(resolve, 300));
+                        const oldBlockAgain = this.player.block;
+                        await card.play(this.player, newTarget, this, true);
+                        if (this.player.block > oldBlockAgain) {
+                            this.showEffectForPlayer('block');
+                            if (this.audioManager) this.audioManager.playSe('defense'); // ブロックSE
                         }
                     }
                 }
@@ -660,6 +668,12 @@ export class BattleEngine {
         });
     }
 
+    escapeBattle() {
+        this.isEnded = true;
+        console.log('戦闘から逃走しました！');
+        if (this.onBattleEnd) this.onBattleEnd('escape');
+    }
+
     checkBattleEnd() {
         if (this.isEnded) return;
         const allEnemiesDead = this.enemies.every(e => e.isDead());
@@ -674,6 +688,27 @@ export class BattleEngine {
                 this.onBattleEnd('win');
             }
         } else if (this.player.isDead()) {
+            // 妖精の瓶チェック
+            const fairyIndex = this.player.potions.findIndex((p: any) => p && p.id === 'fairy_potion');
+            if (fairyIndex !== -1) {
+                const fairyPotion = this.player.potions[fairyIndex];
+                const multiplier = fairyPotion.getMultiplier(this.player);
+                const healAmount = Math.floor(this.player.maxHp * 0.3 * multiplier);
+
+                this.player.potions[fairyIndex] = null;
+                this.player.hp = healAmount; // 復活
+                console.log(`瓶詰の妖精が発動！ HPが ${healAmount} 回復しました。`);
+
+                if (this.effectManager) {
+                    const playerElement = document.getElementById('player');
+                    if (playerElement) {
+                        this.effectManager.showHealEffect(playerElement, healAmount);
+                    }
+                }
+                this.uiUpdateCallback();
+                return;
+            }
+
             this.isEnded = true;
             if (this.onBattleEnd) this.onBattleEnd('lose');
         }

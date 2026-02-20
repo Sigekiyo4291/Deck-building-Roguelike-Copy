@@ -12,7 +12,8 @@ export const BUFF_TYPES = [
   'feel_no_pain', 'combust', 'rupture', 'evolve', 'dark_embrace',
   'juggernaut', 'barricade', 'corruption', 'brutality', 'berserk',
   'curl_up', 'malleable', 'artifact', 'rage', 'enrage_enemy',
-  'split', 'spore_cloud', 'thievery', 'mode_shift', 'sharp_hide'
+  'split', 'spore_cloud', 'thievery', 'mode_shift', 'sharp_hide',
+  'plated_armor', 'regeneration', 'duplication'
 ];
 
 export function isDebuff(type: string, value: number): boolean {
@@ -128,6 +129,14 @@ export class Entity {
     if (totalReflect > 0 && source && source !== this) {
       // 攻撃者に反射ダメージを与える
       source.takeDamage(totalReflect, null);
+    }
+
+    // プレートアーマー (Plated Armor) の処理: ダメージを受けた場合に減少
+    if (remainingDamage > 0) {
+      const platedArmor = this.getStatusValue('plated_armor');
+      if (platedArmor > 0) {
+        this.addStatus('plated_armor', -1);
+      }
     }
 
     return remainingDamage;
@@ -255,9 +264,26 @@ export class Entity {
         s.value = 0; // 値を0にして削除対象にする
       }
 
+      /* 既存のforEach内に追加 */
       // 儀式(ritual): ターン終了時に筋力を得る
       if (s.type === 'ritual') {
         this.addStatus('strength', s.value);
+      }
+
+      // 再生(regeneration): ターン終了時に回復し、値を1減らす
+      if (s.type === 'regeneration') {
+        this.heal(s.value);
+        s.value--; // 再生自体はターン経過で減少
+      }
+
+      // 金属化(metallicize): ターン終了時にブロック獲得
+      if (s.type === 'metallicize') {
+        this.addBlock(s.value);
+      }
+
+      // プレートアーマー(plated_armor): ターン終了時にブロック獲得
+      if (s.type === 'plated_armor') {
+        this.addBlock(s.value);
       }
     });
     // 値が0のものを削除

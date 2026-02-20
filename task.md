@@ -128,3 +128,30 @@
 - [x] ターゲット死亡時の自動ターゲット変更機能
 - [x] スピードポーションのdexterity_down実装とステータスアイコン追加
 - [x] 戦闘中の山札クリック挙動修正
+
+# ポーション追加実装タスク
+- [x] ステータス効果の実装 (src/core/entity.ts)
+    - [x] `BUFF_TYPES`, `DEBUFF_TYPES` 定数の更新
+    - [x] 再生 (Regeneration)
+    - [x] 金属化 (Metallicize)
+    - [x] アーティファクト (Artifact) - 既存ロジック確認・修正
+    - [x] トゲ (Thorns) - 既存ロジック確認・修正
+    - [x] 儀式 (Ritual) - 既存ロジック確認・修正
+    - [x] プレートアーマー (Plated Armor)
+- [x] ポーションクラスの実装 (src/core/potion-data.ts)
+    - [x] コモンポーション (16種)
+    - [x] アンコモンポーション (9種)
+    - [x] レアポーション (7種) 
+- [x] レアリティ抽選ロジックの修正 (src/core/potion-data.ts)
+    - [x] コモン65%, アンコモン25%, レア10%
+- [x] 特殊効果の実装
+    - [x] 複製ポーション (Double Tap / Burst 相当)
+    - [x] 選択して手札に加える系 (Attack/Skill/Power/Colorless Potion)
+    - [x] 瓶詰の妖精 (Fairy Potion) - 死亡時復活ロジック
+    - [x] 煙玉 (Smoke Bomb) - 戦闘離脱ロジック
+    - [x] エントロピー醸造 (Entropic Brew)
+    - [x] 賭博師の醸造酒 (Gambler's Brew)
+    - [x] スネッコオイル (Snecko Oil) - コストランダム化
+- [x] UI/UX調整
+    - [x] ポーション画像の割り当て（仮画像含む）
+    - [x] ツールチップの確認

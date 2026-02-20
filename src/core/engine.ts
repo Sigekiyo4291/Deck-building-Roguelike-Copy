@@ -318,11 +318,11 @@ export class BattleEngine {
                 // 必要であればここでthis.playerに発光エフェクトなどを入れる
             }
 
+            // 使用したのでスロットを空ける (ポーションの効果で再度スロットが使われる可能性を考慮し先に空ける)
+            this.player.potions[potionIndex] = null;
+
             // バグ修正: 第3引数を this.enemies から this (BattleEngine) に変更
             await potion.onUse(this.player, target, this);
-
-            // 使用したのでスロットを空ける
-            this.player.potions[potionIndex] = null;
 
             if (this.audioManager) {
                 if (potion.targetType === 'single' || potion.targetType === 'all') {

@@ -245,4 +245,50 @@ export class EffectManager {
 
         requestAnimationFrame(animate);
     }
+
+    /**
+     * 回復エフェクトを表示
+     * @param {HTMLElement} targetElement - 対象の要素
+     * @param {number} amount - 回復量
+     * @param {Function} callback - コールバック
+     */
+    showHealEffect(targetElement, amount, callback = null) {
+        if (!targetElement) {
+            if (callback) callback();
+            return;
+        }
+
+        const rect = targetElement.getBoundingClientRect();
+        const effectEl = document.createElement('div');
+        effectEl.className = 'heal-effect-text';
+        effectEl.textContent = `+${amount}`;
+        effectEl.style.position = 'absolute';
+        effectEl.style.left = `${rect.left + rect.width / 2}px`;
+        effectEl.style.top = `${rect.top}px`;
+        effectEl.style.color = '#7fff00';
+        effectEl.style.fontWeight = 'bold';
+        effectEl.style.fontSize = '24px';
+        effectEl.style.textShadow = '0 0 5px black, 0 0 2px black';
+        effectEl.style.pointerEvents = 'none';
+        effectEl.style.zIndex = '1000';
+        effectEl.style.transition = 'all 1s ease-out';
+        effectEl.style.transform = 'translate(-50%, 0)';
+
+        document.body.appendChild(effectEl);
+
+        // アニメーション (上にフワッと消える)
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                effectEl.style.transform = 'translate(-50%, -50px)';
+                effectEl.style.opacity = '0';
+            });
+        });
+
+        setTimeout(() => {
+            if (effectEl.parentNode) {
+                effectEl.parentNode.removeChild(effectEl);
+            }
+            if (callback) callback();
+        }, 1000);
+    }
 }

@@ -442,6 +442,10 @@ export class BattleEngine {
         // ダメージを与える
         target.takeDamage(damage, source);
 
+        if (target === this.player && target.isDead()) {
+            this.triggerFairyPotionIfDead();
+        }
+
         // 死亡判定と死亡時処理
         if (target.isDead()) {
             if (target.onDeath) target.onDeath(source, this);
@@ -492,6 +496,7 @@ export class BattleEngine {
             });
             console.log(`手札に火傷が ${burnCards.length} 枚あります。合計 ${totalBurnDamage} ダメージを受けます。`);
             this.player.takeDamage(totalBurnDamage, null); // 敵ではなくカードからのダメージ
+            if (this.player.isDead()) this.triggerFairyPotionIfDead();
         }
 
         // 燃焼 (Combust) の処理
@@ -499,6 +504,8 @@ export class BattleEngine {
         if (combustDamage > 0) {
             console.log(`燃焼発動！ 1 HPを失い、全体に ${combustDamage} ダメージ。`);
             this.player.loseHP(1);
+            if (this.player.isDead()) this.triggerFairyPotionIfDead();
+
             for (const enemy of this.enemies) {
                 if (!enemy.isDead()) {
                     await this.attackWithEffect(this.player, enemy, combustDamage);
@@ -591,7 +598,7 @@ export class BattleEngine {
         try {
             // 全ての生存している敵が行動
             for (const enemy of this.enemies) {
-                if (!enemy.isDead()) {
+                if (!enemy.isDead() && !this.player.isDead()) {
                     enemy.resetBlock();
 
                     // 敵の行動実行
@@ -602,12 +609,15 @@ export class BattleEngine {
                             const damage = enemy.calculateDamage(enemy.nextMove.value);
                             const times = enemy.nextMove.times || 1;
                             for (let i = 0; i < times; i++) {
+                                if (this.player.isDead()) break;
                                 // 攻撃エフェクト付きで実行
                                 await this.attackWithEffect(enemy, this.player, damage);
                                 this.uiUpdateCallback(); // 攻撃ごとにUI（HP/ブロック）を更新
                                 if (times > 1) await new Promise(resolve => setTimeout(resolve, 200));
                             }
                         }
+
+                        if (this.player.isDead()) break;
 
                         // 特殊効果（バフ、デバフ、ブロック、分裂など）
                         if (enemy.nextMove.effect) {
@@ -674,6 +684,32 @@ export class BattleEngine {
         if (this.onBattleEnd) this.onBattleEnd('escape');
     }
 
+    triggerFairyPotionIfDead() {
+        if (!this.player.isDead()) return false;
+
+        // 妖精の瓶チェック
+        const fairyIndex = this.player.potions.findIndex((p: any) => p && p.id === 'fairy_potion');
+        if (fairyIndex !== -1) {
+            const fairyPotion = this.player.potions[fairyIndex];
+            const multiplier = fairyPotion.getMultiplier(this.player);
+            const healAmount = Math.floor(this.player.maxHp * 0.3 * multiplier);
+
+            this.player.potions[fairyIndex] = null;
+            this.player.hp = healAmount; // 復活
+            console.log(`瓶詰の妖精が発動！ HPが ${healAmount} 回復しました。`);
+
+            if (this.effectManager) {
+                const playerElement = document.getElementById('player');
+                if (playerElement) {
+                    this.effectManager.showHealEffect(playerElement, healAmount);
+                }
+            }
+            this.uiUpdateCallback();
+            return true;
+        }
+        return false;
+    }
+
     checkBattleEnd() {
         if (this.isEnded) return;
         const allEnemiesDead = this.enemies.every(e => e.isDead());
@@ -688,27 +724,6 @@ export class BattleEngine {
                 this.onBattleEnd('win');
             }
         } else if (this.player.isDead()) {
-            // 妖精の瓶チェック
-            const fairyIndex = this.player.potions.findIndex((p: any) => p && p.id === 'fairy_potion');
-            if (fairyIndex !== -1) {
-                const fairyPotion = this.player.potions[fairyIndex];
-                const multiplier = fairyPotion.getMultiplier(this.player);
-                const healAmount = Math.floor(this.player.maxHp * 0.3 * multiplier);
-
-                this.player.potions[fairyIndex] = null;
-                this.player.hp = healAmount; // 復活
-                console.log(`瓶詰の妖精が発動！ HPが ${healAmount} 回復しました。`);
-
-                if (this.effectManager) {
-                    const playerElement = document.getElementById('player');
-                    if (playerElement) {
-                        this.effectManager.showHealEffect(playerElement, healAmount);
-                    }
-                }
-                this.uiUpdateCallback();
-                return;
-            }
-
             this.isEnded = true;
             if (this.onBattleEnd) this.onBattleEnd('lose');
         }

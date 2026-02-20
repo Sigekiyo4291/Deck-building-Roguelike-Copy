@@ -13,7 +13,7 @@ export const BUFF_TYPES = [
   'juggernaut', 'barricade', 'corruption', 'brutality', 'berserk',
   'curl_up', 'malleable', 'artifact', 'rage', 'enrage_enemy',
   'split', 'spore_cloud', 'thievery', 'mode_shift', 'sharp_hide',
-  'plated_armor', 'regeneration', 'duplication'
+  'plated_armor', 'regeneration', 'duplication', 'pen_nib', 'vigor'
 ];
 
 export function isDebuff(type: string, value: number): boolean {
@@ -419,6 +419,32 @@ export class Player extends Entity {
     if (card.onExhaust && engine) {
       card.onExhaust(this, engine);
     }
+  }
+
+  addCard(card) {
+    this.masterDeck.push(card);
+    if (this.relics) {
+      this.relics.forEach(relic => {
+        if (relic.onCardAdd) relic.onCardAdd(this, card);
+      });
+    }
+  }
+
+  gainGold(amount) {
+    this.gold += amount;
+  }
+
+  spendGold(amount) {
+    if (this.gold >= amount) {
+      this.gold -= amount;
+      if (this.relics) {
+        this.relics.forEach(relic => {
+          if (relic.onGoldSpend) relic.onGoldSpend(this, amount);
+        });
+      }
+      return true;
+    }
+    return false;
   }
 
   resetEnergy() {

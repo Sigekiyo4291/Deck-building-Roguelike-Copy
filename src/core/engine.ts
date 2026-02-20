@@ -13,6 +13,7 @@ export class BattleEngine {
     isProcessing: boolean = false;
     isEnded: boolean = false;
     isBossBattle: boolean = false;
+    currentPlayingCard: any = null;
 
     constructor(player, enemies, uiUpdateCallback, onBattleEnd, onCardSelectionRequest, effectManager = null, audioManager = null) {
         this.player = player;
@@ -94,7 +95,13 @@ export class BattleEngine {
         if (!this.player.hasStatus('barricade')) {
             this.player.resetBlock();
         }
-        this.drawCards(5);
+
+        // レリック: onPlayerTurnStart
+        this.player.relics.forEach(relic => {
+            if (relic.onPlayerTurnStart) relic.onPlayerTurnStart(this.player, this);
+        });
+
+        await this.drawCards(5);
         this.updateIntent();
         this.uiUpdateCallback();
     }
@@ -228,7 +235,14 @@ export class BattleEngine {
                     if (relic.onCardPlay) relic.onCardPlay(this.player, this, card);
                 });
 
+                this.currentPlayingCard = card;
                 await card.play(this.player, target, this);
+                this.currentPlayingCard = null;
+
+                // レリック: afterCardPlay
+                this.player.relics.forEach(relic => {
+                    if (relic.afterCardPlay) relic.afterCardPlay(this.player, this, card);
+                });
 
                 // 敵にカードプレイを通知（激怒などの発動用）
                 this.enemies.forEach(enemy => {
@@ -269,7 +283,9 @@ export class BattleEngine {
                     if (newTarget || card.targetType !== 'single') {
                         await new Promise(resolve => setTimeout(resolve, 300));
                         const oldBlockAgain = this.player.block;
+                        this.currentPlayingCard = card;
                         await card.play(this.player, newTarget, this, true);
+                        this.currentPlayingCard = null;
                         if (this.player.block > oldBlockAgain) {
                             this.showEffectForPlayer('block');
                             if (this.audioManager) this.audioManager.playSe('defense'); // ブロックSE
@@ -339,6 +355,11 @@ export class BattleEngine {
 
             // バグ修正: 第3引数を this.enemies から this (BattleEngine) に変更
             await potion.onUse(this.player, target, this);
+
+            // レリック: onPotionUse
+            this.player.relics.forEach(relic => {
+                if (relic.onPotionUse) relic.onPotionUse(this.player, potion);
+            });
 
             if (this.audioManager) {
                 if (potion.targetType === 'single' || potion.targetType === 'all') {
@@ -427,6 +448,16 @@ export class BattleEngine {
     async attackWithEffect(source, target, damage, targetIndex = null) {
         if (!target || target.isDead()) return;
 
+        let finalDamage = damage;
+        // レリックによるダメージ補正
+        if (source === this.player && source.relics) {
+            source.relics.forEach(relic => {
+                if (relic.modifyDamageDealt) {
+                    finalDamage = relic.modifyDamageDealt(source, target, finalDamage, this.currentPlayingCard);
+                }
+            });
+        }
+
         // ターゲットインデックスを取得
         if (targetIndex === null) {
             targetIndex = this.enemies.indexOf(target);
@@ -456,7 +487,7 @@ export class BattleEngine {
         }
 
         // ダメージを与える
-        target.takeDamage(damage, source);
+        target.takeDamage(finalDamage, source);
 
         if (target === this.player && target.isDead()) {
             this.triggerFairyPotionIfDead();

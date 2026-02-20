@@ -270,6 +270,11 @@ class Game {
     this.map.currentNode = node;
     node.isClear = true;
 
+    // レリック: onRoomEnter
+    this.player.relics.forEach(relic => {
+      if (relic.onRoomEnter) relic.onRoomEnter(this.player, node.type);
+    });
+
     if (node.type === 'enemy' || node.type === 'elite' || node.type === 'boss') {
       this.isEliteBattle = (node.type === 'elite' || node.type === 'boss'); // エリート/ボスの判定
       this.startBattle(node.type);
@@ -296,9 +301,22 @@ class Game {
     // 休む (HP回復)
     document.getElementById('rest-heal-btn').onclick = () => {
       const healAmount = Math.floor(this.player.maxHp * 0.3);
-      this.player.heal(healAmount);
-      alert(`HPが ${healAmount} 回復しました！`);
-      this.finishRest();
+      // レリック: 王者の枕 (Regal Pillow) - 追加回復
+      const extraHeal = this.player.relics.some(r => r.id === 'regal_pillow') ? 15 : 0;
+      this.player.heal(healAmount + extraHeal);
+
+      // レリック: onRoomRest
+      this.player.relics.forEach(relic => {
+        if (relic.onRoomRest) relic.onRoomRest(this.player);
+      });
+
+      // レリック: ドリームキャッチャー (Dream Catcher)
+      if (this.player.relics.some(r => r.id === 'dream_catcher')) {
+        alert(`ドリームキャッチャー発動！ カードを1枚獲得します。`);
+        this.showCardRewardOnly();
+      } else {
+        this.finishRest();
+      }
     };
 
     // 鍛える (カード強化)
@@ -360,7 +378,40 @@ class Game {
   // ===== イベント関連メソッド =====
 
   showEventScene() {
-    // ランダムなイベントを選択
+    // レリック: 小さな宝箱 (Tiny Chest)
+    this.player.relicCounters['tiny_chest'] = (this.player.relicCounters['tiny_chest'] || 0) + 1;
+    if (this.player.relics.some(r => r.id === 'tiny_chest') && this.player.relicCounters['tiny_chest'] >= 4) {
+      this.player.relicCounters['tiny_chest'] = 0;
+      alert('小さな宝箱が発動！ お宝を見つけました。');
+      this.showTreasureScene();
+      return;
+    }
+
+    // 「？」ノードの抽選 (簡易版)
+    // 通常はイベント80%、戦闘10%、宝箱10%など。
+    const rand = Math.random();
+
+    // レリック: 数珠ブレスレット (Juzu Bracelet) - 通常戦闘が発生しない
+    const hasJuzu = this.player.relics.some(r => r.id === 'juzu_bracelet');
+
+    if (!hasJuzu && rand < 0.1) {
+      // 戦闘発生
+      alert('イベントかと思いきや、敵に襲われました！');
+      this.startBattle('enemy');
+      return;
+    } else if (rand < 0.2) {
+      // 宝箱発生
+      alert('イベントかと思いきや、宝箱を見つけました！');
+      this.showTreasureScene();
+      return;
+    } else if (rand < 0.25) {
+      // ショップ発生
+      alert('イベントかと思いきや、商人がいました！');
+      this.showShopScene();
+      return;
+    }
+
+    // 通常のイベント
     const event = getRandomEvent();
     this.currentEvent = event;
     this.currentEventState = {};
@@ -570,9 +621,8 @@ class Game {
 
       cardEl.onclick = () => {
         if (wrapper.classList.contains('sold-out')) return;
-        if (this.player.gold >= price) {
-          this.player.gold -= price;
-          this.player.masterDeck.push(card);
+        if (this.player.spendGold(price)) {
+          this.player.addCard(card);
           this.updateGlobalStatusUI();
           wrapper.classList.add('sold-out');
         } else {
@@ -612,9 +662,8 @@ class Game {
 
       cardEl.onclick = () => {
         if (wrapper.classList.contains('sold-out')) return;
-        if (this.player.gold >= price) {
-          this.player.gold -= price;
-          this.player.masterDeck.push(card);
+        if (this.player.spendGold(price)) {
+          this.player.addCard(card);
           this.updateGlobalStatusUI();
           wrapper.classList.add('sold-out');
         } else {
@@ -664,8 +713,7 @@ class Game {
 
       relicEl.onclick = () => {
         if (wrapper.classList.contains('sold-out')) return;
-        if (this.player.gold >= price) {
-          this.player.gold -= price;
+        if (this.player.spendGold(price)) {
           this.player.relics.push(relic);
           if (relic.onObtain) relic.onObtain(this.player);
           this.updateGlobalStatusUI();
@@ -713,10 +761,11 @@ class Game {
         if (this.player.gold >= price) {
           const emptySlot = this.player.potions.indexOf(null);
           if (emptySlot !== -1) {
-            this.player.gold -= price;
-            this.player.potions[emptySlot] = potion;
-            this.updateGlobalStatusUI();
-            wrapper.classList.add('sold-out');
+            if (this.player.spendGold(price)) {
+              this.player.potions[emptySlot] = potion;
+              this.updateGlobalStatusUI();
+              wrapper.classList.add('sold-out');
+            }
           } else {
             alert('ポーションのスロットがいっぱいです！');
           }
@@ -731,7 +780,12 @@ class Game {
     }
 
     // 5. 下段右: カード削除サービス
-    const removalPrice = 75 + (this.player.cardRemovalCount || 0) * 25;
+    // レリック: スマイルマスク (Smiling Mask) - 削除費用を50に固定
+    let removalPrice = 75 + (this.player.cardRemovalCount || 0) * 25;
+    if (this.player.relics.some(r => r.id === 'smiling_mask')) {
+      removalPrice = 50;
+    }
+
     const removalWrapper = document.createElement('div');
     removalWrapper.className = 'shop-item-wrapper';
 
@@ -748,7 +802,7 @@ class Game {
 
     removalBtn.onclick = () => {
       if (removalWrapper.classList.contains('sold-out')) return;
-      if (this.player.gold >= removalPrice) {
+      if (this.player.spendGold(removalPrice)) {
         this.showCardRemovalUI(removalPrice, removalWrapper);
       } else {
         alert('ゴールドが足りません！');
@@ -798,27 +852,20 @@ class Game {
         e.preventDefault();
         e.stopPropagation();
 
-        console.log(`Card removal start: ${card.name}, idx: ${idx}, price: ${price}`);
-
-        if (confirm(`${(card as any).name} を削除しますか？`)) {
-          // デッキから削除
+        if (confirm(`${card.name} を削除しますか？`)) {
           this.player.masterDeck.splice(idx, 1);
-          this.player.gold -= price;
           this.player.cardRemovalCount = (this.player.cardRemovalCount || 0) + 1;
 
-          console.log(`Card removed. New gold: ${this.player.gold}, Count: ${this.player.cardRemovalCount}`);
-
-          this.updateGlobalStatusUI();
-
-          // ショップ側の表示を「売切」にする
-          wrapper.classList.add('sold-out');
-
-          // UIを閉じる
           if (overlay.parentNode) {
             document.body.removeChild(overlay);
           }
+          wrapper.classList.add('sold-out');
+          alert(`${card.name} をデッキから削除しました！`);
+          this.updateGlobalStatusUI();
+          this.showShopScene(); // 価格更新のため再描画
         }
       };
+
       list.appendChild(cardEl);
     });
 
@@ -838,6 +885,28 @@ class Game {
 
     overlay.appendChild(content);
     document.body.appendChild(overlay);
+  }
+
+  showCardRewardOnly() {
+    this.sceneManager.showReward();
+    const listEl = document.getElementById('reward-list');
+    if (listEl) {
+      listEl.innerHTML = '';
+      const reward = { type: 'card', isRare: false, taken: false };
+      const itemEl = document.createElement('div');
+      itemEl.className = 'reward-item';
+      itemEl.textContent = '🎴 カードを追加 (ドリームキャッチャー)';
+      itemEl.onclick = () => {
+        if (!reward.taken) this.showCardSelection(reward, itemEl);
+      };
+      listEl.appendChild(itemEl);
+
+      const doneBtn = document.getElementById('reward-done-btn');
+      if (doneBtn) {
+        doneBtn.textContent = '休憩終了 (ドリームキャッチャー)';
+        doneBtn.onclick = () => this.finishRest();
+      }
+    }
   }
 
   showTreasureScene() {
@@ -1269,6 +1338,16 @@ class Game {
       icon.className = 'relic-icon';
       icon.textContent = relic.name.charAt(0);
       icon.setAttribute('data-tooltip', `${relic.name}\n${relic.rarity}\n\n${relic.description}`);
+
+      // カウンター表示の追加
+      const counterValue = this.player.relicCounters[relic.id];
+      if (counterValue !== undefined && counterValue !== null) {
+        const counter = document.createElement('div');
+        counter.className = 'relic-counter';
+        counter.textContent = String(counterValue);
+        icon.appendChild(counter);
+      }
+
       container.appendChild(icon);
     });
   }
@@ -1364,12 +1443,30 @@ class Game {
 
       const cardEl = this.createRewardCardElement(card);
       cardEl.onclick = () => {
-        this.player.masterDeck.push(card);
+        // お守り (Omamori) チェック
+        if (card.type === 'curse') {
+          const omamori = this.player.relics.find(r => r.id === 'omamori');
+          if (omamori && (this.player.relicCounters['omamori'] || 0) > 0) {
+            this.player.relicCounters['omamori']--;
+            alert(`お守りが発動！ 呪い ${card.name} を無効化しました。`);
+            rewardItem.taken = true;
+            itemEl.style.opacity = '0.5';
+            itemEl.style.textDecoration = 'line-through';
+            overlay.style.display = 'none';
+            return;
+          }
+        }
+        this.player.addCard(card);
         alert(`${card.name} をデッキに追加しました！`);
         rewardItem.taken = true;
         itemEl.style.opacity = '0.5';
         itemEl.style.textDecoration = 'line-through';
         overlay.style.display = 'none';
+
+        // ドリームキャッチャーなどの特殊な報酬表示中なら終了処理へ
+        if (document.getElementById('reward-done-btn')?.innerText === '休憩終了 (ドリームキャッチャー)') {
+          this.finishRest();
+        }
       };
       container.appendChild(cardEl);
     }
@@ -1382,6 +1479,10 @@ class Game {
       rewardItem.taken = true; // スキップしたら取得済み扱い
       itemEl.style.opacity = '0.5';
       itemEl.style.textDecoration = 'line-through';
+
+      if (document.getElementById('reward-done-btn')?.innerText === '休憩終了 (ドリームキャッチャー)') {
+        this.finishRest();
+      }
     };
   }
 

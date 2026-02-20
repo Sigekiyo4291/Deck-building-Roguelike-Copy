@@ -1208,6 +1208,25 @@ body {
   box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
 }
 
+.relic-counter {
+  position: absolute;
+  bottom: -5px;
+  right: -5px;
+  background: #333;
+  color: #fff;
+  border: 1px solid #aaa;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 12px;
+  font-weight: bold;
+  z-index: 5;
+  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+}
+
 .relic-icon:hover::after {
   content: attr(data-tooltip);
   position: absolute;

@@ -324,6 +324,7 @@ export class Player extends Entity {
   potionSlots: number;
   potions: any[];
   relics: any[];
+  relicCounters: { [key: string]: number };
   masterDeck: any[];
   cardRemovalCount: number;
 
@@ -340,6 +341,7 @@ export class Player extends Entity {
     this.potionSlots = 3;
     this.potions = new Array(3).fill(null); // 所持枠をnullで初期化
     this.relics = []; // レリック所持リスト
+    this.relicCounters = {}; // レリックの汎用カウンター保管用
     this.cardRemovalCount = 0;
 
     // マスターデッキ（所持カード）の初期化
@@ -352,8 +354,50 @@ export class Player extends Entity {
     this.relics.push(RelicLibrary.BURNING_BLOOD);
   }
 
+  heal(amount) {
+    const prevHp = this.hp;
+    super.heal(amount);
+    const actualHeal = this.hp - prevHp;
+    if (actualHeal > 0 && this.relics) {
+      this.relics.forEach(relic => {
+        if (relic.onHPRecovery) relic.onHPRecovery(this, null, actualHeal);
+      });
+    }
+  }
+
+  takeDamage(amount, source) {
+    const prevHp = this.hp;
+    const remainingDamage = super.takeDamage(amount, source);
+    if (this.hp < prevHp && this.relics) {
+      const lostHp = prevHp - this.hp;
+      this.relics.forEach(relic => {
+        if (relic.onTakeDamage) relic.onTakeDamage(this, null, lostHp);
+      });
+    }
+    return remainingDamage;
+  }
+
+  loseHP(amount) {
+    const prevHp = this.hp;
+    const lostAmount = super.loseHP(amount);
+    if (this.hp < prevHp && this.relics) {
+      const lostHp = prevHp - this.hp;
+      this.relics.forEach(relic => {
+        if (relic.onTakeDamage) relic.onTakeDamage(this, null, lostHp); // ダメージフックとして処理
+      });
+    }
+    return lostAmount;
+  }
+
   exhaustCard(card, engine) {
     this.exhaust.push(card);
+
+    // レリック: onCardExhaust
+    if (this.relics) {
+      this.relics.forEach(relic => {
+        if (relic.onCardExhaust) relic.onCardExhaust(this, engine, card);
+      });
+    }
 
     // 無痛 (Feel No Pain) の処理
     const fnpBlock = this.getStatusValue('feel_no_pain');

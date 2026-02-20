@@ -18,6 +18,12 @@ export class Relic {
     onPlayerTurnStart(owner, engine) { }
     onTurnEnd(owner, engine) { }
     onVictory(owner, engine) { }
+    onCardPlay(owner, engine, card) { }
+    onTakeDamage(owner, engine, amount) { }
+    onHPRecovery(owner, engine, amount) { }
+    onShuffle(owner, engine) { }
+    onCardDraw(owner, engine, card) { }
+    onCardExhaust(owner, engine, card) { }
 }
 
 export const RelicLibrary = {

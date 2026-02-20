@@ -111,10 +111,20 @@ export class BattleEngine {
                 this.player.deck = [...this.player.discard];
                 this.player.discard = [];
                 this.shuffle(this.player.deck);
+
+                // レリック: onShuffle
+                this.player.relics.forEach(relic => {
+                    if (relic.onShuffle) relic.onShuffle(this.player, this);
+                });
             }
             const card = this.player.deck.pop();
             if (!card) continue;
             this.player.hand.push(card);
+
+            // レリック: onCardDraw
+            this.player.relics.forEach(relic => {
+                if (relic.onCardDraw) relic.onCardDraw(this.player, this, card);
+            });
 
             // 炎の吐息 (Fire Breathing) の処理
             const fbDamage = this.player.getStatusValue('fire_breathing');
@@ -212,6 +222,12 @@ export class BattleEngine {
                 }
 
                 this.player.hand.splice(cardIndex, 1);
+
+                // レリック: onCardPlay
+                this.player.relics.forEach(relic => {
+                    if (relic.onCardPlay) relic.onCardPlay(this.player, this, card);
+                });
+
                 await card.play(this.player, target, this);
 
                 // 敵にカードプレイを通知（激怒などの発動用）

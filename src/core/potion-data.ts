@@ -299,12 +299,19 @@ export const PotionLibrary = {
                     }
                     const card = player.deck.pop();
                     if (card) {
+                        // コストを0にして強制的にプレイできるようにする
+                        card.temporaryCost = 0;
                         player.hand.push(card);
                         // EngineのplayCardを呼び出す
                         // target が null の場合、playCard 内部で適当な敵が選ばれる
                         let targetIdx = 0;
                         if (target) targetIdx = engine.enemies.indexOf(target);
                         if (targetIdx === -1) targetIdx = 0;
+
+                        // engine.usePotionによってisProcessingがtrueになっているため、playCardを呼べるようにfalseにする
+                        engine.isProcessing = false;
+
+                        // playCardは、アニメーション等があるのでawaitで待つ
                         await engine.playCard(player.hand.length - 1, targetIdx);
                     }
                 }

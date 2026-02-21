@@ -446,6 +446,61 @@ export const RelicLibrary = {
             }
         }
     },
+    MATRYOSHKA: new class extends Relic {
+        constructor() { super('matryoshka', 'マトリョーシカ', '次に開ける2つの宝箱から、レリックが2つ出現する。', 'uncommon'); }
+        onObtain(owner) {
+            owner.relicCounters['matryoshka'] = 2; // 残り回数
+        }
+    },
+    FROZEN_EGG: new class extends Relic {
+        constructor() { super('frozen_egg', '凍った卵', '今後カードの報酬で得られる「パワー」がアップグレードされる。', 'uncommon'); }
+        onCardAdd(owner, card) {
+            if (card.type === 'power' && !card.isUpgraded && card.upgradeData) {
+                card.upgrade();
+            }
+        }
+    },
+    TOXIC_EGG: new class extends Relic {
+        constructor() { super('toxic_egg', '毒の卵', '今後カードの報酬で得られる「スキル」がアップグレードされる。', 'uncommon'); }
+        onCardAdd(owner, card) {
+            if (card.type === 'skill' && !card.isUpgraded && card.upgradeData) {
+                card.upgrade();
+            }
+        }
+    },
+    MOLTEN_EGG: new class extends Relic {
+        constructor() { super('molten_egg', '溶融した卵', '今後カードの報酬で得られる「アタック」がアップグレードされる。', 'uncommon'); }
+        onCardAdd(owner, card) {
+            if (card.type === 'attack' && !card.isUpgraded && card.upgradeData) {
+                card.upgrade();
+            }
+        }
+    },
+    MERCURY_HOURGLASS: new class extends Relic {
+        constructor() { super('mercury_hourglass', '水銀の砂時計', 'ターン開始時、敵全体に3ダメージを与える。', 'uncommon'); }
+        onPlayerTurnStart(owner, engine) {
+            engine.enemies.forEach(enemy => {
+                if (!enemy.isDead()) {
+                    enemy.takeDamage(3, owner);
+                }
+            });
+        }
+    },
+    SELF_FORMING_CLAY: new class extends Relic {
+        constructor() { super('self_forming_clay', '自己形成粘土', '戦闘中HPを失うたび、次のターンに3ブロックを得る。', 'uncommon'); }
+        onTakeDamage(owner, engine, amount) {
+            if (amount > 0) {
+                owner.relicCounters['self_forming_clay'] = (owner.relicCounters['self_forming_clay'] || 0) + 3;
+            }
+        }
+        onPlayerTurnStart(owner, engine) {
+            const blockToGain = owner.relicCounters['self_forming_clay'] || 0;
+            if (blockToGain > 0) {
+                owner.addBlock(blockToGain);
+                owner.relicCounters['self_forming_clay'] = 0;
+            }
+        }
+    },
 
     GREMLIN_HORN: new class extends Relic {
         constructor() { super('gremlin_horn', 'グレムリンの角笛', '敵が死ぬたび、エナジーを1得て、カードを1枚引く。', 'uncommon'); }

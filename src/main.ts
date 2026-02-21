@@ -932,9 +932,22 @@ class Game {
       icon.textContent = '🔓';
       openBtn.textContent = '中身を確認';
 
+      // レリック: 呪いの鍵 (Cursed Key) 判定
+      const cursedKey = this.player.relics.find(r => r.id === 'cursed_key');
+      if (cursedKey) {
+        // 呪いをランダムに1枚獲得
+        const curses = Object.values(CardLibrary).filter(c => c.type === 'curse');
+        if (curses.length > 0) {
+          const randomCurse = curses[Math.floor(Math.random() * curses.length)].clone();
+          this.player.addCard(randomCurse);
+          alert(`呪いの鍵の影響で ${randomCurse.name} を得てしまった！`);
+        }
+      }
+
       openBtn.onclick = () => {
         // 報酬画面を流用して中身を表示（レリック確定 + ゴールド）
-        this.showRewardScene(true); // エリート戦と同様の報酬（レリック確定）を付与
+        // 第3引数を isTreasure として渡し、マトリョーシカの判定などに使う
+        this.showRewardScene(true, false, true);
       };
     };
 
@@ -1081,7 +1094,7 @@ class Game {
     }
   }
 
-  showRewardScene(isElite, isBoss = false) {
+  showRewardScene(isElite, isBoss = false, isTreasure = false) {
     console.log('Game: showRewardScene called, isElite:', isElite, 'isBoss:', isBoss);
     this.audioManager.playBgm('map'); // リワード画面でマップBGMに戻す（勝利ファンファーレ実装まではこれで）
     try {
@@ -1126,10 +1139,22 @@ class Game {
         console.log('Sozu equipped. No potion for you!');
       }
 
-      // レリック（エリート戦なら確定）
-      if (isElite) {
-        // 未所持のレリックからランダムに1つ選ぶ
-        const ownedIds = this.player.relics.map(r => r.id);
+      // レリック（エリート戦、ボス戦、宝箱なら確定）
+      let relicCount = 0;
+      if (isElite || isBoss || isTreasure) relicCount = 1;
+
+      // レリック: マトリョーシカ
+      if (isTreasure) {
+        const matryoshka = this.player.relics.find(r => r.id === 'matryoshka');
+        if (matryoshka && (this.player.relicCounters['matryoshka'] || 0) > 0) {
+          this.player.relicCounters['matryoshka']--;
+          relicCount = 2;
+        }
+      }
+
+      for (let i = 0; i < relicCount; i++) {
+        // 未所持かつ報酬に未追加のレリックからランダムに1つ選ぶ
+        const ownedIds = [...this.player.relics.map(r => r.id), ...rewards.filter(r => r.type === 'relic').map(r => r.data.id)];
         const candidates = Object.values(RelicLibrary).filter(r =>
           !ownedIds.includes(r.id) && r.rarity !== 'starter' && r.rarity !== 'boss'
         );

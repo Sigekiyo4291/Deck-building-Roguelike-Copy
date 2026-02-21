@@ -215,7 +215,8 @@ export class Card {
             costCalculator: this.costCalculator,
             image: this.image,
             effectType: this.effectType,
-            onExhaust: this.onExhaust
+            onExhaust: this.onExhaust,
+            isInnate: this.isInnate
         });
         c.miscValue = this.miscValue;
         return c;

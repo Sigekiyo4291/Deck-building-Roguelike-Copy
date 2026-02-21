@@ -12,7 +12,7 @@ export class Relic {
     }
 
     // フックメソッド（デフォルトは何もしない）
-    onObtain(owner) { }
+    onObtain(owner, game?: any) { }
     onBattleStart(owner, engine) { }
     onTurnStart(owner, engine) { }
     onPlayerTurnStart(owner, engine) { }
@@ -517,6 +517,52 @@ export const RelicLibrary = {
     },
     WHITE_BEAST_STATUE: new class extends Relic {
         constructor() { super('white_beast_statue', '白き獣の像', '戦闘後、必ずポーションがドロップする。', 'uncommon'); }
+    },
+
+    BOTTLED_FLAME: new class extends Relic {
+        constructor() { super('bottled_flame', '瓶詰の炎', '獲得時、アタックを1枚選ぶ。そのカードは各戦闘の開始時に手札にある状態になる。', 'uncommon'); }
+        onObtain(owner, game) {
+            if (game) {
+                const attacks = owner.masterDeck.filter(c => c.type === 'attack' && !c.isInnate);
+                if (attacks.length > 0) {
+                    game.showCardSelectionFromPile('瓶詰の炎: アタックを選択', attacks, (card) => {
+                        card.isInnate = true;
+                    });
+                }
+            }
+        }
+    },
+    BOTTLED_TORNADO: new class extends Relic {
+        constructor() { super('bottled_tornado', '瓶詰の竜巻', '獲得時、パワーを1枚選ぶ。そのカードは各戦闘の開始時に手札にある状態になる。', 'uncommon'); }
+        onObtain(owner, game) {
+            if (game) {
+                const powers = owner.masterDeck.filter(c => c.type === 'power' && !c.isInnate);
+                if (powers.length > 0) {
+                    game.showCardSelectionFromPile('瓶詰の竜巻: パワーを選択', powers, (card) => {
+                        card.isInnate = true;
+                    });
+                }
+            }
+        }
+    },
+    BOTTLED_LIGHTNING: new class extends Relic {
+        constructor() { super('bottled_lightning', '瓶詰の雷', '獲得時、スキルを1枚選ぶ。そのカードは各戦闘の開始時に手札にある状態になる。', 'uncommon'); }
+        onObtain(owner, game) {
+            if (game) {
+                const skills = owner.masterDeck.filter(c => c.type === 'skill' && !c.isInnate);
+                if (skills.length > 0) {
+                    game.showCardSelectionFromPile('瓶詰の雷: スキルを選択', skills, (card) => {
+                        card.isInnate = true;
+                    });
+                }
+            }
+        }
+    },
+    SINGING_BOWL: new class extends Relic {
+        constructor() { super('singing_bowl', '歌うボウル', 'カードの報酬をスキップしたとき、最大HP+2。', 'uncommon'); }
+    },
+    BLUE_CANDLE: new class extends Relic {
+        constructor() { super('blue_candle', 'ブルーキャンドル', 'プレイ不可の「呪い」がプレイ可能になる。呪いをプレイするとHPを1失い、そのカードは廃棄される。', 'uncommon'); }
     },
 
     // Potion Related

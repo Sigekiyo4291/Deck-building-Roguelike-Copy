@@ -720,7 +720,7 @@ class Game {
         if (wrapper.classList.contains('sold-out')) return;
         if (this.player.spendGold(price)) {
           this.player.relics.push(relic);
-          if (relic.onObtain) relic.onObtain(this.player);
+          if (relic.onObtain) relic.onObtain(this.player, this);
           this.updateGlobalStatusUI();
           wrapper.classList.add('sold-out');
         } else {
@@ -1234,7 +1234,7 @@ class Game {
     } else if (reward.type === 'relic') {
       const relic = reward.data;
       this.player.relics.push(relic);
-      if (relic.onObtain) relic.onObtain(this.player);
+      if (relic.onObtain) relic.onObtain(this.player, this);
 
       alert(`${relic.name} を獲得しました！\n効果: ${relic.description}`);
       reward.taken = true;
@@ -1513,8 +1513,22 @@ class Game {
     if (!overlay || !container || !skipBtn) return;
 
     overlay.style.display = 'flex';
+
+    // レリック: 歌うボウル
+    const singingBowl = this.player.relics.find(r => r.id === 'singing_bowl');
+    if (singingBowl) {
+      skipBtn.textContent = 'スキップ (最大HP+2)';
+    } else {
+      skipBtn.textContent = 'スキップ';
+    }
+
     skipBtn.onclick = () => {
       overlay.style.display = 'none';
+
+      if (singingBowl) {
+        this.player.increaseMaxHp(2);
+      }
+
       rewardItem.taken = true; // スキップしたら取得済み扱い
       itemEl.style.opacity = '0.5';
       itemEl.style.textDecoration = 'line-through';
@@ -1556,7 +1570,7 @@ class Game {
       `;
       relicEl.onclick = () => {
         this.player.relics.push(relic);
-        if (relic.onObtain) relic.onObtain(this.player);
+        if (relic.onObtain) relic.onObtain(this.player, this);
         overlay.style.display = 'none';
         alert(`ボスレリック「${relic.name}」を獲得しました！`);
         this.proceedToNextAct();
@@ -2050,11 +2064,14 @@ class Game {
 
     console.log('Game: tryPlayCard for', card.name, 'at index', index);
 
-    // 1. 呪いカードチェック（ステータスカードは許可するように変更）
+    // 1. 呪いカードチェック（ブルーキャンドルを所持している場合は許可）
     if (card.type === 'curse') {
-      alert('このカードは使用できません！');
-      this.updateBattleUI();
-      return;
+      const hasBlueCandle = this.player.relics.some(r => r.id === 'blue_candle');
+      if (!hasBlueCandle) {
+        alert('このカードは使用できません！');
+        this.updateBattleUI();
+        return;
+      }
     }
 
     // 2. エネルギーチェック

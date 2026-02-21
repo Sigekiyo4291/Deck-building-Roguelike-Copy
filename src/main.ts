@@ -684,7 +684,7 @@ class Game {
     // 3. 下段中央: レリック (3個)
     const ownedRelicIds = this.player.relics.map(r => r.id);
     const candidateRelics = Object.values(RelicLibrary).filter(r =>
-      !ownedRelicIds.includes(r.id) && r.rarity !== 'starter' && r.rarity !== 'boss'
+      !ownedRelicIds.includes(r.id) && r.rarity !== 'starter' && r.rarity !== 'boss' && (!r.character || r.character === 'ironclad')
     );
 
     const getRelicPrice = (rarity) => {
@@ -1156,7 +1156,7 @@ class Game {
         // 未所持かつ報酬に未追加のレリックからランダムに1つ選ぶ
         const ownedIds = [...this.player.relics.map(r => r.id), ...rewards.filter(r => r.type === 'relic').map(r => r.data.id)];
         const candidates = Object.values(RelicLibrary).filter(r =>
-          !ownedIds.includes(r.id) && r.rarity !== 'starter' && r.rarity !== 'boss'
+          !ownedIds.includes(r.id) && r.rarity !== 'starter' && r.rarity !== 'boss' && (!r.character || r.character === 'ironclad')
         );
 
         if (candidates.length > 0) {
@@ -1550,7 +1550,7 @@ class Game {
     // ボスレリックを3つ抽選
     const ownedIds = this.player.relics.map(r => r.id);
     const candidates = Object.values(RelicLibrary).filter(r =>
-      r.rarity === 'boss' && !ownedIds.includes(r.id)
+      r.rarity === 'boss' && !ownedIds.includes(r.id) && (!r.character || r.character === 'ironclad')
     );
 
     // シャッフル

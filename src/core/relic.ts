@@ -3,12 +3,14 @@ export class Relic {
     name: string;
     description: string;
     rarity: string;
+    character?: string; // 特定キャラ専用レリック用（例：'ironclad'）
 
-    constructor(id, name, description, rarity) {
+    constructor(id, name, description, rarity, character?) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.rarity = rarity; // 'starter', 'common', 'uncommon', 'rare', 'boss'
+        this.character = character;
     }
 
     // フックメソッド（デフォルトは何もしない）
@@ -566,6 +568,19 @@ export const RelicLibrary = {
     },
     BLUE_CANDLE: new class extends Relic {
         constructor() { super('blue_candle', 'ブルーキャンドル', 'プレイ不可の「呪い」がプレイ可能になる。呪いをプレイするとHPを1失い、そのカードは廃棄される。', 'uncommon'); }
+    },
+    HORN_CLEAT: new class extends Relic {
+        constructor() { super('horn_cleat', 'ホーンクリート', '2ターン目の開始時に14ブロックを得る。', 'uncommon'); }
+        onPlayerTurnStart(owner, engine) {
+            if (engine.turn === 2) {
+                owner.addBlock(14);
+                if (engine.showEffectForPlayer) engine.showEffectForPlayer('block');
+                if (engine.audioManager) engine.audioManager.playSe('defense');
+            }
+        }
+    },
+    PAPER_PHROG: new class extends Relic {
+        constructor() { super('paper_phrog', '折り紙キャエル', '弱体を持つ敵へのダメージが50％ではなく、75％増加する。', 'uncommon', 'ironclad'); }
     },
 
     // Potion Related

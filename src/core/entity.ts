@@ -79,7 +79,7 @@ export class Entity {
 
   takeDamage(amount, source) {
     // ターゲット側の補正（脆弱など）を適用
-    let totalDamage = this.applyTargetModifiers(amount);
+    let totalDamage = this.applyTargetModifiers(amount, source);
     let remainingDamage = totalDamage;
 
     // ブロックでダメージを軽減
@@ -182,10 +182,15 @@ export class Entity {
   }
 
   // ターゲット側の補正（脆弱など）を適用
-  applyTargetModifiers(damage) {
+  applyTargetModifiers(damage, source?) {
     let finalDamage = damage;
     if (this.hasStatus('vulnerable')) {
-      finalDamage = Math.floor(finalDamage * 1.5);
+      let multiplier = 1.5;
+      if (source && source.relics) {
+        const hasPhrog = source.relics.find(r => r.id === 'paper_phrog');
+        if (hasPhrog) multiplier = 1.75;
+      }
+      finalDamage = Math.floor(finalDamage * multiplier);
     }
     return finalDamage;
   }

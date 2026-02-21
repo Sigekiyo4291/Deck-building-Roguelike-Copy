@@ -119,7 +119,7 @@ export class Card {
     getFinalDamage(source, target, engine) {
         const damage = this.getDamage(source, engine);
         if (target) {
-            return target.applyTargetModifiers(damage);
+            return target.applyTargetModifiers(damage, source);
         }
         return damage;
     }
@@ -650,7 +650,7 @@ export const CardLibrary = {
         },
         targetType: 'single',
         upgradeData: {
-            description: '8ダメージ。使うたびにこのカード의ダメージが8増加する。',
+            description: '8ダメージ。使うたびにこのカードのダメージが8増加する。',
             baseDamage: 8,
             effect: async (s, t, e, c) => {
                 const damage = c.getFinalDamage(s, t, e);

@@ -639,6 +639,25 @@ body {
   text-shadow: 0 0 3px #000;
 }
 
+/* 瓶詰レリックアイコン */
+.bottled-badge {
+  position: absolute;
+  bottom: 5px;
+  right: 35px;
+  /* コストアイコンと被らないように調整 */
+  width: 24px;
+  height: 24px;
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid #ffcc00;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 14px;
+  z-index: 10;
+  box-shadow: 0 0 5px rgba(255, 204, 0, 0.5);
+}
+
 /* イラストコンテナ */
 .card-illustration-container {
   position: absolute;

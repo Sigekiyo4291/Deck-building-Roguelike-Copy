@@ -22,6 +22,7 @@ export interface CardInitParams {
     onExhaust?: any;
     isInnate?: boolean;
     isStatus?: boolean;
+    bottledId?: string;
 }
 
 export class Card {
@@ -51,6 +52,7 @@ export class Card {
     temporaryCost: number | null;
     isStatus: boolean;
     isInnate: boolean;
+    bottledId?: string;
 
     constructor(params: CardInitParams) {
         this.id = params.id;
@@ -84,6 +86,7 @@ export class Card {
         this.temporaryCost = null;
         this.isStatus = params.isStatus || false;
         this.isInnate = params.isInnate || false;
+        this.bottledId = params.bottledId;
     }
 
     getCost(source) {
@@ -216,7 +219,8 @@ export class Card {
             image: this.image,
             effectType: this.effectType,
             onExhaust: this.onExhaust,
-            isInnate: this.isInnate
+            isInnate: this.isInnate,
+            bottledId: this.bottledId
         });
         c.miscValue = this.miscValue;
         return c;

@@ -527,6 +527,7 @@ export const RelicLibrary = {
                 if (attacks.length > 0) {
                     game.showCardSelectionFromPile('瓶詰の炎: アタックを選択', attacks, (card) => {
                         card.isInnate = true;
+                        card.bottledId = 'bottled_flame';
                     });
                 }
             }
@@ -540,6 +541,7 @@ export const RelicLibrary = {
                 if (powers.length > 0) {
                     game.showCardSelectionFromPile('瓶詰の竜巻: パワーを選択', powers, (card) => {
                         card.isInnate = true;
+                        card.bottledId = 'bottled_tornado';
                     });
                 }
             }
@@ -553,6 +555,7 @@ export const RelicLibrary = {
                 if (skills.length > 0) {
                     game.showCardSelectionFromPile('瓶詰の雷: スキルを選択', skills, (card) => {
                         card.isInnate = true;
+                        card.bottledId = 'bottled_lightning';
                     });
                 }
             }

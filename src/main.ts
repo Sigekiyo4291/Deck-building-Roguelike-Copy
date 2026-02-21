@@ -1626,6 +1626,18 @@ class Game {
       </div>
     `;
 
+    // 瓶詰レリックのアイコンを追加
+    if (card.bottledId) {
+      let iconChar = '';
+      if (card.bottledId === 'bottled_flame') iconChar = '🔥';
+      else if (card.bottledId === 'bottled_tornado') iconChar = '🌪️';
+      else if (card.bottledId === 'bottled_lightning') iconChar = '⚡️';
+
+      if (iconChar) {
+        cardEl.innerHTML += `<div class="bottled-badge" title="初期手札">${iconChar}</div>`;
+      }
+    }
+
     // カードタイトルの文字数に応じてフォントサイズを調整
     const titleEl = cardEl.querySelector('.card-title') as HTMLElement;
     if (titleEl) {
@@ -1987,6 +1999,18 @@ class Game {
         <div class="card-desc">${description}</div>
       </div>
     `;
+
+    // 瓶詰レリックのアイコンを追加
+    if (card.bottledId) {
+      let iconChar = '';
+      if (card.bottledId === 'bottled_flame') iconChar = '🔥';
+      else if (card.bottledId === 'bottled_tornado') iconChar = '🌪️';
+      else if (card.bottledId === 'bottled_lightning') iconChar = '⚡️';
+
+      if (iconChar) {
+        cardEl.innerHTML += `<div class="bottled-badge" title="初期手札">${iconChar}</div>`;
+      }
+    }
 
     // カードタイトルの文字数に応じてフォントサイズを調整
     const titleEl = cardEl.querySelector('.card-title') as HTMLElement;

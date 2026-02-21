@@ -496,6 +496,13 @@ export class BattleEngine {
         // 死亡判定と死亡時処理
         if (target.isDead()) {
             if (target.onDeath) target.onDeath(source, this);
+
+            // レリック: 敵死亡時フック (グレムリンの角笛など)
+            if (target !== this.player) {
+                this.player.relics.forEach(relic => {
+                    if (relic.onEnemyDeath) relic.onEnemyDeath(this.player, target, this);
+                });
+            }
         }
     }
 

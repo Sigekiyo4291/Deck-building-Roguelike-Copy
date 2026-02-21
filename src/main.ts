@@ -562,7 +562,12 @@ class Game {
     const getPrice = (base: number) => {
       const variation = base * 0.1;
       const offset = (Math.random() * 2 - 1) * variation;
-      return Math.floor(base + offset);
+      let finalPrice = Math.floor(base + offset);
+      // レリック: 配達人
+      if (this.player.relics.some(r => r.id === 'the_courier')) {
+        finalPrice = Math.floor(finalPrice * 0.8);
+      }
+      return finalPrice;
     };
 
     // カードの収集
@@ -784,6 +789,10 @@ class Game {
     let removalPrice = 75 + (this.player.cardRemovalCount || 0) * 25;
     if (this.player.relics.some(r => r.id === 'smiling_mask')) {
       removalPrice = 50;
+    }
+    // レリック: 配達人
+    if (this.player.relics.some(r => r.id === 'the_courier')) {
+      removalPrice = Math.floor(removalPrice * 0.8);
     }
 
     const removalWrapper = document.createElement('div');
@@ -1099,13 +1108,14 @@ class Game {
 
       // ポーション（ドロップ率チェック）
       const hasSozu = this.player.relics.some(r => r.id === 'sozu');
+      const hasWhiteBeast = this.player.relics.some(r => r.id === 'white_beast_statue');
       if (!hasSozu) {
-        if (Math.random() * 100 < this.potionDropChance) {
+        if (hasWhiteBeast || Math.random() * 100 < this.potionDropChance) {
           // ドロップ成功
           const potion = getRandomPotion();
           rewards.push({ type: 'potion', data: potion, taken: false });
           // ドロップ率は10%減少
-          this.potionDropChance = Math.max(0, this.potionDropChance - 10);
+          if (!hasWhiteBeast) this.potionDropChance = Math.max(0, this.potionDropChance - 10);
           console.log(`Potion dropped! Next chance: ${this.potionDropChance}%`);
         } else {
           // ドロップ失敗時は10%増加
@@ -1435,7 +1445,11 @@ class Game {
       keys = keys.filter(k => CardLibrary[k].rarity === 'rare');
     }
 
-    for (let i = 0; i < 3; i++) {
+    // レリック: 質問カード
+    let numCards = 3;
+    if (this.player.relics.some(r => r.id === 'question_card')) numCards = 4;
+
+    for (let i = 0; i < numCards; i++) {
       // 全カード配列からランダム取得
       // （レアリティ抽選ロジックは今回省略、完全ランダム）
       const randomKey = keys[Math.floor(Math.random() * keys.length)];

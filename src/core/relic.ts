@@ -33,6 +33,7 @@ export class Relic {
     onRoomRest(owner) { }
     modifyDamageDealt(owner, target, damage, card?) { return damage; }
     modifyBlockGained(owner, block, card?) { return block; }
+    modifyHealAmount(owner, amount) { return amount; } // 回復量補正用
     onGoldSpend(owner, amount) { }
 }
 
@@ -618,6 +619,153 @@ export const RelicLibrary = {
         onPlayerTurnStart(owner, engine) {
             if (engine.isElite || engine.isBoss) {
                 owner.energy += 1;
+            }
+        }
+    },
+
+    // Rare
+    ICE_CREAM: new class extends Relic {
+        constructor() { super('ice_cream', 'アイスクリーム', '使用しなかったエナジーが蓄積されていく。', 'rare'); }
+    },
+    POCKETWATCH: new class extends Relic {
+        constructor() { super('pocketwatch', '懐中時計', '1ターンにプレイしたカードが3枚以下なら、次のターン開始時にカードを3枚引く。', 'rare'); }
+        onCardPlay(owner, engine, card) {
+            owner.relicCounters['pocketwatch'] = (owner.relicCounters['pocketwatch'] || 0) + 1;
+        }
+        onTurnEnd(owner, engine) {
+            if ((owner.relicCounters['pocketwatch'] || 0) <= 3) {
+                owner.relicCounters['pocketwatch_active'] = 1;
+            } else {
+                owner.relicCounters['pocketwatch_active'] = 0;
+            }
+            // カウンターはUI表示用なので、リセットタイミングはonPlayerTurnStartとする
+        }
+        onPlayerTurnStart(owner, engine) {
+            if (owner.relicCounters['pocketwatch_active'] === 1) {
+                engine.drawCards(3);
+                console.log('懐中時計発動！ 3枚カードを引きます。');
+            }
+            owner.relicCounters['pocketwatch'] = 0;
+            owner.relicCounters['pocketwatch_active'] = 0;
+        }
+    },
+    UNCEASING_TOP: new class extends Relic {
+        constructor() { super('unceasing_top', '永久コマ', '手札にカードが1枚もない時、カードを1枚引く。', 'rare'); }
+    },
+    TURNIP: new class extends Relic {
+        constructor() { super('turnip', 'カブ', '「脆弱」にならなくなる。', 'rare'); }
+    },
+    GINGER: new class extends Relic {
+        constructor() { super('ginger', '生姜', '「脱力」にならなくなる。', 'rare'); }
+    },
+    DU_VU_DOLL: new class extends Relic {
+        constructor() { super('du_vu_doll', 'ドゥーヴー人形', '戦闘開始時、デッキの呪い1枚につき、筋力を1得る。', 'rare'); }
+        onBattleStart(owner, engine) {
+            const curses = owner.masterDeck.filter(c => c.type === 'curse').length;
+            if (curses > 0) {
+                owner.addStatus('strength', curses);
+                console.log(`ドゥーヴー人形発動！ 呪い ${curses} 枚により筋力+${curses}。`);
+            }
+        }
+    },
+    CALIPERS: new class extends Relic {
+        constructor() { super('calipers', 'カリパス', 'ターン開始時、ブロックをすべて失う代わりに15失う。', 'rare'); }
+    },
+    CHARONS_ASHES: new class extends Relic {
+        constructor() { super('charons_ashes', 'カロンの遺灰', 'カードを廃棄するたび、敵全体に3ダメージを与える。', 'rare', 'ironclad'); }
+        onCardExhaust(owner, engine, card) {
+            if (!engine) return;
+            engine.enemies.forEach(enemy => {
+                if (!enemy.isDead()) {
+                    // 非同期演出を待たない簡易ダメージ
+                    enemy.takeDamage(3, owner);
+                }
+            });
+            console.log('カロンの遺灰発動！ 廃棄により敵全体に3ダメージ。');
+        }
+    },
+    TUNGSTEN_ROD: new class extends Relic {
+        constructor() { super('tungsten_rod', 'タングステンの棒', 'HPを失う時、その値を1軽減する。', 'rare'); }
+    },
+    MAGIC_FLOWER: new class extends Relic {
+        constructor() { super('magic_flower', 'マジックフラワー', '戦闘中、HPの回復量を50%増加させる。', 'rare', 'ironclad'); }
+        modifyHealAmount(owner, amount) {
+            // StSでは戦闘中のみだが、ここでは簡略化して常に適用するか判定
+            return Math.floor(amount * 1.5);
+        }
+    },
+    OLD_COIN: new class extends Relic {
+        constructor() { super('old_coin', '古のコイン', '獲得時、300ゴールドを得る。', 'rare'); }
+        onObtain(owner, game) {
+            owner.gainGold(300);
+            console.log('古のコイン獲得！ 300ゴールドを得ました。');
+        }
+    },
+    MANGO: new class extends Relic {
+        constructor() { super('mango', 'マンゴー', '獲得時、最大HP+14。', 'rare'); }
+        onObtain(owner, game) {
+            owner.increaseMaxHp(14);
+            console.log('マンゴー獲得！ 最大HP+14。');
+        }
+    },
+    STONE_CALENDAR: new class extends Relic {
+        constructor() { super('stone_calendar', '暦石', '7ターン目の終了時、敵全体に52ダメージを与える。', 'rare'); }
+        onTurnEnd(owner, engine) {
+            if (engine.turn === 7) {
+                console.log('暦石発動！ 7ターン目終了時に敵全体へ52ダメージ。');
+                engine.enemies.forEach(enemy => {
+                    if (!enemy.isDead()) {
+                        enemy.takeDamage(52, owner);
+                    }
+                });
+            }
+        }
+    },
+    CAPTAINS_WHEEL: new class extends Relic {
+        constructor() { super('captains_wheel', '船長の舵輪', '3ターン目の開始時に18ブロックを得る。', 'rare'); }
+        onPlayerTurnStart(owner, engine) {
+            if (engine.turn === 3) {
+                console.log('船長の舵輪発動！ 3ターン目開始時に18ブロック獲得。');
+                owner.addBlock(18);
+                if (engine.showEffectForPlayer) engine.showEffectForPlayer('block');
+                if (engine.audioManager) engine.audioManager.playSe('defense');
+            }
+        }
+    },
+    THREAD_AND_NEEDLE: new class extends Relic {
+        constructor() { super('thread_and_needle', '針と糸', '戦闘開始時、プレートアーマー4を得る。', 'rare'); }
+        onBattleStart(owner, engine) {
+            owner.addStatus('plated_armor', 4);
+        }
+    },
+    INCENSE_BURNER: new class extends Relic {
+        constructor() { super('incense_burner', '香炉', '6ターン毎に無形1を得る。', 'rare'); }
+        onPlayerTurnStart(owner, engine) {
+            let count = owner.relicCounters['incense_burner'] || 0;
+            count++;
+            if (count >= 6) {
+                console.log('香炉発動！ 無形を獲得します。');
+                owner.addStatus('intangible', 1);
+                count = 0;
+            }
+            owner.relicCounters['incense_burner'] = count;
+        }
+        onBattleStart(owner, engine) {
+            if (owner.relicCounters['incense_burner'] === undefined) {
+                owner.relicCounters['incense_burner'] = 0;
+            }
+        }
+    },
+    TORII: new class extends Relic {
+        constructor() { super('torii', '鳥居', '5以下のダメージを1に軽減する。', 'rare'); }
+        // Entity.takeDamage にて判定
+    },
+    BIRD_FACED_URN: new class extends Relic {
+        constructor() { super('bird_faced_urn', '鳥頭壺', 'パワーを使用するたびにHPを2回復する。', 'rare'); }
+        onCardPlay(owner, engine, card) {
+            if (card.type === 'power') {
+                console.log('鳥頭壺発動！ パワープレイによりHP回復。');
+                owner.heal(2);
             }
         }
     }

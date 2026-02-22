@@ -255,17 +255,44 @@ export class DebugManager {
     // --- Relic Tab ---
     initRelicTab() {
         const listContainer = document.getElementById('debug-relic-list');
-        Object.values(RelicLibrary).forEach(relic => {
-            const btn = document.createElement('button');
-            btn.textContent = relic.name;
-            btn.className = 'debug-item-btn';
-            btn.onclick = () => {
-                this.game.player.relics.push(relic);
-                if (relic.onObtain) relic.onObtain(this.game.player);
-                this.game.updateRelicUI();
-                alert(`Added ${relic.name}`);
-            };
-            listContainer.appendChild(btn);
+        const relics = Object.values(RelicLibrary);
+
+        const rarities = ['starter', 'common', 'uncommon', 'rare', 'boss', 'event', 'shop'];
+        const rarityLabels = {
+            starter: '🛡️ Starter',
+            common: '⚪ Common',
+            uncommon: '🔵 Uncommon',
+            rare: '🟡 Rare',
+            boss: '👑 Boss',
+            event: '❓ Event',
+            shop: '💰 Shop'
+        };
+
+        rarities.forEach(rarity => {
+            const rarityRelics = relics.filter(r => r.rarity === rarity);
+            if (rarityRelics.length === 0) return;
+
+            const header = document.createElement('h4');
+            header.textContent = rarityLabels[rarity] || rarity;
+            header.className = 'debug-section-header';
+            listContainer.appendChild(header);
+
+            const groupContainer = document.createElement('div');
+            groupContainer.className = 'debug-group-container';
+
+            rarityRelics.forEach(relic => {
+                const btn = document.createElement('button');
+                btn.textContent = relic.name;
+                btn.className = 'debug-item-btn ' + relic.rarity;
+                btn.onclick = () => {
+                    this.game.player.relics.push(relic);
+                    if (relic.onObtain) relic.onObtain(this.game.player, this.game);
+                    this.game.updateRelicUI();
+                    alert(`Added ${relic.name}`);
+                };
+                groupContainer.appendChild(btn);
+            });
+            listContainer.appendChild(groupContainer);
         });
     }
 

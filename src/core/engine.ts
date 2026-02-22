@@ -71,6 +71,11 @@ export class BattleEngine {
 
     async startPlayerTurn() {
         this.phase = 'player';
+        console.log(`--- Turn ${this.turn} ---`);
+
+        // ステータス更新（ターン開始時：無形など）
+        this.player.updateStatusAtTurnStart();
+
         this.player.onTurnStart();
 
         // 残虐 (Brutality) の処理
@@ -88,12 +93,29 @@ export class BattleEngine {
         const dfPlusCount = this.player.getStatusValue('demon_form_plus');
         if (dfPlusCount > 0) this.player.addStatus('strength', dfPlusCount * 3);
 
-        this.player.resetEnergy();
+        // レリック: アイスクリーム (Ice Cream) - エナジーをリセットしない
+        const hasIceCream = this.player.relics.some(r => r.id === 'ice_cream');
+        if (this.turn === 1 || !hasIceCream) {
+            this.player.resetEnergy();
+        } else {
+            // ベース分だけ追加するのではなく、 StS風に「毎ターンのエナジー(3)」を加算する形にする
+            // resetEnergy() は this.energy = this.maxEnergy なので
+            // アイスクリーム時は this.energy += this.maxEnergy となる
+            this.player.energy += this.player.maxEnergy;
+            console.log(`アイスクリーム発動！ エナジーを持ち越し、現在のエナジー: ${this.player.energy}`);
+        }
+
         if (this.player.getStatusValue('berserk') > 0) {
             this.player.energy += this.player.getStatusValue('berserk');
         }
         if (!this.player.hasStatus('barricade')) {
-            this.player.resetBlock();
+            const hasCalipers = this.player.relics.some(r => r.id === 'calipers');
+            if (hasCalipers) {
+                this.player.block = Math.max(0, this.player.block - 15);
+                console.log(`カリパス発動！ ブロックを15失い、残存: ${this.player.block}`);
+            } else {
+                this.player.resetBlock();
+            }
         }
 
         // レリック: onPlayerTurnStart
@@ -304,6 +326,15 @@ export class BattleEngine {
                     this.player.exhaustCard(card, this);
                 } else {
                     this.player.discard.push(card);
+                }
+
+                // レリック: 永久コマ (Unceasing Top) - 手札が空ならドロー
+                if (this.player.hand.length === 0) {
+                    const hasTop = this.player.relics.some(r => r.id === 'unceasing_top');
+                    if (hasTop) {
+                        console.log('永久コマ発動！ 手札が空のためカードを引きます。');
+                        await this.drawCards(1);
+                    }
                 }
 
                 this.checkBattleEnd();
@@ -654,6 +685,8 @@ export class BattleEngine {
             for (const enemy of this.enemies) {
                 if (!enemy.isDead() && !this.player.isDead()) {
                     enemy.resetBlock();
+                    // ステータス更新（ターン開始時：無形など）
+                    enemy.updateStatusAtTurnStart();
 
                     // 敵の行動実行
                     if (enemy.nextMove) {

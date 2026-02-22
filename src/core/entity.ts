@@ -13,7 +13,7 @@ export const BUFF_TYPES = [
   'juggernaut', 'barricade', 'corruption', 'brutality', 'berserk',
   'curl_up', 'malleable', 'artifact', 'rage', 'enrage_enemy',
   'split', 'spore_cloud', 'thievery', 'mode_shift', 'sharp_hide',
-  'plated_armor', 'regeneration', 'duplication', 'pen_nib', 'vigor'
+  'plated_armor', 'regeneration', 'duplication', 'pen_nib', 'vigor', 'intangible'
 ];
 
 export function isDebuff(type: string, value: number): boolean {
@@ -38,6 +38,7 @@ export class Entity {
   sprite: string;
   statusEffects: { type: string, value: number }[];
   uuid: string;
+  relics: any[] = []; // レリックによる補正チェック用
   onGainBlock?: () => void;
 
   constructor(name, maxHp, sprite) {
@@ -51,7 +52,13 @@ export class Entity {
   }
 
   heal(amount) {
-    this.hp = Math.min(this.maxHp, this.hp + amount);
+    let finalAmount = amount;
+    if (this.relics && this.relics.length > 0) {
+      this.relics.forEach(r => {
+        if (r.modifyHealAmount) finalAmount = r.modifyHealAmount(this, finalAmount);
+      });
+    }
+    this.hp = Math.min(this.maxHp, this.hp + finalAmount);
   }
 
   // 最大HPを増やし、現在HPも同量回復させる（捕食など）
@@ -90,6 +97,21 @@ export class Entity {
       } else {
         remainingDamage -= this.block;
         this.block = 0;
+      }
+    }
+
+    if (remainingDamage > 0 && this.relics && this.relics.length > 0) {
+      const hasTungsten = this.relics.some(r => r.id === 'tungsten_rod');
+      if (hasTungsten) {
+        remainingDamage = Math.max(0, remainingDamage - 1);
+        console.log(`タングステンの棒発動！ ダメージを1軽減。残りダメージ: ${remainingDamage}`);
+      }
+    }
+
+    if (remainingDamage > 0 && remainingDamage <= 5 && this.relics && this.relics.length > 0) {
+      if (this.relics.some(r => r.id === 'torii')) {
+        remainingDamage = 1;
+        console.log(`鳥居発動！ 被ダメージを ${remainingDamage} に軽減。`);
       }
     }
 
@@ -184,6 +206,12 @@ export class Entity {
   // ターゲット側の補正（脆弱など）を適用
   applyTargetModifiers(damage, source?) {
     let finalDamage = damage;
+
+    // 無形(intangible)
+    if (this.hasStatus('intangible') && finalDamage > 0) {
+      return 1;
+    }
+
     if (this.hasStatus('vulnerable')) {
       let multiplier = 1.5;
       if (source && source.relics) {
@@ -202,6 +230,18 @@ export class Entity {
 
   // ステータス操作
   addStatus(type, value) {
+    // レリックによるデバフ無効化
+    if (this.relics && this.relics.length > 0) {
+      if (type === 'vulnerable' && value > 0 && this.relics.some(r => r.id === 'turnip')) {
+        console.log(`${this.name} はカブによって脆弱化を防いだ！`);
+        return;
+      }
+      if (type === 'weak' && value > 0 && this.relics.some(r => r.id === 'ginger')) {
+        console.log(`${this.name} は生姜によって脱力を防いだ！`);
+        return;
+      }
+    }
+
     // アーティファクトの処理
     if (isDebuff(type, value)) {
       const artifactVal = this.getStatusValue('artifact');
@@ -235,6 +275,15 @@ export class Entity {
 
   onTurnEnd() {
     // ターン終了時の処理
+  }
+
+  updateStatusAtTurnStart() {
+    // ターン開始時の更新（無形など）
+    const intangible = this.statusEffects.find(s => s.type === 'intangible');
+    if (intangible && intangible.value > 0) {
+      intangible.value--;
+      console.log(`${this.name} の無形が減少しました。残り: ${intangible.value}`);
+    }
   }
 
   updateStatus() {
@@ -328,7 +377,6 @@ export class Player extends Entity {
   gold: number;
   potionSlots: number;
   potions: any[];
-  relics: any[];
   relicCounters: { [key: string]: number };
   masterDeck: any[];
   cardRemovalCount: number;

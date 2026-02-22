@@ -54,6 +54,10 @@ export class Entity {
   }
 
   heal(amount) {
+    if (this.relics && this.relics.some(r => r.id === 'mark_of_the_bloom')) {
+      console.log('花の印により回復が無効化されました。');
+      return;
+    }
     let finalAmount = amount;
     if (this.relics && this.relics.length > 0) {
       this.relics.forEach(r => {
@@ -217,8 +221,16 @@ export class Entity {
     const strength = this.getStatusValue('strength');
     damage += strength;
 
-    // 脱力(weak)状態ならダメージ25%減少
+    // 脱力(weak)状態ならダメージ減少
     if (this.hasStatus('weak')) {
+      let multiplier = 0.75;
+      if (this.relics && this.relics.some(r => r.id === 'odd_mushroom')) {
+        multiplier = 0.8; // 25%増の逆（1.25の逆数は0.8）ではなく、ダメージ増加の軽減。
+        // StSのStrange Mushroomは「プレイヤーが受ける脆弱によるダメージ増加を50%から25%に減らす」
+        // ここは「プレイヤー自身が攻撃する時の脱力」の計算。
+        // 修正：Strange Mushroomは脆弱(Vulnerable)にのみ作用する。脱力(Weak)には作用しない。
+        // 元のロジックに戻す。
+      }
       damage = Math.floor(damage * 0.75);
     }
 
@@ -236,7 +248,9 @@ export class Entity {
 
     if (this.hasStatus('vulnerable')) {
       let multiplier = 1.5;
-      if (source && source.relics) {
+      if (this.relics && this.relics.some(r => r.id === 'odd_mushroom')) {
+        multiplier = 1.25;
+      } else if (source && source.relics) {
         const hasPhrog = source.relics.find(r => r.id === 'paper_phrog');
         if (hasPhrog) multiplier = 1.75;
       }
@@ -506,6 +520,14 @@ export class Player extends Entity {
     if (card.onExhaust && engine) {
       card.onExhaust(this, engine);
     }
+
+    // 特殊カード: ネクロノミカーズ (NECRONOMICURSE) - 廃棄されても手札に戻る
+    if (card.id === 'necronomicurse' && engine) {
+      console.log('ネクロノミカーズの呪い！ 廃棄されても手札に戻ります。');
+      // 廃棄パイルから削除して手札へ
+      this.exhaust = this.exhaust.filter(c => c !== card);
+      engine.addCardToHand(card);
+    }
   }
 
   addCard(card) {
@@ -522,8 +544,19 @@ export class Player extends Entity {
       console.log('エクトプラズムによりゴールドを獲得できません。');
       return;
     }
-    this.gold += amount;
-    alert(`${amount} ゴールドを獲得しました！ (所持金: ${this.gold}G)`);
+    // 偶像系レリックの補正を計算
+    let finalAmount = amount;
+    if (this.relics.some(r => r.id === 'golden_idol_relic')) {
+      finalAmount = Math.floor(finalAmount * 1.25);
+    }
+
+    this.gold += finalAmount;
+    alert(`${finalAmount} ゴールドを獲得しました！ (所持金: ${this.gold}G)`);
+
+    // 血塗られた偶像 (Bloody Idol): ゴールド獲得時にHP5回復
+    if (this.relics.some(r => r.id === 'bloody_idol')) {
+      this.heal(5);
+    }
   }
 
   spendGold(amount) {

@@ -301,6 +301,12 @@ class Game {
     }
 
     this.currentFloor++; // 階層を進める
+
+    // レリック: サ・サ・サーペントの頭部 (SSSERPENT_HEAD)
+    if (this.player.relics.some(r => r.id === 'ssserpent_head')) {
+      this.player.gainGold(50);
+    }
+
     this.updateGlobalStatusUI(); // UI更新
     this.map.currentNode = node;
     node.isClear = true;
@@ -621,6 +627,17 @@ class Game {
     closeBtn.style.display = 'block';
 
     this.player.masterDeck.forEach((card, index) => {
+      // 削除不可カードの判定
+      const unremovableIds = ['parasite', 'curse_of_the_bell', 'necronomicurse'];
+      if (unremovableIds.includes(card.id)) {
+        const cardEl = this.createRewardCardElement(card);
+        cardEl.style.opacity = '0.5';
+        cardEl.style.cursor = 'default';
+        cardEl.title = 'このカードは削除できません';
+        listEl.appendChild(cardEl);
+        return;
+      }
+
       const cardEl = this.createRewardCardElement(card);
       cardEl.onclick = () => {
         // ランダムなカードに変化 (呪い以外)
@@ -710,6 +727,17 @@ class Game {
     closeBtn.style.display = 'block';
 
     this.player.masterDeck.forEach((card, index) => {
+      // 削除不可カードの判定
+      const unremovableIds = ['parasite', 'curse_of_the_bell', 'necronomicurse'];
+      if (unremovableIds.includes(card.id)) {
+        const cardEl = this.createRewardCardElement(card);
+        cardEl.style.opacity = '0.5';
+        cardEl.style.cursor = 'default';
+        cardEl.title = 'このカードは削除できません';
+        listEl.appendChild(cardEl);
+        return;
+      }
+
       const cardEl = this.createRewardCardElement(card);
       cardEl.onclick = () => {
         this.player.masterDeck.splice(index, 1);
@@ -1049,6 +1077,17 @@ class Game {
     list.className = 'deck-list';
 
     this.player.masterDeck.forEach((card, idx) => {
+      // 削除不可カードの判定
+      const unremovableIds = ['parasite', 'curse_of_the_bell', 'necronomicurse'];
+      if (unremovableIds.includes(card.id)) {
+        const cardEl = this.createRewardCardElement(card);
+        cardEl.style.opacity = '0.5';
+        cardEl.style.cursor = 'default';
+        cardEl.title = 'このカードは削除できません';
+        list.appendChild(cardEl);
+        return;
+      }
+
       // createCardElementはドラッグ等の複雑なイベントを持つため、シンプルな表示用のcreateRewardCardElementを使用
       const cardEl = this.createRewardCardElement(card);
       cardEl.style.cursor = 'pointer';
@@ -1102,6 +1141,21 @@ class Game {
     icon.textContent = '🎁';
     openBtn.style.display = 'block';
     openBtn.textContent = '開ける';
+
+    // レリック: ヌロスの飢えた顔 (NLOTH_HUNGRY_FACE)
+    if (this.player.relics.some(r => r.id === 'nloth_hungry_face')) {
+      const hungryFaceIndex = this.player.relics.findIndex(r => r.id === 'nloth_hungry_face');
+      this.player.relics.splice(hungryFaceIndex, 1);
+      alert('ヌロスの飢えた顔により、宝箱は空っぽでした...');
+
+      openBtn.onclick = async () => {
+        this.map.updateAvailableNodes();
+        const transition = this.sceneManager.showMap();
+        this.renderMap();
+        await transition;
+      };
+      return;
+    }
 
     const handleOpen = () => {
       icon.textContent = '🔓';
@@ -1205,6 +1259,17 @@ class Game {
       }
     }
 
+    // ネオーの哀歌 (NEOW_LAMENT) 判定
+    const neowLamentCount = this.player.relicCounters['neow_lament'] || 0;
+    if (this.player.relics.some(r => r.id === 'neow_lament') && neowLamentCount > 0) {
+      this.player.relicCounters['neow_lament']--;
+      enemies.forEach(e => {
+        e.maxHp = 1;
+        e.hp = 1;
+      });
+      console.log(`ネオーの哀歌発動！ 敵のHPを1にしました。残り ${this.player.relicCounters['neow_lament']} 回。`);
+    }
+
     // バトルエンジン初期化
     if (this.battleEngine) {
       this.battleEngine = null; // 古いインスタンス破棄
@@ -1263,6 +1328,12 @@ class Game {
       // 通常戦闘の場合、カウントアップ
       if (!this.isEliteBattle && this.map.currentNode && this.map.currentNode.type === 'enemy') {
         this.battleCount++;
+      }
+
+      // レリック: 聖職者の顔 (CLERIC_FACE)
+      if (this.player.relics.some(r => r.id === 'cleric_face')) {
+        this.player.increaseMaxHp(1);
+        console.log('聖職者の顔により最大HPが1増加しました。');
       }
 
       console.log('Game: Calling showRewardScene, isElite: ' + this.isEliteBattle + ', isBoss: ' + this.isBossBattle);
@@ -1683,10 +1754,26 @@ class Game {
     if (this.player.relics.some(r => r.id === 'broken_crown')) numCards -= 2;
     numCards = Math.max(1, numCards);
 
+    // ヌロスの贈り物 (NLOTH_GIFT)
+    const hasNlothGift = this.player.relics.some(r => r.id === 'nloth_gift');
+
     for (let i = 0; i < numCards; i++) {
-      // 全カード配列からランダム取得
-      // （レアリティ抽選ロジックは今回省略、完全ランダム）
-      const randomKey = keys[Math.floor(Math.random() * keys.length)];
+      // レアリティ抽選 (ヌロスの贈り物対応)
+      let rarity = 'common';
+      const roll = Math.random();
+      let rareChance = 0.03;
+      if (hasNlothGift) rareChance = 0.09;
+
+      if (rewardItem.isRare || roll < rareChance) {
+        rarity = 'rare';
+      } else if (roll < 0.4) {
+        rarity = 'uncommon';
+      }
+
+      const possibleKeys = Object.keys(CardLibrary).filter(k =>
+        CardLibrary[k].type !== 'curse' && CardLibrary[k].type !== 'status' && CardLibrary[k].rarity === rarity
+      );
+      const randomKey = possibleKeys[Math.floor(Math.random() * possibleKeys.length)] || keys[Math.floor(Math.random() * keys.length)];
       const card = CardLibrary[randomKey].clone();
 
       const cardEl = this.createRewardCardElement(card);

@@ -360,6 +360,10 @@ export class BattleEngine {
                     this.player.addStatus('double_tap', -1);
                     console.log('Double Tap triggered!');
                     shouldPlayAgain = true;
+                } else if (card.type === 'attack' && (typeof currentCost === 'number' && currentCost >= 2) && this.player.relics.some(r => r.id === 'necronomicon') && (this.player.relicCounters['necronomicon'] || 0) > 0) {
+                    this.player.relicCounters['necronomicon'] = 0;
+                    console.log('Necronomicon triggered!');
+                    shouldPlayAgain = true;
                 }
 
                 if (shouldPlayAgain) {
@@ -717,6 +721,31 @@ export class BattleEngine {
         });
 
         this.phase = 'enemy';
+
+        // レリック: ニルリーのコーデックス (NILRY_CODEX)
+        if (this.player.relics.some(r => r.id === 'nilry_codex')) {
+            console.log('ニルリーのコーデックス発動！ 手札に加えるカードを選択してください。');
+            const candidates = [];
+            const allCards = Object.values(CardLibrary).filter(c => c.type !== 'curse' && c.type !== 'status' && c.rarity !== 'basic');
+            for (let i = 0; i < 3; i++) {
+                candidates.push(allCards[Math.floor(Math.random() * allCards.length)].clone());
+            }
+
+            await new Promise<void>(resolve => {
+                this.onCardSelectionRequest(
+                    'ニルリーのコーデックス: 山札に加えるカードを選択',
+                    candidates,
+                    (selectedCard) => {
+                        if (selectedCard) {
+                            this.addCardToDrawPile(selectedCard);
+                            console.log(`ニルリーのコーデックスにより ${selectedCard.name} を山札に加えました。`);
+                        }
+                        resolve();
+                    }
+                );
+            });
+        }
+
         this.uiUpdateCallback();
 
         // 敵のターン実行

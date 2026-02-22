@@ -2440,6 +2440,18 @@ export const CardLibrary = {
             // 使用不可
         },
         targetType: 'self'
+    }),
+    NECRONOMICURSE: new Card({
+        id: 'necronomicurse',
+        name: 'ネクロノミカーズ',
+        cost: -1,
+        type: 'curse',
+        rarity: 'curse',
+        description: '使用できない。この呪いは削除できず、廃棄されても手札に戻る。',
+        effect: (s, t) => {
+            // 使用不可
+        },
+        targetType: 'self'
     })
 };
 

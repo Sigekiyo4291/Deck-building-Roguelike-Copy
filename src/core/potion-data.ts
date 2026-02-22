@@ -5,8 +5,7 @@ function getRandomCardsForPotion(type: string, count: number): any[] {
     let keys = Object.keys(CardLibrary).filter(k => CardLibrary[k].type === type && CardLibrary[k].rarity !== 'basic' && CardLibrary[k].rarity !== 'special');
 
     if (type === 'colorless') {
-        // 今回の要件での「無色」は汎用的なアンコモン・レアカード等で代用 (色属性の明確な定義がないため)
-        keys = Object.keys(CardLibrary).filter(k => (CardLibrary[k].rarity === 'uncommon' || CardLibrary[k].rarity === 'rare') && CardLibrary[k].type !== 'curse' && CardLibrary[k].type !== 'status');
+        keys = Object.keys(CardLibrary).filter(k => CardLibrary[k].cardClass === 'colorless');
     }
 
     const result = [];

@@ -565,7 +565,7 @@ body {
   background-image: url('assets/images/ui/card_frame_ironclad.png');
 }
 
-.card.neutral .card-frame {
+.card.colorless .card-frame {
   background-image: url('assets/images/ui/card_frame_common.png');
 }
 

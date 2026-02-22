@@ -1789,12 +1789,12 @@ class Game {
 
       let card;
       if (isColorless) {
-        const colorlessPool = Object.values(CardLibrary).filter(c => c.type === 'colorless');
+        const colorlessPool = Object.values(CardLibrary).filter(c => c.cardClass === 'colorless');
         const randomKey = Object.keys(CardLibrary).find(k => CardLibrary[k] === colorlessPool[Math.floor(Math.random() * colorlessPool.length)]);
         card = CardLibrary[randomKey || 'FINESSE'].clone();
       } else {
         const possibleKeys = Object.keys(CardLibrary).filter(k =>
-          CardLibrary[k].type !== 'curse' && CardLibrary[k].type !== 'status' && CardLibrary[k].type !== 'colorless' && CardLibrary[k].rarity === rarity
+          CardLibrary[k].type !== 'curse' && CardLibrary[k].type !== 'status' && CardLibrary[k].cardClass !== 'colorless' && CardLibrary[k].rarity === rarity
         );
         const randomKey = possibleKeys[Math.floor(Math.random() * possibleKeys.length)] || keys[Math.floor(Math.random() * keys.length)];
         card = CardLibrary[randomKey].clone();
@@ -2280,9 +2280,8 @@ class Game {
 
   createCardElement(card, index) {
     const cardEl = document.createElement('div');
-    const charClass = (card.type === 'curse' || card.isStatus) ? 'curse' : 'ironclad';
     const upgradedClass = card.isUpgraded ? 'upgraded' : '';
-    cardEl.className = `card ${card.rarity} card-${card.type} ${charClass} ${upgradedClass}`;
+    cardEl.className = `card ${card.rarity} card-${card.type} ${card.cardClass} ${upgradedClass}`;
 
     let description = card.description;
     if (this.battleEngine) {

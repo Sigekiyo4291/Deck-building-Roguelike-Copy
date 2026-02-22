@@ -23,7 +23,7 @@ export interface CardInitParams {
     isInnate?: boolean;
     isStatus?: boolean;
     bottledId?: string;
-    realType?: string; // 無色カードなどの場合に本来のタイプ（attack/skill等）を保持
+    cardClass?: string; // ironclad, colorless, curse, status
 }
 
 export class Card {
@@ -54,7 +54,7 @@ export class Card {
     isStatus: boolean;
     isInnate: boolean;
     bottledId?: string;
-    realType: string;
+    cardClass: string;
 
     constructor(params: CardInitParams) {
         this.id = params.id;
@@ -89,7 +89,7 @@ export class Card {
         this.isStatus = params.isStatus || false;
         this.isInnate = params.isInnate || false;
         this.bottledId = params.bottledId;
-        this.realType = params.realType || params.type;
+        this.cardClass = params.cardClass || (params.type === 'curse' ? 'curse' : (params.isStatus ? 'status' : 'ironclad'));
     }
 
     getCost(source) {
@@ -229,7 +229,7 @@ export class Card {
             onExhaust: this.onExhaust,
             isInnate: this.isInnate,
             bottledId: this.bottledId,
-            realType: this.realType
+            cardClass: this.cardClass
         });
         c.miscValue = this.miscValue;
         return c;
@@ -2466,8 +2466,8 @@ export const CardLibrary = {
         id: 'finesse',
         name: '技巧',
         cost: 0,
-        type: 'colorless',
-        realType: 'skill',
+        type: 'skill',
+        cardClass: 'colorless',
         rarity: 'uncommon',
         description: '2ブロックを得る。カードを1枚引く。',
         effect: (s, t, e) => {
@@ -2489,8 +2489,8 @@ export const CardLibrary = {
         id: 'flash_of_steel',
         name: '剣の一閃',
         cost: 0,
-        type: 'colorless',
-        realType: 'attack',
+        type: 'attack',
+        cardClass: 'colorless',
         rarity: 'uncommon',
         description: '3ダメージを与える。カードを1枚引く。',
         effect: async (s, t, e) => {

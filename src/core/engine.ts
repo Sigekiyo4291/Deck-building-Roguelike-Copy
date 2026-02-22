@@ -340,7 +340,7 @@ export class BattleEngine {
                 });
 
                 // レリック: オレンジ色の丸薬 (Orange Pellets) の判定
-                const typeToLog = card.realType || card.type;
+                const typeToLog = card.type;
                 if (['attack', 'skill', 'power'].includes(typeToLog)) {
                     this.playedTypesThisTurn.add(typeToLog);
                     if (this.playedTypesThisTurn.has('attack') && this.playedTypesThisTurn.has('skill') && this.playedTypesThisTurn.has('power')) {

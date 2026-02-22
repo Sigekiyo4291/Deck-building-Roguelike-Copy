@@ -1185,7 +1185,7 @@ export const RelicLibrary = {
         constructor() { super('toolbox', '道具箱', '戦闘開始時、3枚のランダムなランダムな無色のカードから1枚選び、手札に加える。', 'shop'); }
         onBattleStart(owner, engine) {
             if (engine && engine.onCardSelectionRequest) {
-                const colorlessCards = Object.values(CardLibrary).filter(c => c.type === 'colorless');
+                const colorlessCards = Object.values(CardLibrary).filter(c => c.cardClass === 'colorless');
                 const candidates = [];
                 for (let i = 0; i < 3; i++) {
                     if (colorlessCards.length > 0) {

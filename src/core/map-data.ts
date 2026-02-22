@@ -57,11 +57,16 @@ export class GameMap {
                 }
             }
         } else {
-            // 現在のノードから繋がっている次の階層のノードを選択可能に
+            // 通常の移動ルール
             for (const nextNodeId of this.currentNode.nextNodes) {
                 const node = this.getNode(nextNodeId);
                 if (node) node.isAvailable = true;
             }
+
+            // レリック: 空飛ぶ靴 (Wing Boots)
+            // main.ts などから渡される player 情報が必要だが、ここでは gameMap が player を知らないため
+            // main.ts の描画ロジック側で補完するか、引数で渡す必要がある。
+            // ひとまず map-data.ts 側で「全ノード開放」フラグを外から設定できるようにする
         }
     }
 }

@@ -827,5 +827,14 @@ export const RelicLibrary = {
     },
     PEACE_PIPE: new class extends Relic {
         constructor() { super('peace_pipe', '安らぎのパイプ', '休息所で「削除」アクションができるようになる。', 'rare'); }
+    },
+    PRAYER_WHEEL: new class extends Relic {
+        constructor() { super('prayer_wheel', '祈りのルーレット', '通常の敵が追加でカードをドロップするようになる。', 'rare'); }
+    },
+    WING_BOOTS: new class extends Relic {
+        constructor() { super('wing_boots', '空飛ぶ靴', '次の部屋を選択する時、3回まで道を無視して飛ぶことが出来る。', 'rare'); }
+        onObtain(owner, game) {
+            owner.relicCounters['wing_boots'] = 3;
+        }
     }
 };

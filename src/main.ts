@@ -258,6 +258,20 @@ class Game {
 
   renderMap() {
     if (this.map && this.sceneManager) {
+      // 空飛ぶ靴の判定
+      const hasWingBoots = this.player.relics.some(r => r.id === 'wing_boots');
+      const wingBootsCount = this.player.relicCounters['wing_boots'] || 0;
+
+      if (hasWingBoots && wingBootsCount > 0 && this.map.currentNode) {
+        // 次の階層の全てのノードを一時的に isAvailable = true にする
+        const nextLayerIdx = this.map.currentNode.layer + 1;
+        if (this.map.layers[nextLayerIdx]) {
+          this.map.layers[nextLayerIdx].forEach(node => {
+            node.isAvailable = true;
+          });
+        }
+      }
+
       this.sceneManager.renderMap(this.map, (node) => this.onNodeSelect(node));
       this.updateGlobalStatusUI(); // グローバルステータスを更新（金貨等）
       this.audioManager.playBgm('map'); // マップBGM再生
@@ -265,6 +279,25 @@ class Game {
   }
 
   onNodeSelect(node) {
+    if (this.sceneManager.isTransitioning) return;
+
+    // 空飛ぶ靴 (Wing Boots) の判定: 本来繋がっていないノードを選んだ場合
+    // currentNode があり、且つその nextNodes に選択したノードの ID が含まれていない場合、パス外移動とみなす
+    if (this.map.currentNode && !this.map.currentNode.nextNodes.includes(node.id)) {
+      const wingBootsIndex = this.player.relics.findIndex(r => r.id === 'wing_boots');
+      if (wingBootsIndex !== -1 && (this.player.relicCounters['wing_boots'] || 0) > 0) {
+        this.player.relicCounters['wing_boots']--;
+        console.log(`空飛ぶ靴を使用！ 残り ${this.player.relicCounters['wing_boots']} 回。`);
+        this.updateGlobalStatusUI();
+      } else if (!node.isAvailable) {
+        // 普通に選択不可なノード（靴がない/使い切った場合）
+        return;
+      }
+    } else if (!node.isAvailable) {
+      // 通常の移動ルールで選択不可
+      return;
+    }
+
     this.currentFloor++; // 階層を進める
     this.updateGlobalStatusUI(); // UI更新
     this.map.currentNode = node;
@@ -1196,6 +1229,13 @@ class Game {
 
       // カード
       rewards.push({ type: 'card', isRare: isBoss, taken: false });
+
+      // レリック: 祈りのルーレット (Prayer Wheel)
+      // 通常戦闘（エリートでもボスでも宝箱でもない）かつ所持している場合
+      if (!isElite && !isBoss && !isTreasure && this.player.relics.some(r => r.id === 'prayer_wheel')) {
+        rewards.push({ type: 'card', isRare: false, taken: false });
+        console.log('祈りのルーレット発動！ 追加のカード報酬を提示します。');
+      }
 
       // ポーション（ドロップ率チェック）
       const hasSozu = this.player.relics.some(r => r.id === 'sozu');

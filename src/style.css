@@ -482,8 +482,8 @@ body {
   justify-content: center;
   align-items: center;
   color: #fff;
-  font-size: 0;
-  /* テキスト "エネルギー:" を隠す */
+  font-size: 16px;
+  /* スラッシュ表示用 */
   box-shadow: 0 0 15px rgba(255, 0, 0, 0.6);
   text-shadow: 2px 2px 0 #000;
   pointer-events: auto;
@@ -492,14 +492,15 @@ body {
 
 .energy-display span {
   font-size: 40px;
-  display: block;
+  display: inline-block;
 }
 
-.energy-display span::after {
-  content: "/3";
-  font-size: 0.5em;
+#energy-max-value {
+  font-size: 20px;
   margin-left: 2px;
+  opacity: 0.8;
 }
+
 
 /* 手札 */
 .hand {

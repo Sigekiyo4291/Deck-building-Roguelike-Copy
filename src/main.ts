@@ -201,6 +201,8 @@ class Game {
     this.updateGlobalStatusUI();
   }
 
+
+
   start() {
     this.audioManager.playBgm('title'); // タイトルBGMがあれば再生（なければマップなど）
     this.sceneManager.showTitle();
@@ -332,7 +334,13 @@ class Game {
     this.audioManager.playBgm('map'); // 休憩中もマップBGM
 
     // 休む (HP回復)
-    document.getElementById('rest-heal-btn').onclick = () => {
+    const healBtn = document.getElementById('rest-heal-btn') as HTMLButtonElement;
+    if (this.player.relics.some(r => r.id === 'coffee_dripper')) {
+      healBtn.disabled = true;
+      healBtn.style.opacity = '0.5';
+      healBtn.title = 'コーヒードリッパーにより休息ができません。';
+    }
+    healBtn.onclick = () => {
       const healAmount = Math.floor(this.player.maxHp * 0.3);
       // レリック: 王者の枕 (Regal Pillow) - 追加回復
       const extraHeal = this.player.relics.some(r => r.id === 'regal_pillow') ? 15 : 0;
@@ -353,7 +361,14 @@ class Game {
     };
 
     // 鍛える (カード強化)
-    document.getElementById('rest-upgrade-btn').onclick = () => {
+    const upgradeBtn = document.getElementById('rest-upgrade-btn') as HTMLButtonElement;
+    // レリック: 融合ハンマー (Fusion Hammer)
+    if (this.player.relics.some(r => r.id === 'fusion_hammer')) {
+      upgradeBtn.disabled = true;
+      upgradeBtn.style.opacity = '0.5';
+      upgradeBtn.title = '融合ハンマーにより鍛治ができません。';
+    }
+    upgradeBtn.onclick = () => {
       this.showUpgradeSelection();
     };
 
@@ -582,42 +597,9 @@ class Game {
     await transition;
   }
 
-  // カード削除選択UI
-  showCardRemovalSelection(onComplete) {
-    const overlay = document.getElementById('deck-selection-overlay');
-    const listEl = document.getElementById('deck-selection-list');
-    const titleEl = document.getElementById('deck-selection-title');
-    const closeBtn = document.getElementById('close-deck-selection-btn');
-
-    if (!overlay || !listEl || !titleEl || !closeBtn) return;
-
-    titleEl.textContent = '削除するカードを選択';
-    listEl.innerHTML = '';
-    overlay.style.display = 'flex';
-    closeBtn.style.display = 'block';
-
-    this.player.masterDeck.forEach((card, index) => {
-      const cardEl = this.createRewardCardElement(card);
-      cardEl.onclick = () => {
-        // 削除確認
-        if (confirm(`${card.name} を削除しますか？`)) {
-          this.player.masterDeck.splice(index, 1);
-          alert(`${card.name} をデッキから削除しました！`);
-          overlay.style.display = 'none';
-          if (onComplete) onComplete();
-        }
-      };
-      listEl.appendChild(cardEl);
-    });
-
-    closeBtn.onclick = () => {
-      overlay.style.display = 'none';
-      if (onComplete) onComplete();
-    };
-  }
 
   // カード変化選択UI
-  showCardTransformSelection(onComplete) {
+  showCardTransformSelection(onComplete, upgrade = false) {
     const overlay = document.getElementById('deck-selection-overlay');
     const listEl = document.getElementById('deck-selection-list');
     const titleEl = document.getElementById('deck-selection-title');
@@ -634,10 +616,11 @@ class Game {
       const cardEl = this.createRewardCardElement(card);
       cardEl.onclick = () => {
         // ランダムなカードに変化 (呪い以外)
-        const keys = Object.keys(CardLibrary).filter(k => CardLibrary[k].type !== 'curse');
+        const keys = Object.keys(CardLibrary).filter(k => CardLibrary[k].type !== 'curse' && CardLibrary[k].rarity !== 'basic' && CardLibrary[k].rarity !== 'special');
         const randomKey = keys[Math.floor(Math.random() * keys.length)];
 
         const newCard = CardLibrary[randomKey].clone();
+        if (upgrade) newCard.upgrade();
 
         this.player.masterDeck[index] = newCard;
         alert(`${card.name} が ${newCard.name} に変化しました！`);
@@ -651,6 +634,100 @@ class Game {
       overlay.style.display = 'none';
       if (onComplete) onComplete();
     };
+  }
+
+  // --- Phase 2 Boss Relic Helper Methods ---
+
+  gainRandomPotion() {
+    // レリック: ししおどし (Sozu)
+    if (this.player.relics.some(r => r.id === 'sozu')) {
+      console.log('ししおどしによりポーションを獲得できません。');
+      return;
+    }
+
+    // 空きスロットがあるか確認
+    const emptyIndex = this.player.potions.findIndex(p => p === null);
+    if (emptyIndex !== -1) {
+      const allPotions = Object.values(PotionLibrary);
+      const randomPotion = allPotions[Math.floor(Math.random() * allPotions.length)].clone();
+      this.player.potions[emptyIndex] = randomPotion;
+      alert(`ポーション「${randomPotion.name}」を獲得しました！`);
+      this.updatePotionUI();
+    } else {
+      alert('ポーション枠がいっぱいです。');
+    }
+  }
+
+  upgradeRandomCard() {
+    const upgradableCards = this.player.masterDeck.filter(c => !c.isUpgraded && c.rarity !== 'curse' && !c.isStatus);
+    if (upgradableCards.length > 0) {
+      const randomCard = upgradableCards[Math.floor(Math.random() * upgradableCards.length)];
+      randomCard.upgrade();
+      alert(`カード「${randomCard.name}」がアップグレードされました！`);
+    } else {
+      console.log('アップグレード可能なカードがありません。');
+    }
+  }
+
+  showCardRewardOnly() {
+    // 戦闘後報酬のようなUIを出すが、カードのみ
+    this.showRewardScene(false, true); // 第1引数 gold=false, 第2引数 card=true
+  }
+
+  transformAllBasicCards() {
+    let count = 0;
+    this.player.masterDeck = this.player.masterDeck.map(card => {
+      if (card.id === 'strike' || card.id === 'defend' || card.name.includes('ストライク') || card.name.includes('防御')) {
+        const keys = Object.keys(CardLibrary).filter(k => CardLibrary[k].type !== 'curse' && CardLibrary[k].type !== 'status' && CardLibrary[k].rarity !== 'basic');
+        const randomKey = keys[Math.floor(Math.random() * keys.length)];
+        count++;
+        return CardLibrary[randomKey].clone();
+      }
+      return card;
+    });
+    alert(`${count} 枚の基本カードが変化しました！`);
+  }
+
+  showCardRemovalSelection(onComplete) {
+    const overlay = document.getElementById('deck-selection-overlay');
+    const listEl = document.getElementById('deck-selection-list');
+    const titleEl = document.getElementById('deck-selection-title');
+    const closeBtn = document.getElementById('close-deck-selection-btn');
+
+    if (!overlay || !listEl || !titleEl || !closeBtn) return;
+
+    titleEl.textContent = '削除するカードを選択';
+    listEl.innerHTML = '';
+    overlay.style.display = 'flex';
+    closeBtn.style.display = 'block';
+
+    this.player.masterDeck.forEach((card, index) => {
+      const cardEl = this.createRewardCardElement(card);
+      cardEl.onclick = () => {
+        this.player.masterDeck.splice(index, 1);
+        alert(`${card.name} をデッキから削除しました。`);
+        overlay.style.display = 'none';
+        if (onComplete) onComplete();
+      };
+      listEl.appendChild(cardEl);
+    });
+
+    closeBtn.onclick = () => {
+      overlay.style.display = 'none';
+      if (onComplete) onComplete();
+    };
+  }
+
+  gainRandomRelicByRarity(rarity) {
+    const ownedIds = this.player.relics.map(r => r.id);
+    const candidates = Object.values(RelicLibrary).filter(r => r.rarity === rarity && !ownedIds.includes(r.id));
+    if (candidates.length > 0) {
+      const relic = candidates[Math.floor(Math.random() * candidates.length)];
+      this.player.relics.push(relic);
+      if (relic.onObtain) relic.onObtain(this.player, this);
+      alert(`レリック「${relic.name}」を獲得しました！`);
+      this.updateRelicUI();
+    }
   }
 
 
@@ -1007,27 +1084,6 @@ class Game {
     document.body.appendChild(overlay);
   }
 
-  showCardRewardOnly() {
-    this.sceneManager.showReward();
-    const listEl = document.getElementById('reward-list');
-    if (listEl) {
-      listEl.innerHTML = '';
-      const reward = { type: 'card', isRare: false, taken: false };
-      const itemEl = document.createElement('div');
-      itemEl.className = 'reward-item';
-      itemEl.textContent = '🎴 カードを追加 (ドリームキャッチャー)';
-      itemEl.onclick = () => {
-        if (!reward.taken) this.showCardSelection(reward, itemEl);
-      };
-      listEl.appendChild(itemEl);
-
-      const doneBtn = document.getElementById('reward-done-btn');
-      if (doneBtn) {
-        doneBtn.textContent = '休憩終了 (ドリームキャッチャー)';
-        doneBtn.onclick = () => this.finishRest();
-      }
-    }
-  }
 
   showTreasureScene() {
     this.sceneManager.showTreasure();
@@ -1085,6 +1141,8 @@ class Game {
         }
       },
       (title, pile, callback, options) => this.showCardSelectionFromPile(title, pile, callback, options),
+      false, // isEliteBattle
+      false, // isBossBattle
       this.effectManager, // エフェクトマネージャーを渡す
       this.audioManager   // オーディオマネージャーを渡す
     );
@@ -1158,6 +1216,8 @@ class Game {
         }
       },
       (title, pile, callback, options) => this.showCardSelectionFromPile(title, pile, callback, options),
+      this.isEliteBattle,
+      this.isBossBattle,
       this.effectManager, // エフェクトマネージャーを渡す
       this.audioManager   // オーディオマネージャーを渡す
     );
@@ -1229,6 +1289,17 @@ class Game {
 
       // カード
       rewards.push({ type: 'card', isRare: isBoss, taken: false });
+
+      // レリック: ブラックスター (Black Star)
+      if (isElite && this.player.relics.some(r => r.id === 'black_star')) {
+        const ownedRelicIds = this.player.relics.map(r => r.id);
+        const candidates = Object.values(RelicLibrary).filter(r => !ownedRelicIds.includes(r.id) && r.rarity !== 'starter' && r.rarity !== 'boss');
+        if (candidates.length > 0) {
+          const extraRelic = candidates[Math.floor(Math.random() * candidates.length)];
+          rewards.push({ type: 'relic', data: extraRelic, taken: false });
+          console.log('ブラックスター発動！ 追加のレリックをドロップ。');
+        }
+      }
 
       // レリック: 祈りのルーレット (Prayer Wheel)
       // 通常戦闘（エリートでもボスでも宝箱でもない）かつ所持している場合
@@ -1327,8 +1398,7 @@ class Game {
   // onRewardClickの修正: itemElを受け取ってクリック後に無効化スタイル適用
   onRewardClick(reward, index, itemEl) {
     if (reward.type === 'gold') {
-      this.player.gold += reward.value;
-      alert(`${reward.value} ゴールドを獲得しました！ (所持金: ${this.player.gold}G)`);
+      this.player.gainGold(reward.value);
       reward.taken = true;
       itemEl.style.opacity = '0.5';
       itemEl.style.textDecoration = 'line-through';
@@ -1599,9 +1669,11 @@ class Game {
       keys = keys.filter(k => CardLibrary[k].rarity === 'rare');
     }
 
-    // レリック: 質問カード
+    // レリック: 質問カード / 壊れた王冠
     let numCards = 3;
     if (this.player.relics.some(r => r.id === 'question_card')) numCards = 4;
+    if (this.player.relics.some(r => r.id === 'broken_crown')) numCards -= 2;
+    numCards = Math.max(1, numCards);
 
     for (let i = 0; i < numCards; i++) {
       // 全カード配列からランダム取得
@@ -1845,60 +1917,66 @@ class Game {
 
         enemyEl.onclick = () => this.onEnemyClick(index);
 
-        // 意図アイコン
         let intentHtml = '';
         let intentText = ''; // ホバー時に表示するテキスト
+
         if (enemy.nextMove) {
-          const move = enemy.nextMove;
-          let icons = [];
-          let hasAttack = false;
-          let hasBuff = false;
-          let hasDebuff = false;
-          let hasSpecial = false;
-
-          const nextMoveStatusEffects = move.statusEffects || [];
-
-          if (move.type === 'attack') {
-            const damage = enemy.calculateDamage(move.value);
-            const times = move.times ? `x${move.times}` : '';
-            icons.push(`<span class="intent-attack">🗡️${damage}${times}</span>`);
-            hasAttack = true;
-          }
-
-          // バフ判定: 元のタイプがbuff、またはステータス効果にバフを含む
-          if (move.type === 'buff' || nextMoveStatusEffects.some(s => isBuff(s.type, s.value))) {
-            icons.push('💪');
-            hasBuff = true;
-          }
-
-          // デバフ判定: 元のタイプがdebuff、またはステータス効果にデバフを含む（burn カード追加も含む）
-          if (move.type === 'debuff' || nextMoveStatusEffects.some(s => isDebuff(s.type, s.value) || s.type === 'burn')) {
-            icons.push('📉');
-            hasDebuff = true;
-          }
-
-          if (move.type === 'special') {
-            const name = move.name || '✨';
-            icons.push(`<span class="intent-special">${name}</span>`);
-            hasSpecial = true;
-          }
-
-          // 行動内容のテキストを自動判定
-          if (hasSpecial) {
-            intentText = '敵は特殊な行動予定';
+          const hasRunicDome = this.player.relics.some(r => r.id === 'runic_dome');
+          if (hasRunicDome) {
+            intentHtml = `<div class="intent-icon">❓</div>`;
+            intentText = '意図不明（ルーニックドーム）';
           } else {
-            const parts = [];
-            if (hasBuff) parts.push('バフ');
-            if (hasDebuff) parts.push('デバフ');
-            if (hasAttack) parts.push('攻撃');
+            const move = enemy.nextMove;
+            let icons = [];
+            let hasAttack = false;
+            let hasBuff = false;
+            let hasDebuff = false;
+            let hasSpecial = false;
 
-            if (parts.length > 0) {
-              intentText = `敵は${parts.join('・')}予定`;
+            const nextMoveStatusEffects = move.statusEffects || [];
+
+            if (move.type === 'attack') {
+              const damage = enemy.calculateDamage(move.value);
+              const times = move.times ? `x${move.times}` : '';
+              icons.push(`<span class="intent-attack">🗡️${damage}${times}</span>`);
+              hasAttack = true;
             }
-          }
 
-          if (icons.length > 0) {
-            intentHtml = `<div class="intent-icon">${icons.join('')}</div>`;
+            // バフ判定: 元のタイプがbuff、またはステータス効果にバフを含む
+            if (move.type === 'buff' || nextMoveStatusEffects.some(s => isBuff(s.type, s.value))) {
+              icons.push('💪');
+              hasBuff = true;
+            }
+
+            // デバフ判定: 元のタイプがdebuff、またはステータス効果にデバフを含む（burn カード追加も含む）
+            if (move.type === 'debuff' || nextMoveStatusEffects.some(s => isDebuff(s.type, s.value) || s.type === 'burn')) {
+              icons.push('📉');
+              hasDebuff = true;
+            }
+
+            if (move.type === 'special') {
+              const name = move.name || '✨';
+              icons.push(`<span class="intent-special">${name}</span>`);
+              hasSpecial = true;
+            }
+
+            // 行動内容のテキストを自動判定
+            if (hasSpecial) {
+              intentText = '敵は特殊な行動予定';
+            } else {
+              const parts = [];
+              if (hasBuff) parts.push('バフ');
+              if (hasDebuff) parts.push('デバフ');
+              if (hasAttack) parts.push('攻撃');
+
+              if (parts.length > 0) {
+                intentText = `敵は${parts.join('・')}予定`;
+              }
+            }
+
+            if (icons.length > 0) {
+              intentHtml = `<div class="intent-icon">${icons.join('')}</div>`;
+            }
           }
         }
 
@@ -1973,6 +2051,7 @@ class Game {
 
       // --- Deck / Energy ---
       document.getElementById('energy-value').textContent = String(player.energy);
+      document.getElementById('energy-max-value').textContent = String(player.maxEnergy);
       document.getElementById('deck-count').textContent = String(player.deck.length);
       document.getElementById('discard-count').textContent = String(player.discard.length);
       if (this.elExhaustCount) {

@@ -2428,6 +2428,18 @@ export const CardLibrary = {
             // 特殊処理: 削除不可
         },
         targetType: 'self'
+    }),
+    CURSE_OF_THE_BELL: new Card({
+        id: 'curse_of_the_bell',
+        name: '鐘の呪い',
+        cost: -1,
+        type: 'curse',
+        rarity: 'curse',
+        description: '使用できない。この呪いはデッキから削除できない。',
+        effect: (s, t) => {
+            // 使用不可
+        },
+        targetType: 'self'
     })
 };
 

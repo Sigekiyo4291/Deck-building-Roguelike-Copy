@@ -86,7 +86,7 @@ export class Entity {
     return amount;
   }
 
-  takeDamage(amount, source) {
+  takeDamage(amount, source, engine?) {
     // ターゲット側の補正（脆弱など）を適用
     let totalDamage = this.applyTargetModifiers(amount, source);
     let remainingDamage = totalDamage;
@@ -452,13 +452,13 @@ export class Player extends Entity {
     }
   }
 
-  takeDamage(amount, source) {
+  takeDamage(amount, source, engine?) {
     const prevHp = this.hp;
-    const remainingDamage = super.takeDamage(amount, source);
+    const remainingDamage = super.takeDamage(amount, source, engine);
     if (this.hp < prevHp && this.relics) {
       const lostHp = prevHp - this.hp;
       this.relics.forEach(relic => {
-        if (relic.onTakeDamage) relic.onTakeDamage(this, null, lostHp);
+        if (relic.onTakeDamage) relic.onTakeDamage(this, engine, lostHp);
       });
     }
     return remainingDamage;
@@ -518,7 +518,12 @@ export class Player extends Entity {
   }
 
   gainGold(amount) {
+    if (this.relics.some(r => r.id === 'ectoplasm')) {
+      console.log('エクトプラズムによりゴールドを獲得できません。');
+      return;
+    }
     this.gold += amount;
+    alert(`${amount} ゴールドを獲得しました！ (所持金: ${this.gold}G)`);
   }
 
   spendGold(amount) {

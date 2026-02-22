@@ -12,15 +12,18 @@ export class BattleEngine {
     phase: string;
     isProcessing: boolean = false;
     isEnded: boolean = false;
+    isEliteBattle: boolean = false;
     isBossBattle: boolean = false;
     currentPlayingCard: any = null;
 
-    constructor(player, enemies, uiUpdateCallback, onBattleEnd, onCardSelectionRequest, effectManager = null, audioManager = null) {
+    constructor(player, enemies, uiUpdateCallback, onBattleEnd, onCardSelectionRequest, isEliteBattle = false, isBossBattle = false, effectManager = null, audioManager = null) {
         this.player = player;
         this.enemies = enemies; // 配列で保持
         this.uiUpdateCallback = uiUpdateCallback;
         this.onBattleEnd = onBattleEnd;
         this.onCardSelectionRequest = onCardSelectionRequest;
+        this.isEliteBattle = isEliteBattle;
+        this.isBossBattle = isBossBattle;
         this.effectManager = effectManager; // エフェクト管理クラス
         this.audioManager = audioManager;   // オーディオ管理クラス
         this.turn = 1;
@@ -123,7 +126,9 @@ export class BattleEngine {
             if (relic.onPlayerTurnStart) relic.onPlayerTurnStart(this.player, this);
         });
 
-        await this.drawCards(5);
+        let drawCount = 5;
+        if (this.player.relics.some(r => r.id === 'snecko_eye')) drawCount += 2;
+        await this.drawCards(drawCount);
 
         // ギャンブルチップ (Gambling Chip) の処理
         if (this.turn === 1 && this.player.relics.some(r => r.id === 'gambling_chip')) {
@@ -154,6 +159,15 @@ export class BattleEngine {
             }
             const card = this.player.deck.pop();
             if (!card) continue;
+
+            // 混乱 (Confusion) の処理
+            if (this.player.hasStatus('confusion')) {
+                if (card.cost !== -1 && typeof card.cost === 'number') {
+                    card.temporaryCost = Math.floor(Math.random() * 4);
+                    console.log(`混乱により ${card.name} のコストが ${card.temporaryCost} になりました。`);
+                }
+            }
+
             this.player.hand.push(card);
 
             // レリック: onCardDraw
@@ -217,6 +231,11 @@ export class BattleEngine {
         this.uiUpdateCallback();
     }
 
+    addCardToDrawPile(card) {
+        this.player.deck.push(card);
+        this.shuffle(this.player.deck);
+    }
+
     shuffle(array) {
         for (let i = array.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
@@ -244,6 +263,13 @@ export class BattleEngine {
 
     async playCard(cardIndex, targetIndex = 0) {
         if (this.phase !== 'player' || this.isProcessing || this.isEnded) return;
+
+        // レリック: ベルベットチョーカー (Velvet Choker) 制限
+        const chokerCount = this.player.relicCounters['velvet_choker'];
+        if (chokerCount !== undefined && chokerCount >= 6) {
+            alert('ベルベットチョーカーにより、このターンはこれ以上カードを使えません！');
+            return;
+        }
 
         console.log('BattleEngine: Processing started (isProcessing = true)');
         this.isProcessing = true;
@@ -559,7 +585,7 @@ export class BattleEngine {
         }
 
         // ダメージを与える
-        target.takeDamage(finalDamage, source);
+        target.takeDamage(finalDamage, source, this);
 
         if (target === this.player && target.isDead()) {
             this.triggerFairyPotionIfDead();
@@ -641,11 +667,21 @@ export class BattleEngine {
         }
 
         // 手札を全て捨てる（エセリアルは廃棄）
+        const hasRunicPyramid = this.player.relics.some(r => r.id === 'runic_pyramid');
         const etherealCards = this.player.hand.filter(c => c.isEthereal);
         const nonEtherealCards = this.player.hand.filter(c => !c.isEthereal);
 
         if (nonEtherealCards.length > 0) {
-            this.player.discard.push(...nonEtherealCards);
+            if (!hasRunicPyramid) {
+                this.player.discard.push(...nonEtherealCards);
+                this.player.hand = [];
+            } else {
+                console.log('ルーニックピラミッド発動！ 手札を維持します。');
+                // 手札はそのまま（ただしエセリアルは後で処理される）
+                this.player.hand = [...nonEtherealCards];
+            }
+        } else {
+            this.player.hand = [];
         }
 
         if (etherealCards.length > 0) {
@@ -660,7 +696,7 @@ export class BattleEngine {
             if (relic.onTurnEnd) relic.onTurnEnd(this.player, this);
         });
 
-        this.player.hand = [];
+        // this.player.hand = []; // 既に上記で処理済み
 
         // 金属音 (metallicize) の処理
         const metCount = this.player.getStatusValue('metallicize');

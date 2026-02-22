@@ -372,6 +372,14 @@ class Game {
       this.showUpgradeSelection();
     };
 
+    // 立ち去る
+    const leaveBtn = document.getElementById('rest-leave-btn') as HTMLButtonElement;
+    if (leaveBtn) {
+      leaveBtn.onclick = () => {
+        this.finishRest();
+      };
+    }
+
     const optionsContainer = document.querySelector('.rest-options');
     if (optionsContainer) {
       // 既存の動的ボタンをクリア（念のため）

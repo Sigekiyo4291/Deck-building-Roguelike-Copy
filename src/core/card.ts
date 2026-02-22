@@ -23,6 +23,7 @@ export interface CardInitParams {
     isInnate?: boolean;
     isStatus?: boolean;
     bottledId?: string;
+    realType?: string; // 無色カードなどの場合に本来のタイプ（attack/skill等）を保持
 }
 
 export class Card {
@@ -53,6 +54,7 @@ export class Card {
     isStatus: boolean;
     isInnate: boolean;
     bottledId?: string;
+    realType: string;
 
     constructor(params: CardInitParams) {
         this.id = params.id;
@@ -87,6 +89,7 @@ export class Card {
         this.isStatus = params.isStatus || false;
         this.isInnate = params.isInnate || false;
         this.bottledId = params.bottledId;
+        this.realType = params.realType || params.type;
     }
 
     getCost(source) {
@@ -166,6 +169,11 @@ export class Card {
         let xValue = 0;
         if (currentCost === 'X') {
             xValue = source.energy;
+            // レリック: ケミカルX
+            if (source.relics && source.relics.some(r => r.id === 'chemical_x')) {
+                xValue += 2;
+                console.log('ケミカルX発動！ X = ' + xValue);
+            }
             if (!freePlay) source.energy = 0;
         } else if (typeof currentCost === 'number' && currentCost >= 0) {
             if (freePlay) {
@@ -220,7 +228,8 @@ export class Card {
             effectType: this.effectType,
             onExhaust: this.onExhaust,
             isInnate: this.isInnate,
-            bottledId: this.bottledId
+            bottledId: this.bottledId,
+            realType: this.realType
         });
         c.miscValue = this.miscValue;
         return c;
@@ -2452,6 +2461,60 @@ export const CardLibrary = {
             // 使用不可
         },
         targetType: 'self'
+    }),
+    FINESSE: new Card({
+        id: 'finesse',
+        name: '技巧',
+        cost: 0,
+        type: 'colorless',
+        realType: 'skill',
+        rarity: 'uncommon',
+        description: '2ブロックを得る。カードを1枚引く。',
+        effect: (s, t, e) => {
+            s.addBlock(2);
+            if (e) e.drawCards(1);
+        },
+        targetType: 'self',
+        upgradeData: {
+            description: '4ブロックを得る。カードを1枚引く。',
+            baseBlock: 4,
+            effect: (s, t, e) => {
+                s.addBlock(4);
+                if (e) e.drawCards(1);
+            }
+        },
+        baseBlock: 2
+    }),
+    FLASH_OF_STEEL: new Card({
+        id: 'flash_of_steel',
+        name: '剣の一閃',
+        cost: 0,
+        type: 'colorless',
+        realType: 'attack',
+        rarity: 'uncommon',
+        description: '3ダメージを与える。カードを1枚引く。',
+        effect: async (s, t, e) => {
+            if (e && e.dealDamageWithEffect) {
+                await e.dealDamageWithEffect(s, t, s.calculateDamage(3));
+            } else {
+                t.takeDamage(s.calculateDamage(3), s);
+            }
+            if (e) e.drawCards(1);
+        },
+        targetType: 'single',
+        upgradeData: {
+            description: '6ダメージを与える。カードを1枚引く。',
+            baseDamage: 6,
+            effect: async (s, t, e) => {
+                if (e && e.dealDamageWithEffect) {
+                    await e.dealDamageWithEffect(s, t, s.calculateDamage(6));
+                } else {
+                    t.takeDamage(s.calculateDamage(6), s);
+                }
+                if (e) e.drawCards(1);
+            }
+        },
+        baseDamage: 3
     })
 };
 

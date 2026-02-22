@@ -15,6 +15,7 @@ export class BattleEngine {
     isEliteBattle: boolean = false;
     isBossBattle: boolean = false;
     currentPlayingCard: any = null;
+    playedTypesThisTurn: Set<string> = new Set(); // オレンジ色の丸薬用
 
     constructor(player, enemies, uiUpdateCallback, onBattleEnd, onCardSelectionRequest, isEliteBattle = false, isBossBattle = false, effectManager = null, audioManager = null) {
         this.player = player;
@@ -80,6 +81,7 @@ export class BattleEngine {
         this.player.updateStatusAtTurnStart();
 
         this.player.onTurnStart();
+        this.playedTypesThisTurn.clear();
 
         // 残虐 (Brutality) の処理
         const brutalityCount = this.player.getStatusValue('brutality');
@@ -277,6 +279,10 @@ export class BattleEngine {
             const card = this.player.hand[cardIndex];
             if (!card) return;
 
+            // レリック: 医療キット (Medical Kit) - 状態異常を使用可能にする
+            const hasMedicalKit = this.player.relics.some(r => r.id === 'medical_kit');
+            const isStatusPlayable = card.isStatus && hasMedicalKit;
+
             let target = this.enemies[targetIndex];
             if (!target || target.isDead()) {
                 target = this.enemies.find(e => !e.isDead());
@@ -291,7 +297,7 @@ export class BattleEngine {
 
             const currentCost = card.getCost(this.player);
             if (currentCost === 'X' || (typeof currentCost === 'number' && currentCost >= 0 && this.player.energy >= currentCost)) {
-                if (!card.canPlay(this.player, this)) {
+                if (!card.canPlay(this.player, this) && !isStatusPlayable) {
                     console.log("使用条件を満たしていません！");
                     return;
                 }
@@ -333,7 +339,20 @@ export class BattleEngine {
                     if (relic.afterCardPlay) relic.afterCardPlay(this.player, this, card);
                 });
 
-                // 敵にカードプレイを通知（激怒などの発動用）
+                // レリック: オレンジ色の丸薬 (Orange Pellets) の判定
+                const typeToLog = card.realType || card.type;
+                if (['attack', 'skill', 'power'].includes(typeToLog)) {
+                    this.playedTypesThisTurn.add(typeToLog);
+                    if (this.playedTypesThisTurn.has('attack') && this.playedTypesThisTurn.has('skill') && this.playedTypesThisTurn.has('power')) {
+                        const pellets = this.player.relics.find(r => r.id === 'orange_pellets');
+                        if (pellets && pellets.clearDebuffs) {
+                            pellets.clearDebuffs(this.player);
+                            this.playedTypesThisTurn.clear(); // 発動後はリセット（ StSの仕様に準拠するなら1ターン1回）
+                        }
+                    }
+                }
+
+                // 敵にカードプレイを通知
                 this.enemies.forEach(enemy => {
                     if (!enemy.isDead()) {
                         enemy.onPlayerPlayCard(card, this.player, this);
@@ -389,10 +408,10 @@ export class BattleEngine {
                 if (card.type === 'power') {
                     // パワーカードは戦闘から取り除かれる（どこにも追加しない）
                     console.log(`${card.name} は戦闘から取り除かれました。`);
-                } else if (card.isExhaust || (this.player.hasStatus('corruption') && card.type === 'skill')) {
-                    // 堕落 (Corruption) または元々の廃棄属性
-                    if (this.player.hasStatus('corruption') && card.type === 'skill') {
-                        console.log(`堕落発動！ ${card.name} は廃棄されました。`);
+                } else if (card.isExhaust || (this.player.hasStatus('corruption') && card.type === 'skill') || (isStatusPlayable)) {
+                    // 医療キットによる状態異常の廃棄または元の廃棄属性
+                    if (isStatusPlayable) {
+                        console.log(`医療キット発動！ ${card.name} は廃棄されました。`);
                     }
                     this.player.exhaustCard(card, this);
                 } else {

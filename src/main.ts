@@ -81,6 +81,7 @@ class Game {
   currentEvent: any;
   currentEventState: any;
   private currentPotionPopup: HTMLElement | null = null;
+  pendingOrreryCards: number = 0; // 太陽系儀用の残り選択枚数
 
   constructor() {
     this.player = new Player();
@@ -163,12 +164,17 @@ class Game {
     if (deckPile) {
       deckPile.onclick = () => {
         if (this.battleEngine) {
-          // 戦闘中は山札を表示 (順番がバレないようにソートして表示)
-          const sortedDeck = [...this.player.deck].sort((a, b) => {
-            if (a.type !== b.type) return a.type.localeCompare(b.type);
-            return a.name.localeCompare(b.name);
-          });
-          this.showCardSelectionFromPile('山札', sortedDeck, () => { });
+          // 山札パイルのクリックイベント
+          const hasFrozenEye = this.player.relics.some(r => r.id === 'frozen_eye');
+          let displayDeck = [...this.player.deck];
+          if (!hasFrozenEye) {
+            // 順番がバレないようにソートして表示
+            displayDeck.sort((a, b) => {
+              if (a.type !== b.type) return a.type.localeCompare(b.type);
+              return a.name.localeCompare(b.name);
+            });
+          }
+          this.showCardSelectionFromPile('山札', displayDeck, () => { });
         } else {
           // 非戦闘時はデッキ全体を表示
           this.showDeckView();
@@ -790,6 +796,10 @@ class Game {
       // レリック: 配達人
       if (this.player.relics.some(r => r.id === 'the_courier')) {
         finalPrice = Math.floor(finalPrice * 0.8);
+      }
+      // レリック: 会員カード (Membership Card)
+      if (this.player.relics.some(r => r.id === 'membership_card')) {
+        finalPrice = Math.floor(finalPrice * 0.5);
       }
       return finalPrice;
     };
@@ -1764,17 +1774,31 @@ class Game {
       let rareChance = 0.03;
       if (hasNlothGift) rareChance = 0.09;
 
+      // プリズムの破片 (Prismatic Shard) の判定: 5%の確率で無色カードに
+      const hasPrismaticShard = this.player.relics.some(r => r.id === 'prismatic_shard');
+      let isColorless = false;
+      if (hasPrismaticShard && Math.random() < 0.05) {
+        isColorless = true;
+      }
+
       if (rewardItem.isRare || roll < rareChance) {
         rarity = 'rare';
       } else if (roll < 0.4) {
         rarity = 'uncommon';
       }
 
-      const possibleKeys = Object.keys(CardLibrary).filter(k =>
-        CardLibrary[k].type !== 'curse' && CardLibrary[k].type !== 'status' && CardLibrary[k].rarity === rarity
-      );
-      const randomKey = possibleKeys[Math.floor(Math.random() * possibleKeys.length)] || keys[Math.floor(Math.random() * keys.length)];
-      const card = CardLibrary[randomKey].clone();
+      let card;
+      if (isColorless) {
+        const colorlessPool = Object.values(CardLibrary).filter(c => c.type === 'colorless');
+        const randomKey = Object.keys(CardLibrary).find(k => CardLibrary[k] === colorlessPool[Math.floor(Math.random() * colorlessPool.length)]);
+        card = CardLibrary[randomKey || 'FINESSE'].clone();
+      } else {
+        const possibleKeys = Object.keys(CardLibrary).filter(k =>
+          CardLibrary[k].type !== 'curse' && CardLibrary[k].type !== 'status' && CardLibrary[k].type !== 'colorless' && CardLibrary[k].rarity === rarity
+        );
+        const randomKey = possibleKeys[Math.floor(Math.random() * possibleKeys.length)] || keys[Math.floor(Math.random() * keys.length)];
+        card = CardLibrary[randomKey].clone();
+      }
 
       const cardEl = this.createRewardCardElement(card);
       cardEl.onclick = () => {
@@ -1793,10 +1817,20 @@ class Game {
         }
         this.player.addCard(card);
         alert(`${card.name} をデッキに追加しました！`);
-        rewardItem.taken = true;
-        itemEl.style.opacity = '0.5';
-        itemEl.style.textDecoration = 'line-through';
+        if (rewardItem) rewardItem.taken = true;
+        if (itemEl) {
+          itemEl.style.opacity = '0.5';
+          itemEl.style.textDecoration = 'line-through';
+        }
         overlay.style.display = 'none';
+
+        // 太陽系儀 (Orrery) の連続選択
+        if (this.pendingOrreryCards > 0) {
+          this.pendingOrreryCards--;
+          setTimeout(() => {
+            this.showCardSelection({ isRare: false, taken: false }, null);
+          }, 300);
+        }
 
         // ドリームキャッチャーなどの特殊な報酬表示中なら終了処理へ
         if (document.getElementById('reward-done-btn')?.innerText === '休憩終了 (ドリームキャッチャー)') {
@@ -1825,9 +1859,19 @@ class Game {
         this.player.increaseMaxHp(2);
       }
 
-      rewardItem.taken = true; // スキップしたら取得済み扱い
-      itemEl.style.opacity = '0.5';
-      itemEl.style.textDecoration = 'line-through';
+      if (rewardItem) rewardItem.taken = true; // スキップしたら取得済み扱い
+      if (itemEl) {
+        itemEl.style.opacity = '0.5';
+        itemEl.style.textDecoration = 'line-through';
+      }
+
+      // 太陽系儀 (Orrery) の連続選択 (スキップ時)
+      if (this.pendingOrreryCards > 0) {
+        this.pendingOrreryCards--;
+        setTimeout(() => {
+          this.showCardSelection({ isRare: false, taken: false }, null);
+        }, 300);
+      }
 
       if (document.getElementById('reward-done-btn')?.innerText === '休憩終了 (ドリームキャッチャー)') {
         this.finishRest();

@@ -97,12 +97,20 @@ export class Entity {
 
     // ブロックでダメージを軽減
     if (this.block > 0) {
+      const oldBlock = this.block;
       if (this.block >= remainingDamage) {
         this.block -= remainingDamage;
         remainingDamage = 0;
       } else {
         remainingDamage -= this.block;
         this.block = 0;
+      }
+
+      // ブロックが破られた判定 (Hand Drill用)
+      if (oldBlock > 0 && this.block === 0 && source && source.relics) {
+        source.relics.forEach(relic => {
+          if (relic.onBlockBroken) relic.onBlockBroken(source, this, null);
+        });
       }
     }
 
@@ -490,9 +498,24 @@ export class Player extends Entity {
     return lostAmount;
   }
 
-  exhaustCard(card, engine) {
-    this.exhaust.push(card);
+  // Helper to add card to discard pile (needed for Strange Spoon)
+  addCardToDiscard(card) {
+    this.discard.push(card);
+  }
 
+  exhaustCard(card, engine) {
+    // 奇妙なスプーン (Strange Spoon) の処理
+    if (this.relics.some(r => r.id === 'strange_spoon') && Math.random() < 0.5) {
+      console.log('奇妙なスプーン発動！ 廃棄せずに捨て札にします。');
+      this.addCardToDiscard(card);
+      if (card.onExhaust && engine) {
+        card.onExhaust(this, engine);
+      }
+      return;
+    }
+
+    this.exhaust.push(card);
+    console.log(`${card.name} が廃棄されました。`);
     // レリック: onCardExhaust
     if (this.relics) {
       this.relics.forEach(relic => {

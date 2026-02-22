@@ -1227,6 +1227,11 @@ body {
   box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
 }
 
+.relic-icon.used {
+  filter: grayscale(100%);
+  opacity: 0.6;
+}
+
 .relic-counter {
   position: absolute;
   bottom: -5px;

@@ -124,6 +124,12 @@ export class BattleEngine {
         });
 
         await this.drawCards(5);
+
+        // ギャンブルチップ (Gambling Chip) の処理
+        if (this.turn === 1 && this.player.relics.some(r => r.id === 'gambling_chip')) {
+            await this.handleGamblingChip();
+        }
+
         this.updateIntent();
         this.uiUpdateCallback();
     }
@@ -174,6 +180,31 @@ export class BattleEngine {
             }
         }
         this.uiUpdateCallback();
+    }
+
+    async handleGamblingChip() {
+        console.log('ギャンブルチップ発動！ 捨てるカードを選択してください。');
+        return new Promise<void>(resolve => {
+            this.onCardSelectionRequest(
+                'ギャンブルチップ: 捨てるカードを選択 (完了で引き直し)',
+                this.player.hand,
+                async (selectedCards, selectedIndices) => {
+                    if (selectedCards && selectedCards.length > 0) {
+                        // 選択されたカードを捨て札に送り、その分引く
+                        // インデックスは降順で削除
+                        const sortedIndices = [...selectedIndices].sort((a, b) => b - a);
+                        sortedIndices.forEach(idx => {
+                            const card = this.player.hand.splice(idx, 1)[0];
+                            this.player.discard.push(card);
+                        });
+                        console.log(`${selectedCards.length} 枚捨てました。同数ドローします。`);
+                        await this.drawCards(selectedCards.length);
+                    }
+                    resolve();
+                },
+                { multiSelect: true }
+            );
+        });
     }
 
     addCardToHand(card) {

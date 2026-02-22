@@ -323,6 +323,84 @@ class Game {
     document.getElementById('rest-upgrade-btn').onclick = () => {
       this.showUpgradeSelection();
     };
+
+    const optionsContainer = document.querySelector('.rest-options');
+    if (optionsContainer) {
+      // 既存の動的ボタンをクリア（念のため）
+      const dynamicBtns = optionsContainer.querySelectorAll('.dynamic-rest-btn');
+      dynamicBtns.forEach(btn => btn.remove());
+
+      // レリック: ショベル (Shovel) - 掘る
+      if (this.player.relics.some(r => r.id === 'shovel')) {
+        this.addRestOption(optionsContainer, '⛏️', '掘る', 'レリックを獲得', () => {
+          this.handleShovelDig();
+        });
+      }
+
+      // レリック: ケトルベル (Girya) - 持ち上げる
+      const giryaCount = this.player.relicCounters['girya'] || 0;
+      if (this.player.relics.some(r => r.id === 'girya') && giryaCount < 3) {
+        this.addRestOption(optionsContainer, '🏋️', '持ち上げる', `筋力を1得る (${giryaCount}/3)`, () => {
+          this.handleGiryaLift();
+        });
+      }
+
+      // レリック: 安らぎのパイプ (Peace Pipe) - 削除
+      if (this.player.relics.some(r => r.id === 'peace_pipe')) {
+        this.addRestOption(optionsContainer, '🚬', '削除', 'カード1枚を削除', () => {
+          this.handlePeacePipeToke();
+        });
+      }
+    }
+  }
+
+  // 休息所オプションの動的追加ヘルパー
+  addRestOption(container: Element, icon: string, label: string, desc: string, callback: () => void) {
+    const btn = document.createElement('button');
+    btn.className = 'end-turn-btn rest-option-btn dynamic-rest-btn';
+    btn.innerHTML = `
+      <span class="option-icon">${icon}</span>
+      <span class="option-label">${label}</span>
+      <span class="option-desc">${desc}</span>
+    `;
+    btn.onclick = callback;
+    container.appendChild(btn);
+  }
+
+  handleShovelDig() {
+    // ショベルで「掘る」：ランダムなレリックを獲得
+    const ownedIds = this.player.relics.map(r => r.id);
+    const candidates = Object.values(RelicLibrary).filter(r =>
+      !ownedIds.includes(r.id) && r.rarity !== 'starter' && r.rarity !== 'boss' && (!r.character || r.character === 'ironclad')
+    );
+
+    if (candidates.length > 0) {
+      const relic = candidates[Math.floor(Math.random() * candidates.length)];
+      this.player.relics.push(relic);
+      if (relic.onObtain) relic.onObtain(this.player, this);
+      alert(`掘り当てた！ ${relic.name} を獲得しました。`);
+      this.updateGlobalStatusUI();
+    } else {
+      alert('これ以上見つかるレリックはありません。');
+    }
+    this.finishRest();
+  }
+
+  handleGiryaLift() {
+    // ケトルベルで「持ち上げる」：筋力を1得る（最大3回）
+    this.player.relicCounters['girya'] = (this.player.relicCounters['girya'] || 0) + 1;
+    // 実際には戦闘開始時に筋力を付与するロジックが必要（ここでは簡易的に player.baseStrength 的なものを増やすか、レリックの onBattleStart で判定する）
+    // 既存のレリック側に onBattleStart を追加するのが正解
+    alert(`ケトルベルを持ち上げた！ 永続的な筋力を得ました。 (${this.player.relicCounters['girya']}/3)`);
+    this.updateGlobalStatusUI();
+    this.finishRest();
+  }
+
+  handlePeacePipeToke() {
+    // 安らぎのパイプで「削除」
+    this.showCardRemovalSelection(() => {
+      this.finishRest();
+    });
   }
 
   showUpgradeSelection(onComplete?: () => void) {
@@ -1381,6 +1459,17 @@ class Game {
         counter.className = 'relic-counter';
         counter.textContent = String(counterValue);
         icon.appendChild(counter);
+      }
+
+      // 使用済み状態の視覚化
+      let isUsed = false;
+      if (relic.id === 'lizard_tail' && counterValue === 0) isUsed = true;
+      if (relic.id === 'fossilized_helix' && counterValue === 0) isUsed = true;
+      if (relic.id === 'omamori' && counterValue === 0) isUsed = true;
+      // 今後必要に応じて追加
+
+      if (isUsed) {
+        icon.classList.add('used');
       }
 
       container.appendChild(icon);

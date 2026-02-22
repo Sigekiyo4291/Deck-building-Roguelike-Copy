@@ -804,5 +804,28 @@ export const RelicLibrary = {
                 owner.relicCounters['lizard_tail'] = 1; // 1: 未使用, 0: 使用済み
             }
         }
+    },
+    GAMBLING_CHIP: new class extends Relic {
+        constructor() { super('gambling_chip', 'ギャンブルチップ', '戦闘開始時、手札を好きな枚数捨てて引き直すことができる。', 'rare'); }
+        // engine.ts の startPlayerTurn 内で明示的に呼び出す
+    },
+    SHOVEL: new class extends Relic {
+        constructor() { super('shovel', 'ショベル', '休息所で「掘る」アクションができるようになる。', 'rare'); }
+    },
+    GIRYA: new class extends Relic {
+        constructor() { super('girya', 'ケトルベル', '休息所で「持ち上げる」アクションができるようになる（最大3回まで）。', 'rare'); }
+        onObtain(owner, game) {
+            owner.relicCounters['girya'] = 0;
+        }
+        onBattleStart(owner, engine) {
+            const count = owner.relicCounters['girya'] || 0;
+            if (count > 0) {
+                owner.addStatus('strength', count);
+                console.log(`ケトルベル発動！ 筋力+${count}。`);
+            }
+        }
+    },
+    PEACE_PIPE: new class extends Relic {
+        constructor() { super('peace_pipe', '安らぎのパイプ', '休息所で「削除」アクションができるようになる。', 'rare'); }
     }
 };

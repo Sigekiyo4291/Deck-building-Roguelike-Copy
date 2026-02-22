@@ -1,3 +1,5 @@
+import { CardLibrary } from './card';
+
 export class Relic {
     id: string;
     name: string;
@@ -35,6 +37,7 @@ export class Relic {
     modifyBlockGained(owner, block, card?) { return block; }
     modifyHealAmount(owner, amount) { return amount; } // 回復量補正用
     onGoldSpend(owner, amount) { }
+    onApplyStatus(owner, target, type, value, engine) { } // ステータス付与時のフック
 }
 
 export const RelicLibrary = {
@@ -766,6 +769,39 @@ export const RelicLibrary = {
             if (card.type === 'power') {
                 console.log('鳥頭壺発動！ パワープレイによりHP回復。');
                 owner.heal(2);
+            }
+        }
+    },
+    DEAD_BRANCH: new class extends Relic {
+        constructor() { super('dead_branch', '古木の枝', 'カードを廃棄するたび、手札にランダムなカードを1枚加える。', 'rare'); }
+        onCardExhaust(owner, engine, card) {
+            if (!engine) return;
+            const allCards = Object.values(CardLibrary).filter(c => c.type !== 'basic' && c.type !== 'curse' && c.type !== 'status');
+            const randomCard = allCards[Math.floor(Math.random() * allCards.length)].clone();
+            engine.addCardToHand(randomCard);
+            console.log(`古木の枝発動！ ${randomCard.name} を手札に加えました。`);
+        }
+    },
+    FOSSILIZED_HELIX: new class extends Relic {
+        constructor() { super('fossilized_helix', '貝の化石', '各戦闘で最初に受けるダメージを0にする。', 'rare'); }
+        onBattleStart(owner, engine) {
+            owner.relicCounters['fossilized_helix'] = 1; // 1: 有効, 0: 使用済み
+        }
+    },
+    CHAMPION_BELT: new class extends Relic {
+        constructor() { super('champion_belt', 'チャンピオンベルト', '敵に「脆弱」を付与するたび、対象に「脱力」1を付与する。', 'rare'); }
+        onApplyStatus(owner, target, type, value, engine) {
+            if (type === 'vulnerable' && value > 0 && target !== owner) {
+                console.log('チャンピオンベルト発動！ 対象に脱力を付与します。');
+                target.addStatus('weak', 1);
+            }
+        }
+    },
+    LIZARD_TAIL: new class extends Relic {
+        constructor() { super('lizard_tail', 'トカゲのしっぽ', 'HPが0になった時、一度だけ最大HPの50%で復活する。', 'rare'); }
+        onBattleStart(owner, engine) {
+            if (owner.relicCounters['lizard_tail'] === undefined) {
+                owner.relicCounters['lizard_tail'] = 1; // 1: 未使用, 0: 使用済み
             }
         }
     }

@@ -164,7 +164,6 @@ export class BattleEngine {
                         await this.attackWithEffect(this.player, enemy, fbDamage);
                     }
                 }
-                this.uiUpdateCallback();
             }
 
             // 進化 (Evolve) の処理
@@ -174,6 +173,17 @@ export class BattleEngine {
                 await this.drawCards(evolveCount);
             }
         }
+        this.uiUpdateCallback();
+    }
+
+    addCardToHand(card) {
+        if (this.player.hand.length >= 10) {
+            console.log("手札がいっぱいです。カードは捨て札に送られます。");
+            this.player.discard.push(card);
+        } else {
+            this.player.hand.push(card);
+        }
+        this.uiUpdateCallback();
     }
 
     shuffle(array) {

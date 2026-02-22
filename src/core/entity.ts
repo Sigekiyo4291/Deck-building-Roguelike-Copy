@@ -39,6 +39,7 @@ export class Entity {
   statusEffects: { type: string, value: number }[];
   uuid: string;
   relics: any[] = []; // レリックによる補正チェック用
+  relicCounters: { [key: string]: number } = {}; // レリックの状態保持用
   onGainBlock?: () => void;
 
   constructor(name, maxHp, sprite) {
@@ -48,6 +49,7 @@ export class Entity {
     this.block = 0;
     this.sprite = sprite;
     this.statusEffects = [];
+    this.relicCounters = {};
     this.uuid = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2) + Date.now().toString(36);
   }
 
@@ -115,8 +117,28 @@ export class Entity {
       }
     }
 
+    // 貝の化石 (Fossilized Helix)
+    if (remainingDamage > 0 && this.relics && this.relics.length > 0) {
+      const helix = this.relics.find(r => r.id === 'fossilized_helix');
+      if (helix && (this.relicCounters['fossilized_helix'] || 0) > 0) {
+        remainingDamage = 0;
+        this.relicCounters['fossilized_helix'] = 0;
+        console.log('貝の化石発動！ ダメージを無効化しました。');
+      }
+    }
+
     const prevHp = this.hp;
     this.hp = Math.max(0, this.hp - remainingDamage);
+
+    // トカゲのしっぽ (Lizard Tail)
+    if (this.hp === 0 && prevHp > 0 && this.relics && this.relics.length > 0) {
+      const tail = this.relics.find(r => r.id === 'lizard_tail');
+      if (tail && (this.relicCounters['lizard_tail'] || 0) > 0) {
+        this.hp = Math.floor(this.maxHp * 0.5);
+        this.relicCounters['lizard_tail'] = 0;
+        console.log('トカゲのしっぽ発動！ 復活しました。');
+      }
+    }
 
     // まるくなる (Curl Up) の処理: ダメージを受けた時に一度だけブロック獲得
     // HPが減少した場合に判定
@@ -229,7 +251,7 @@ export class Entity {
   }
 
   // ステータス操作
-  addStatus(type, value) {
+  addStatus(type: string, value: number, source?: Entity) {
     // レリックによるデバフ無効化
     if (this.relics && this.relics.length > 0) {
       if (type === 'vulnerable' && value > 0 && this.relics.some(r => r.id === 'turnip')) {
@@ -257,6 +279,19 @@ export class Entity {
       existing.value += value;
     } else {
       this.statusEffects.push({ type, value });
+    }
+
+    // レリック: onApplyStatus (自身または他者への付与時にトリガー)
+    if (this.relics && this.relics.length > 0) {
+      this.relics.forEach(r => {
+        if (r.onApplyStatus) r.onApplyStatus(this, this, type, value, null);
+      });
+    }
+
+    if (source && source.relics && source.relics.length > 0) {
+      source.relics.forEach(r => {
+        if (r.onApplyStatus) r.onApplyStatus(source, this, type, value, null);
+      });
     }
   }
 
@@ -377,7 +412,6 @@ export class Player extends Entity {
   gold: number;
   potionSlots: number;
   potions: any[];
-  relicCounters: { [key: string]: number };
   masterDeck: any[];
   cardRemovalCount: number;
 

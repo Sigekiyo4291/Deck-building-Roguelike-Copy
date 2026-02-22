@@ -291,7 +291,7 @@ export const CardLibrary = {
             } else {
                 t.takeDamage(s.calculateDamage(8), s);
             }
-            t.addStatus('vulnerable', 2);
+            t.addStatus('vulnerable', 2, s);
         },
         targetType: 'single',
         upgradeData: {
@@ -303,7 +303,7 @@ export const CardLibrary = {
                 } else {
                     t.takeDamage(s.calculateDamage(10), s);
                 }
-                t.addStatus('vulnerable', 3);
+                t.addStatus('vulnerable', 3, s);
             }
         },
         baseDamage: 8,
@@ -419,7 +419,7 @@ export const CardLibrary = {
             } else {
                 t.takeDamage(s.calculateDamage(4), s);
             }
-            t.addStatus('vulnerable', 1);
+            t.addStatus('vulnerable', 1, s);
         },
         targetType: 'all',
         upgradeData: {
@@ -431,7 +431,7 @@ export const CardLibrary = {
                 } else {
                     t.takeDamage(s.calculateDamage(7), s);
                 }
-                t.addStatus('vulnerable', 1);
+                t.addStatus('vulnerable', 1, s);
             }
         },
         baseDamage: 4,

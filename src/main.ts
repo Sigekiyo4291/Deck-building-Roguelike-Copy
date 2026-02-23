@@ -2444,6 +2444,16 @@ class Game {
       }
     }
 
+    // 1. ステータスカードチェック（救急箱を所持している場合は許可）
+    if (card.type === 'status') {
+      const hasMedicalKit = this.player.relics.some(r => r.id === 'medical_kit');
+      if (!hasMedicalKit) {
+        alert('このカードは使用できません！');
+        this.updateBattleUI();
+        return;
+      }
+    }
+
     // 2. エネルギーチェック
     const currentCost = card.getCost(this.player);
     const requiredEnergy = (currentCost === 'X') ? 0 : Number(currentCost);

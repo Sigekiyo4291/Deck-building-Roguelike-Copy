@@ -162,7 +162,11 @@ export class Card {
     }
 
     async play(source, target, engine, freePlay = false) {
-        if (this.type === 'curse') return false;
+        // 呪いチェック（ブルーキャンドル所持時は許可）
+        if (this.type === 'curse') {
+            const hasBlueCandle = source.relics && source.relics.some(r => r.id === 'blue_candle');
+            if (!hasBlueCandle) return false;
+        }
 
         const currentCost = this.getCost(source);
 
@@ -185,8 +189,18 @@ export class Card {
                 return false;
             }
         } else if (typeof currentCost === 'number' && currentCost < 0) {
-            // 呪いなど使用不可
-            return false;
+            // 医療キット所持時はステータスカードをコスト0でプレイ可能
+            const hasMedicalKit = source.relics && source.relics.some(r => r.id === 'medical_kit');
+            // ブルーキャンドル所持時は呪いカードをコスト0でプレイ可能
+            const hasBlueCandle = source.relics && source.relics.some(r => r.id === 'blue_candle');
+            if (this.isStatus && hasMedicalKit) {
+                xValue = 0; // エネルギー不消費でプレイ
+            } else if (this.type === 'curse' && hasBlueCandle) {
+                xValue = 0; // エネルギー不消費でプレイ
+            } else {
+                // その他の使用不可カード
+                return false;
+            }
         } else {
             return false;
         }
@@ -228,6 +242,7 @@ export class Card {
             effectType: this.effectType,
             onExhaust: this.onExhaust,
             isInnate: this.isInnate,
+            isStatus: this.isStatus,
             bottledId: this.bottledId,
             cardClass: this.cardClass
         });

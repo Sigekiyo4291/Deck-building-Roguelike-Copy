@@ -282,6 +282,9 @@ export class BattleEngine {
             // レリック: 医療キット (Medical Kit) - 状態異常を使用可能にする
             const hasMedicalKit = this.player.relics.some(r => r.id === 'medical_kit');
             const isStatusPlayable = card.isStatus && hasMedicalKit;
+            // レリック: ブルーキャンドル (Blue Candle) - 呪いを使用可能にする
+            const hasBlueCandle = this.player.relics.some(r => r.id === 'blue_candle');
+            const isCursePlayable = card.type === 'curse' && hasBlueCandle;
 
             let target = this.enemies[targetIndex];
             if (!target || target.isDead()) {
@@ -296,8 +299,8 @@ export class BattleEngine {
             }
 
             const currentCost = card.getCost(this.player);
-            if (currentCost === 'X' || (typeof currentCost === 'number' && currentCost >= 0 && this.player.energy >= currentCost)) {
-                if (!card.canPlay(this.player, this) && !isStatusPlayable) {
+            if (currentCost === 'X' || isStatusPlayable || isCursePlayable || (typeof currentCost === 'number' && currentCost >= 0 && this.player.energy >= currentCost)) {
+                if (!card.canPlay(this.player, this) && !isStatusPlayable && !isCursePlayable) {
                     console.log("使用条件を満たしていません！");
                     return;
                 }
@@ -333,6 +336,13 @@ export class BattleEngine {
                 this.currentPlayingCard = card;
                 await card.play(this.player, target, this);
                 this.currentPlayingCard = null;
+
+                // レリック: ブルーキャンドル - 呪い使用時にHP-1（ブロック無視）
+                if (isCursePlayable) {
+                    this.player.loseHP(1);
+                    console.log('ブルーキャンドル：呪い使用でHP-1');
+                    if (this.uiUpdateCallback) this.uiUpdateCallback();
+                }
 
                 // レリック: afterCardPlay
                 this.player.relics.forEach(relic => {

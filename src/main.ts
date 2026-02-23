@@ -553,6 +553,10 @@ class Game {
     } else if (rand < 0.25) {
       // ショップ発生
       alert('イベントかと思いきや、商人がいました！');
+      // レリック: onRoomEnter（ショップ入室フック）
+      this.player.relics.forEach(relic => {
+        if (relic.onRoomEnter) relic.onRoomEnter(this.player, 'shop');
+      });
       this.showShopScene();
       return;
     }

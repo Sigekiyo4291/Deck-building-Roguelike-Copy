@@ -243,8 +243,11 @@ export class DebugManager {
                 btn.textContent = `[${card.cost}] ${card.name}`;
                 btn.className = 'debug-item-btn ' + card.rarity;
                 btn.onclick = () => {
-                    this.game.player.masterDeck.push(card.clone());
-                    alert(`Added ${card.name} to deck`);
+                    if (this.game.player.addCard(card.clone())) {
+                        alert(`Added ${card.name} to deck`);
+                    } else {
+                        alert(`Omamori blocked adding ${card.name}`);
+                    }
                 };
                 groupContainer.appendChild(btn);
             });

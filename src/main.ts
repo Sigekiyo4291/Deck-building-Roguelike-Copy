@@ -1182,8 +1182,11 @@ class Game {
         const curses = Object.values(CardLibrary).filter(c => c.type === 'curse');
         if (curses.length > 0) {
           const randomCurse = curses[Math.floor(Math.random() * curses.length)].clone();
-          this.player.addCard(randomCurse);
-          alert(`呪いの鍵の影響で ${randomCurse.name} を得てしまった！`);
+          if (this.player.addCard(randomCurse)) {
+            alert(`呪いの鍵の影響で ${randomCurse.name} を得てしまった！`);
+          } else {
+            alert(`呪いの鍵の影響で ${randomCurse.name} を得そうになりましたが、お守りが防いでくれました！`);
+          }
         }
       }
 

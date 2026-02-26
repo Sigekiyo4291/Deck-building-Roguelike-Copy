@@ -554,12 +554,23 @@ export class Player extends Entity {
   }
 
   addCard(card) {
+    // お守り (Omamori) の処理
+    if (card.type === 'curse' && this.relics.some(r => r.id === 'omamori')) {
+      const count = this.relicCounters['omamori'] || 0;
+      if (count > 0) {
+        this.relicCounters['omamori']--;
+        console.log(`お守り発動！ 呪い ${card.name} を無効化しました。残り回数: ${this.relicCounters['omamori']}`);
+        return false;
+      }
+    }
+
     this.masterDeck.push(card);
     if (this.relics) {
       this.relics.forEach(relic => {
         if (relic.onCardAdd) relic.onCardAdd(this, card);
       });
     }
+    return true;
   }
 
   gainGold(amount) {

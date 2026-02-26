@@ -90,8 +90,11 @@ export const EventLibrary = {
                             {
                                 text: '[逃げ切る] 呪い-怪我を受け取る',
                                 action: (game, updateState2) => {
-                                    game.player.masterDeck.push(CardLibrary.INJURY.clone());
-                                    alert('呪い「怪我」をデッキに追加しました。');
+                                    if (game.player.addCard(CardLibrary.INJURY.clone())) {
+                                        alert('呪い「怪我」をデッキに追加しました。');
+                                    } else {
+                                        alert('お守りが発動し、呪い「怪我」を無効化しました！');
+                                    }
                                     game.finishEvent();
                                 }
                             },
@@ -218,8 +221,11 @@ export const EventLibrary = {
                 text: '[同意] ゴールド175獲得。呪い-疑念を受け取る。',
                 action: (game, updateState) => {
                     game.player.gold += 175;
-                    game.player.masterDeck.push(CardLibrary.DOUBT.clone());
-                    alert('ゴールド175を獲得しましたが、呪い「疑念」をデッキに追加しました。');
+                    if (game.player.addCard(CardLibrary.DOUBT.clone())) {
+                        alert('ゴールド175を獲得しましたが、呪い「疑念」をデッキに追加しました。');
+                    } else {
+                        alert('ゴールド175を獲得しました！お守りが発動し、呪い「疑念」を無効化しました。');
+                    }
                     game.finishEvent();
                 }
             },
@@ -363,8 +369,11 @@ export const EventLibrary = {
                         const relic = candidates[Math.floor(Math.random() * candidates.length)];
                         game.player.relics.push(relic);
                         if (relic.onObtain) relic.onObtain(game.player, game);
-                        game.player.masterDeck.push(CardLibrary.REGRET.clone());
-                        alert(`レリック「${relic.name}」を獲得しましたが、呪い「後悔」をデッキに追加しました。`);
+                        if (game.player.addCard(CardLibrary.REGRET.clone())) {
+                            alert(`レリック「${relic.name}」を獲得しましたが、呪い「後悔」をデッキに追加しました。`);
+                        } else {
+                            alert(`レリック「${relic.name}」を獲得しました！お守りが発動し、呪い「後悔」を無効化しました。`);
+                        }
                     }
                     game.finishEvent();
                 }
@@ -453,8 +462,11 @@ export const EventLibrary = {
                 action: (game, updateState) => {
                     const healAmount = Math.floor(game.player.maxHp * 0.25);
                     game.player.heal(healAmount);
-                    game.player.masterDeck.push(CardLibrary.PARASITE.clone());
-                    alert(`HPを${healAmount}回復しましたが、呪い「寄生」をデッキに追加しました。`);
+                    if (game.player.addCard(CardLibrary.PARASITE.clone())) {
+                        alert(`HPを${healAmount}回復しましたが、呪い「寄生」をデッキに追加しました。`);
+                    } else {
+                        alert(`HPを${healAmount}回復しました！お守りが発動し、呪い「寄生」を無効化しました。`);
+                    }
                     game.finishEvent();
                 }
             }

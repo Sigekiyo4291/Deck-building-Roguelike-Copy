@@ -61,8 +61,12 @@ export class BattleEngine {
         this.player.deck = [...nonInnateCards, ...innateCards];
 
         // レリック: onBattleStart
+        console.log(`BattleEngine.start: isEliteBattle=${this.isEliteBattle}, isBossBattle=${this.isBossBattle}`);
         this.player.relics.forEach(relic => {
-            if (relic.onBattleStart) relic.onBattleStart(this.player, this);
+            if (relic.onBattleStart) {
+                console.log(`Calling onBattleStart for relic: ${relic.id}`);
+                relic.onBattleStart(this.player, this);
+            }
         });
 
         // 敵: onBattleStart

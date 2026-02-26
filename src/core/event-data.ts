@@ -257,7 +257,7 @@ export const EventLibrary = {
                             if (candidates.length > 0) {
                                 const relic = candidates[Math.floor(Math.random() * candidates.length)];
                                 game.player.relics.push(relic);
-                                if (relic.onObtain) relic.onObtain(game.player);
+                                if (relic.onObtain) relic.onObtain(game.player, game);
                                 alert(`レリック「${relic.name}」を獲得しました！`);
                                 game.finishEvent();
                             } else {
@@ -362,7 +362,7 @@ export const EventLibrary = {
                     if (candidates.length > 0) {
                         const relic = candidates[Math.floor(Math.random() * candidates.length)];
                         game.player.relics.push(relic);
-                        if (relic.onObtain) relic.onObtain(game.player);
+                        if (relic.onObtain) relic.onObtain(game.player, game);
                         game.player.masterDeck.push(CardLibrary.REGRET.clone());
                         alert(`レリック「${relic.name}」を獲得しましたが、呪い「後悔」をデッキに追加しました。`);
                     }
@@ -405,7 +405,7 @@ export const EventLibrary = {
                                 if (candidates.length > 0) {
                                     const relic = candidates[Math.floor(Math.random() * candidates.length)];
                                     game.player.relics.push(relic);
-                                    if (relic.onObtain) relic.onObtain(game.player);
+                                    if (relic.onObtain) relic.onObtain(game.player, game);
                                     alert(`レリック「${relic.name}」を発見しました！`);
                                     updateState({ searchCount: searchCount + 1, foundRelic: true, foundGold: foundGold });
                                 }

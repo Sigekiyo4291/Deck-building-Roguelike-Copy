@@ -1240,10 +1240,12 @@ class Game {
   }
 
   startBattle(type) {
+    console.log(`Game.startBattle: type=${type}`);
     // 敵データ生成
     let enemies = [];
     this.isEliteBattle = (type === 'elite');
     this.isBossBattle = (type === 'boss');
+    console.log(`Game.startBattle: isEliteBattle=${this.isEliteBattle}, isBossBattle=${this.isBossBattle}`);
     this.selectedEnemyIndex = 0; // ターゲットインデックスをリセット
 
     if (type === 'boss') {
@@ -2048,6 +2050,7 @@ class Game {
 
       this.battleEngine.enemies.forEach((enemy, index) => {
         if (enemy.isDead()) return; // 死んだ敵は表示しない（あるいは死体表示）
+        console.log(`UI Rendering Enemy ${enemy.name}: HP ${enemy.hp}/${enemy.maxHp}`);
 
         const enemyEl = document.createElement('div');
         enemyEl.className = 'entity enemy';

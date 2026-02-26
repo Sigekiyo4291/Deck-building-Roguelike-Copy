@@ -247,11 +247,13 @@ export const RelicLibrary = {
     PRESERVED_INSECT: new class extends Relic {
         constructor() { super('preserved_insect', '昆虫標本', 'エリート部屋にいる敵のHPが25%低下する。', 'common'); }
         onBattleStart(owner, engine) {
-            if (engine.isElite) {
+            if (engine.isEliteBattle) {
+                console.log('昆虫標本発動！ エリートのHPを25%低下させます。');
                 engine.enemies.forEach(e => {
                     const reduction = Math.floor(e.maxHp * 0.25);
-                    e.maxHp -= reduction;
+                    // 最大HPはそのままに、現在HPのみを減らすことで視覚的に「ダメージを受けた」状態にする
                     e.hp -= reduction;
+                    console.log(`Enemy ${e.name}: HP ${e.hp}/${e.maxHp} (Reduced by ${reduction})`);
                 });
             }
         }
@@ -390,7 +392,7 @@ export const RelicLibrary = {
     PANTAGRAPH: new class extends Relic {
         constructor() { super('pantagraph', 'パンタグラフ', 'ボスの戦闘開始時、HP25回復する。', 'uncommon'); }
         onBattleStart(owner, engine) {
-            if (engine.isBoss) {
+            if (engine.isBossBattle) {
                 owner.heal(25);
             }
         }

@@ -792,6 +792,8 @@ class Game {
       if (c) c.innerHTML = '';
     });
 
+    this.player.isRemovalUsedThisShop = false; // ショップ入場時にリセット
+
     // 価格計算ヘルパー (±10%の変動)
     const getPrice = (base: number) => {
       const variation = base * 0.1;
@@ -1019,6 +1021,28 @@ class Game {
     }
 
     // 5. カード削除サービス
+    this.renderRemovalServiceSlot();
+
+    const shopContainer = document.querySelector('.shop-container') as HTMLElement;
+    if (shopContainer) {
+      shopContainer.style.paddingBottom = '120px';
+      shopContainer.style.position = 'relative';
+    }
+
+    document.getElementById('shop-leave-btn').onclick = async () => {
+      this.map.updateAvailableNodes();
+      const transition = this.sceneManager.showMap();
+      this.renderMap();
+      await transition;
+    };
+  }
+
+  // カード削除サービスの描画
+  renderRemovalServiceSlot() {
+    const removalServiceContainer = document.getElementById('shop-removal-service');
+    if (!removalServiceContainer) return;
+    removalServiceContainer.innerHTML = '';
+
     let removalPrice = 75 + (this.player.cardRemovalCount || 0) * 25;
     const hasSmilingMask = this.player.relics.some(r => r.id === 'smiling_mask');
     const hasMembershipCard = this.player.relics.some(r => r.id === 'membership_card');
@@ -1046,6 +1070,14 @@ class Game {
     removalPriceEl.className = 'shop-price';
     removalPriceEl.textContent = `${removalPrice}`;
 
+    // 「配達人」を持っておらず、かつ既に削除済みの場合は売り切れ状態
+    // 注: 本来のStSでは配達人を持っていても削除は1回限りですが、
+    // 配達人の「売り切れにならない」効果を削除にも適用する場合はここを調整します。
+    // 今回は「配達人」所持時のみ売り切れにならない（＝再購入可能）とします。
+    if (this.player.isRemovalUsedThisShop && !hasCourier) {
+      removalWrapper.classList.add('sold-out');
+    }
+
     removalBtn.onclick = () => {
       if (removalWrapper.classList.contains('sold-out')) return;
       if (this.player.spendGold(removalPrice)) {
@@ -1058,19 +1090,6 @@ class Game {
     removalWrapper.appendChild(removalBtn);
     removalWrapper.appendChild(removalPriceEl);
     removalServiceContainer.appendChild(removalWrapper);
-
-    const shopContainer = document.querySelector('.shop-container') as HTMLElement;
-    if (shopContainer) {
-      shopContainer.style.paddingBottom = '120px';
-      shopContainer.style.position = 'relative';
-    }
-
-    document.getElementById('shop-leave-btn').onclick = async () => {
-      this.map.updateAvailableNodes();
-      const transition = this.sceneManager.showMap();
-      this.renderMap();
-      await transition;
-    };
   }
 
   // カード削除UIの表示
@@ -1116,10 +1135,9 @@ class Game {
           if (overlay.parentNode) {
             document.body.removeChild(overlay);
           }
-          wrapper.classList.add('sold-out');
-          alert(`${card.name} をデッキから削除しました！`);
+          this.player.isRemovalUsedThisShop = true;
           this.updateGlobalStatusUI();
-          this.showShopScene(); // 価格更新のため再描画
+          this.renderRemovalServiceSlot(); // 削除エリアのみ更新
         }
       };
 

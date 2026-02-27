@@ -436,6 +436,7 @@ export class Player extends Entity {
   potions: any[];
   masterDeck: any[];
   cardRemovalCount: number;
+  isRemovalUsedThisShop: boolean;
 
   constructor() {
     super('Vanguard', 80, 'assets/player.png');
@@ -452,6 +453,7 @@ export class Player extends Entity {
     this.relics = []; // レリック所持リスト
     this.relicCounters = {}; // レリックの汎用カウンター保管用
     this.cardRemovalCount = 0;
+    this.isRemovalUsedThisShop = false;
 
     // マスターデッキ（所持カード）の初期化
     this.masterDeck = [];

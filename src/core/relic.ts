@@ -700,6 +700,13 @@ export const RelicLibrary = {
     },
     STONE_CALENDAR: new class extends Relic {
         constructor() { super('stone_calendar', '暦石', '7ターン目の終了時、敵全体に52ダメージを与える。', 'rare'); }
+        onPlayerTurnStart(owner, engine) {
+            let count = owner.relicCounters['stone_calendar'] || 0;
+            if (engine.turn <= 7) {
+                count++;
+                owner.relicCounters['stone_calendar'] = count;
+            }
+        }
         onTurnEnd(owner, engine) {
             if (engine.turn === 7) {
                 console.log('暦石発動！ 7ターン目終了時に敵全体へ52ダメージ。');
@@ -714,6 +721,11 @@ export const RelicLibrary = {
     CAPTAINS_WHEEL: new class extends Relic {
         constructor() { super('captains_wheel', '船長の舵輪', '3ターン目の開始時に18ブロックを得る。', 'rare'); }
         onPlayerTurnStart(owner, engine) {
+            let count = owner.relicCounters['captains_wheel'] || 0;
+            if (engine.turn <= 3) {
+                count++;
+                owner.relicCounters['captains_wheel'] = count;
+            }
             if (engine.turn === 3) {
                 console.log('船長の舵輪発動！ 3ターン目開始時に18ブロック獲得。');
                 owner.addBlock(18);
@@ -721,6 +733,7 @@ export const RelicLibrary = {
                 if (engine.audioManager) engine.audioManager.playSe('defense');
             }
         }
+        isUsedUp(owner) { return owner.relicCounters['captains_wheel'] === 3; }
     },
     THREAD_AND_NEEDLE: new class extends Relic {
         constructor() { super('thread_and_needle', '針と糸', '戦闘開始時、プレートアーマー4を得る。', 'rare'); }

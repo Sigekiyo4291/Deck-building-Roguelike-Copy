@@ -399,8 +399,8 @@ export const RelicLibrary = {
     },
     MEAT_ON_THE_BONE: new class extends Relic {
         constructor() { super('meat_on_the_bone', '骨付き肉', '戦闘終了時、HPが50%以下ならHP12回復。', 'uncommon'); }
-        onBattleEnd(owner, engine, result) {
-            if (result === 'victory' && owner.hp <= owner.maxHp / 2) {
+        onVictory(owner, engine) {
+            if (owner.hp <= owner.maxHp / 2) {
                 owner.heal(12);
             }
         }

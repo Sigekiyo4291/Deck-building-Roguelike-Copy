@@ -535,7 +535,7 @@ export const RelicLibrary = {
         constructor() { super('question_card', '質問カード', 'カードの報酬画面で、選択肢が1つ増える。', 'uncommon'); }
     },
     THE_COURIER: new class extends Relic {
-        constructor() { super('the_courier', '配達人', '商人から20%の割引を受けられる。', 'uncommon'); }
+        constructor() { super('the_courier', '配達人', '商人が販売するカード、レリック、ポーションは売り切れにならず、価格は20％割引される。', 'uncommon'); }
     },
     WHITE_BEAST_STATUE: new class extends Relic {
         constructor() { super('white_beast_statue', '白き獣の像', '戦闘後、必ずポーションがドロップする。', 'uncommon'); }

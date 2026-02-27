@@ -1,4 +1,4 @@
-import { SlimeBoss, Guardian, Hexaghost } from './entity';
+import { SlimeBoss, Guardian, Hexaghost } from './enemies';
 
 export interface BossData {
     id: string;

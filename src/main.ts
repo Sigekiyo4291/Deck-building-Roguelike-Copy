@@ -3,7 +3,10 @@ import { GameMap, RoomType } from './core/map-data';
 import { MapGenerator } from './core/map-generator';
 import { SceneManager } from './core/scene-manager';
 import { BOSS_DATA } from './core/boss-data';
-import { Player, Enemy, Louse, Cultist, JawWorm, AcidSlimeM, SpikeSlimeM, AcidSlimeS, SpikeSlimeS, FungiBeast, AcidSlimeL, SpikeSlimeL, BlueSlaver, RedSlaver, Looter, GremlinNob, Lagavulin, Sentry, SlimeBoss, Guardian, Hexaghost, isDebuff, isBuff } from './core/entity';
+import { Player } from './core/player';
+import { Enemy, isDebuff, isBuff } from './core/entity';
+import { Louse, Cultist, JawWorm, AcidSlimeM, SpikeSlimeM, AcidSlimeS, SpikeSlimeS, FungiBeast, AcidSlimeL, SpikeSlimeL, BlueSlaver, RedSlaver, Looter, GremlinNob, Lagavulin, Sentry, SlimeBoss, Guardian, Hexaghost } from './core/enemies';
+
 import { StatusLibrary } from './core/status-effect';
 import { CardLibrary } from './core/card';
 import { BattleEngine } from './core/engine';

@@ -2,7 +2,7 @@ import {
     Cultist, JawWorm, Louse, AcidSlimeM, SpikeSlimeM, AcidSlimeS, SpikeSlimeS,
     AcidSlimeL, SpikeSlimeL, BlueSlaver, Looter, FungiBeast, RedSlaver,
     GremlinNob, Lagavulin, Sentry
-} from './entity';
+} from './enemies';
 
 export const ENCOUNTER_POOLS: Record<number, {
     weak: (() => any[])[],

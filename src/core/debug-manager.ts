@@ -6,7 +6,7 @@ import {
     Louse, Cultist, JawWorm, AcidSlimeM, SpikeSlimeM, AcidSlimeS, SpikeSlimeS,
     FungiBeast, AcidSlimeL, SpikeSlimeL, BlueSlaver, RedSlaver, Looter,
     GremlinNob, Lagavulin, Sentry, SlimeBoss, Guardian, Hexaghost
-} from './entity';
+} from './enemies';
 import { PotionLibrary } from './potion-data';
 
 export class DebugManager {

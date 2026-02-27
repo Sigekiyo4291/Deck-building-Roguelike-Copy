@@ -1,4 +1,5 @@
 import { CardLibrary } from './card';
+import { StatusLibrary } from './status-effect';
 
 export class BattleEngine {
     player: any;
@@ -316,6 +317,12 @@ export class BattleEngine {
 
                 this.player.hand.splice(cardIndex, 1);
 
+                // ステータスの onCardPlay トリガー
+                this.player.statusEffects.forEach(s => {
+                    const effect = StatusLibrary.get(s.type);
+                    if (effect && effect.onCardPlay) effect.onCardPlay(this.player, s.value, card, this);
+                });
+
                 // レリック: onCardPlay
                 this.player.relics.forEach(relic => {
                     if (relic.onCardPlay) relic.onCardPlay(this.player, this, card);
@@ -606,7 +613,8 @@ export class BattleEngine {
         }
 
         // ダメージを与える
-        target.takeDamage(finalDamage, source, this);
+        const dealtDamage = target.takeDamage(finalDamage, source, this);
+        if (source) (source as any).lastDamageDealt = dealtDamage;
 
         if (target === this.player && target.isDead()) {
             this.triggerFairyPotionIfDead();

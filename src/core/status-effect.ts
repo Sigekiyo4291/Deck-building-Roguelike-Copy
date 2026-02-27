@@ -64,6 +64,9 @@ export abstract class StatusEffect {
     modifyBlockAmount(entity: Entity, value: number, block: number): number {
         return block;
     }
+
+    onCardPlay(entity: Entity, value: number, card: any, engine: any): void { }
+    onReceiveDamage(entity: Entity, value: number, damage: number, source: any, engine?: any): void { }
 }
 
 // --- 具体的なステータスの実装 ---
@@ -361,8 +364,17 @@ export class CorruptionStatus extends StatusEffect {
     isBuff(v: number) { return v > 0; }
 }
 export class MalleableStatus extends StatusEffect {
-    id = 'malleable'; name = '柔軟'; description = '攻撃を受けるたびにブロック獲得。'; icon = '💠';
+    id = 'malleable'; name = '鍛錬'; description = 'アタックダメージを受けるたび、Xブロックを得る。発動するたび増加し、ターン開始時3に戻る。'; icon = '💠';
     isBuff(v: number) { return v > 0; }
+    onReceiveDamage(entity: any, value: number, damage: number, source: any) {
+        if (source) {
+            entity.addBlock(value);
+            entity.addStatus('malleable', 1);
+        }
+    }
+    onTurnStartUpdate(entity: any, value: number) {
+        return 3;
+    }
 }
 export class SplitStatus extends StatusEffect {
     id = 'split'; name = '分裂'; description = 'HP半分以下で分裂。'; icon = '♾️';
@@ -400,7 +412,60 @@ export class EnrageEnemyStatus extends StatusEffect {
     id = 'enrage_enemy'; name = '激怒'; description = 'スキルプレイ時に筋力獲得。'; icon = '💢';
     isBuff(v: number) { return v > 0; }
 }
-
+export class AngryStatus extends StatusEffect {
+    id = 'angry'; name = '怒り'; description = 'ダメージを受けるたびに筋力獲得。'; icon = '💢';
+    isBuff(v: number) { return v > 0; }
+}
+export class FlightStatus extends StatusEffect {
+    id = 'flight'; name = '飛行'; description = '受けるダメージ半減。アタックを受けると減少し0で解除とスタン。'; icon = '🦅';
+    isBuff(v: number) { return v > 0; }
+    modifyIncomingDamage(entity, value, damage) { return Math.floor(damage / 2); }
+    onReceiveDamage(entity, value, damage, source, engine) { if (source) entity.addStatus('flight', -1); }
+}
+export class HexStatus extends StatusEffect {
+    id = 'hex'; name = '呪詛'; description = 'アタック以外のカードを使用するたび、めまいを山札に加える。'; icon = '🔮';
+    isDebuff(v: number) { return v > 0; }
+    onCardPlay(entity, value, card, engine) { if (card.type !== 'attack') engine.addCardsToDrawPile({ id: 'dazed', name: 'めまい', type: 'status' } /* Mock */); /* Requires proper card gen */ }
+}
+export class TimeWarpStatus extends StatusEffect {
+    id = 'time_warp'; name = 'タイムワープ'; description = 'カードをX枚プレイするたび、ターン強制終了。'; icon = '⏱️';
+    isBuff(v: number) { return v > 0; }
+}
+export class SlowStatus extends StatusEffect {
+    id = 'slow'; name = 'スロー'; description = 'カードをプレイするたび、被ダメ+10%。'; icon = '🐌';
+    isDebuff(v: number) { return v > 0; }
+    modifyIncomingDamage(e, v, d) { return Math.floor(d * (1 + 0.1 * v)); }
+    onTurnEndUpdate(e, v) { return 0; }
+}
+export class FadingStatus extends StatusEffect {
+    id = 'fading'; name = '消失'; description = 'ターン終了時に減少し、0で死亡。'; icon = '⏳';
+    isBuff(v: number) { return v > 0; }
+    onTurnEndUpdate(e, v, engine) { if (v <= 1) e.hp = 0; return Math.max(0, v - 1); }
+}
+export class ConstrictedStatus extends StatusEffect {
+    id = 'constricted'; name = '締め付け'; description = 'ターン終了時、ダメージ。'; icon = '🐍';
+    isDebuff(v: number) { return v > 0; }
+    onTurnEndUpdate(e, v, engine) { if (engine) e.takeDamage(v, null, engine); return v; }
+}
+export class PainfulStabsStatus extends StatusEffect {
+    id = 'painful_stabs'; name = '苦痛の一刺し'; description = '被弾時、相手に負傷。'; icon = '🩸';
+    isBuff(v: number) { return v > 0; }
+    onReceiveDamage(e, v, d, s, engine) { if (s && s.uuid === engine.player.uuid) engine.addCardsToDiscard('wound', 1); }
+}
+export class ShackledStatus extends StatusEffect {
+    id = 'shackled'; name = '足枷'; description = 'ターン終了時、筋力回復。'; icon = '⛓️';
+    isDebuff(v: number) { return v > 0; }
+    onTurnEndUpdate(e, v, engine) { e.addStatus('strength', v); return 0; }
+}
+export class CuriosityStatus extends StatusEffect {
+    id = 'curiosity'; name = '好奇心'; description = 'パワーカードを使用するたび、相手に筋力を与える。'; icon = '👁️';
+    isBuff(v: number) { return v > 0; }
+    onCardPlay(entity: any, value: number, card: any, engine: any) {
+        if (card.type === 'power') {
+            entity.addStatus('strength', value);
+        }
+    }
+}
 
 export class StatusLibrary {
     private static effects: Map<string, StatusEffect> = new Map();
@@ -472,3 +537,13 @@ StatusLibrary.register(new DuplicationStatus());
 StatusLibrary.register(new PenNibStatus());
 StatusLibrary.register(new VigorStatus());
 StatusLibrary.register(new EnrageEnemyStatus());
+StatusLibrary.register(new AngryStatus());
+StatusLibrary.register(new FlightStatus());
+StatusLibrary.register(new HexStatus());
+StatusLibrary.register(new TimeWarpStatus());
+StatusLibrary.register(new SlowStatus());
+StatusLibrary.register(new FadingStatus());
+StatusLibrary.register(new ConstrictedStatus());
+StatusLibrary.register(new PainfulStabsStatus());
+StatusLibrary.register(new ShackledStatus());
+StatusLibrary.register(new CuriosityStatus());

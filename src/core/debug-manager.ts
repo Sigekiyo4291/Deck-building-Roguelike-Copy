@@ -5,7 +5,11 @@ import { EventLibrary } from './event-data';
 import {
     Louse, Cultist, JawWorm, AcidSlimeM, SpikeSlimeM, AcidSlimeS, SpikeSlimeS,
     FungiBeast, AcidSlimeL, SpikeSlimeL, BlueSlaver, RedSlaver, Looter,
-    GremlinNob, Lagavulin, Sentry, SlimeBoss, Guardian, Hexaghost
+    GremlinNob, Lagavulin, Sentry, SlimeBoss, Guardian, Hexaghost,
+    SneakyGremlin, MadGremlin, GremlinWizard, ShieldGremlin, FatGremlin, SphericGuardian,
+    ShelledParasite, Byrd, Chosen, Mugger, Snecko, SnakePlant, Centurion, Mystic,
+    GremlinLeader, BookOfStabbing, Taskmaster, BronzeOrb, BronzeAutomaton, Champ, TorchHead, Collector,
+    Darkling, Repulsor, Exploder, Spiker, OrbWalker, Maw, Transient, SpireGrowth, WrithingMass, Dagger, Reptomancer, GiantHead, Nemesis, AwakenedOne, Deca, Donu, TimeEater
 } from './enemies';
 import { PotionLibrary } from './potion-data';
 
@@ -142,6 +146,45 @@ export class DebugManager {
             { name: 'Slime Boss', cls: SlimeBoss },
             { name: 'Guardian', cls: Guardian },
             { name: 'Hexaghost', cls: Hexaghost },
+            { name: 'Sneaky Gremlin', cls: SneakyGremlin },
+            { name: 'Mad Gremlin', cls: MadGremlin },
+            { name: 'Gremlin Wizard', cls: GremlinWizard },
+            { name: 'Shield Gremlin', cls: ShieldGremlin },
+            { name: 'Fat Gremlin', cls: FatGremlin },
+            { name: 'Spheric Guardian', cls: SphericGuardian },
+            { name: 'Shelled Parasite', cls: ShelledParasite },
+            { name: 'Byrd', cls: Byrd },
+            { name: 'Chosen', cls: Chosen },
+            { name: 'Mugger', cls: Mugger },
+            { name: 'Snecko', cls: Snecko },
+            { name: 'Snake Plant', cls: SnakePlant },
+            { name: 'Centurion', cls: Centurion },
+            { name: 'Mystic', cls: Mystic },
+            { name: 'Gremlin Leader', cls: GremlinLeader },
+            { name: 'Book Of Stabbing', cls: BookOfStabbing },
+            { name: 'Taskmaster', cls: Taskmaster },
+            { name: 'Bronze Orb', cls: BronzeOrb },
+            { name: 'Bronze Automaton', cls: BronzeAutomaton },
+            { name: 'Champ', cls: Champ },
+            { name: 'Torch Head', cls: TorchHead },
+            { name: 'Collector', cls: Collector },
+            { name: 'Darkling', cls: Darkling },
+            { name: 'Repulsor', cls: Repulsor },
+            { name: 'Exploder', cls: Exploder },
+            { name: 'Spiker', cls: Spiker },
+            { name: 'Orb Walker', cls: OrbWalker },
+            { name: 'Maw', cls: Maw },
+            { name: 'Transient', cls: Transient },
+            { name: 'Spire Growth', cls: SpireGrowth },
+            { name: 'Writhing Mass', cls: WrithingMass },
+            { name: 'Dagger', cls: Dagger },
+            { name: 'Reptomancer', cls: Reptomancer },
+            { name: 'Giant Head', cls: GiantHead },
+            { name: 'Nemesis', cls: Nemesis },
+            { name: 'Awakened One', cls: AwakenedOne },
+            { name: 'Deca', cls: Deca },
+            { name: 'Donu', cls: Donu },
+            { name: 'Time Eater', cls: TimeEater },
         ];
 
         const listContainer = document.getElementById('debug-enemy-list');

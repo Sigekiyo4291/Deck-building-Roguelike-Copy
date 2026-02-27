@@ -5,7 +5,7 @@ import { SceneManager } from './core/scene-manager';
 import { BOSS_DATA } from './core/boss-data';
 import { Player } from './core/player';
 import { Enemy, isDebuff, isBuff } from './core/entity';
-import { Louse, Cultist, JawWorm, AcidSlimeM, SpikeSlimeM, AcidSlimeS, SpikeSlimeS, FungiBeast, AcidSlimeL, SpikeSlimeL, BlueSlaver, RedSlaver, Looter, GremlinNob, Lagavulin, Sentry, SlimeBoss, Guardian, Hexaghost } from './core/enemies';
+import { Louse, Cultist, JawWorm, AcidSlimeM, SpikeSlimeM, AcidSlimeS, SpikeSlimeS, FungiBeast, AcidSlimeL, SpikeSlimeL, BlueSlaver, RedSlaver, Looter, GremlinNob, Lagavulin, Sentry, SlimeBoss, Guardian, Hexaghost, SneakyGremlin, MadGremlin, GremlinWizard, ShieldGremlin, FatGremlin, SphericGuardian, ShelledParasite, Byrd, Chosen, Mugger, Snecko, SnakePlant, Centurion, Mystic, GremlinLeader, BookOfStabbing, Taskmaster, BronzeOrb, BronzeAutomaton, Champ, TorchHead, Collector, Darkling, Repulsor, Exploder, Spiker, OrbWalker, Maw, Transient, SpireGrowth, WrithingMass, Dagger, Reptomancer, GiantHead, Nemesis, AwakenedOne, Deca, Donu, TimeEater } from './core/enemies';
 
 import { StatusLibrary } from './core/status-effect';
 import { CardLibrary } from './core/card';

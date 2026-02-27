@@ -126,6 +126,16 @@ export class Entity {
     const prevHp = this.hp;
     this.hp = Math.max(0, this.hp - remainingDamage);
 
+    // トリガー: onReceiveDamage
+    if (remainingDamage > 0 || (source && source !== this)) {
+      this.statusEffects.forEach(s => {
+        const effect = StatusLibrary.get(s.type);
+        if (effect && effect.onReceiveDamage) {
+          effect.onReceiveDamage(this, s.value, remainingDamage, source, engine);
+        }
+      });
+    }
+
     // トカゲのしっぽ (Lizard Tail)
     if (this.hp === 0 && prevHp > 0 && this.relics && this.relics.length > 0) {
       const tail = this.relics.find(r => r.id === 'lizard_tail');
@@ -143,6 +153,14 @@ export class Entity {
         console.log(`${this.name} の「まるくなる」発動！ ${curlUpVal} ブロック獲得。`);
         this.addBlock(curlUpVal);
         this.removeStatus('curl_up');
+      }
+    }
+
+    if (remainingDamage > 0) {
+      const angryVal = this.getStatusValue('angry');
+      if (angryVal > 0) {
+        console.log(`${this.name} は怒りで筋力を ${angryVal} 得た！`);
+        this.addStatus('strength', angryVal);
       }
     }
 
@@ -224,6 +242,14 @@ export class Entity {
   applyTargetModifiers(damage, source?) {
     let finalDamage = damage;
 
+    // StatusLibraryのmodifyIncomingDamageを適用
+    this.statusEffects.forEach(s => {
+      const effect = StatusLibrary.get(s.type);
+      if (effect && effect.modifyIncomingDamage) {
+        finalDamage = effect.modifyIncomingDamage(this, s.value, finalDamage);
+      }
+    });
+
     // 無形(intangible)
     if (this.hasStatus('intangible') && finalDamage > 0) {
       return 1;
@@ -303,6 +329,17 @@ export class Entity {
 
   onPlayerPlayCard(card, player, engine) {
     // プレイヤーがカードを使った時のフック
+    if (this.hasStatus('slow')) {
+      this.addStatus('slow', 1);
+    }
+    if (this.hasStatus('time_warp')) {
+      this.addStatus('time_warp', -1);
+      if (this.getStatusValue('time_warp') <= 0) {
+        this.addStatus('time_warp', 12);
+        this.addStatus('strength', 2);
+        engine.endTurn();
+      }
+    }
   }
 
   onTurnEnd() {

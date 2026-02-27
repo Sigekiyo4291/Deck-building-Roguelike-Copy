@@ -1059,12 +1059,9 @@ export const RelicLibrary = {
     },
     MUTAGENIC_STRENGTH: new class extends Relic {
         constructor() { super('mutagenic_strength', '突然変異性筋肥大', '戦闘開始時、筋力3を得る。最初のターン終了時に筋力3を失う。', 'event'); }
-        onBattleStart(owner) { owner.addStatus('strength', 3); }
-        onPlayerTurnEnd(owner) {
-            if (owner.relicCounters['mutagenic_strength_used'] !== 1) {
-                owner.addStatus('strength', -3);
-                owner.relicCounters['mutagenic_strength_used'] = 1;
-            }
+        onBattleStart(owner) {
+            owner.addStatus('strength', 3);
+            owner.addStatus('strength_down', 3);
         }
     },
     SPIRIT_POOP: new class extends Relic {

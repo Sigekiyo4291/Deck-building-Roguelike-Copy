@@ -674,20 +674,16 @@ class Game {
   // --- Phase 2 Boss Relic Helper Methods ---
 
   gainRandomPotion() {
-    // レリック: ししおどし (Sozu)
-    if (this.player.relics.some(r => r.id === 'sozu')) {
-      console.log('ししおどしによりポーションを獲得できません。');
-      return;
-    }
+    const allPotions = Object.values(PotionLibrary);
+    const randomPotion = (allPotions[Math.floor(Math.random() * allPotions.length)] as any).clone();
 
-    // 空きスロットがあるか確認
-    const emptyIndex = this.player.potions.findIndex(p => p === null);
-    if (emptyIndex !== -1) {
-      const allPotions = Object.values(PotionLibrary);
-      const randomPotion = allPotions[Math.floor(Math.random() * allPotions.length)].clone();
-      this.player.potions[emptyIndex] = randomPotion;
+    const result = this.player.obtainPotion(randomPotion);
+
+    if (result.success) {
       alert(`ポーション「${randomPotion.name}」を獲得しました！`);
       this.updatePotionUI();
+    } else if (result.reason === 'sozu') {
+      alert('「ししおどし」によりポーションを獲得できません。');
     } else {
       alert('ポーション枠がいっぱいです。');
     }
@@ -987,21 +983,39 @@ class Game {
 
       potionEl.onclick = () => {
         if (wrapper.classList.contains('sold-out')) return;
-        if (this.player.gold >= price) {
-          const emptySlot = this.player.potions.indexOf(null);
-          if (emptySlot !== -1) {
-            if (this.player.spendGold(price)) {
-              this.player.potions[emptySlot] = potion;
-              this.updateGlobalStatusUI();
 
+        // 購入可能か（ゴールド、スロットの空き）を確認
+        const hasEmptySlot = this.player.getEmptyPotionSlot() !== -1;
+        if (!hasEmptySlot) {
+          alert('ポーションのスロットがいっぱいです！');
+          return;
+        }
+
+        if (this.player.gold >= price) {
+          // 「ししおどし」所持時：ゴールドは払うがポーションは入手できない
+          if (!this.player.canObtainPotion()) {
+            if (this.player.spendGold(price)) {
+              alert('「ししおどし」によりポーションを獲得できません。');
               if (this.player.relics.some(r => r.id === 'the_courier')) {
                 renderPotionSlot(container);
               } else {
                 wrapper.classList.add('sold-out');
               }
+              this.updateGlobalStatusUI();
             }
-          } else {
-            alert('ポーションのスロットがいっぱいです！');
+            return;
+          }
+
+          // 通常の購入
+          if (this.player.spendGold(price)) {
+            this.player.obtainPotion(potion);
+            this.updateGlobalStatusUI();
+
+            if (this.player.relics.some(r => r.id === 'the_courier')) {
+              renderPotionSlot(container);
+            } else {
+              wrapper.classList.add('sold-out');
+            }
           }
         } else {
           alert('ゴールドが足りません！');
@@ -1424,23 +1438,18 @@ class Game {
       }
 
       // ポーション（ドロップ率チェック）
-      const hasSozu = this.player.relics.some(r => r.id === 'sozu');
       const hasWhiteBeast = this.player.relics.some(r => r.id === 'white_beast_statue');
-      if (!hasSozu) {
-        if (hasWhiteBeast || Math.random() * 100 < this.potionDropChance) {
-          // ドロップ成功
-          const potion = getRandomPotion();
-          rewards.push({ type: 'potion', data: potion, taken: false });
-          // ドロップ率は10%減少
-          if (!hasWhiteBeast) this.potionDropChance = Math.max(0, this.potionDropChance - 10);
-          console.log(`Potion dropped! Next chance: ${this.potionDropChance}%`);
-        } else {
-          // ドロップ失敗時は10%増加
-          this.potionDropChance = Math.min(100, this.potionDropChance + 10);
-          console.log(`Potion NOT dropped. Next chance: ${this.potionDropChance}%`);
-        }
+      if (hasWhiteBeast || Math.random() * 100 < this.potionDropChance) {
+        // ドロップ成功
+        const potion = getRandomPotion();
+        rewards.push({ type: 'potion', data: potion, taken: false });
+        // ドロップ率は10%減少
+        if (!hasWhiteBeast) this.potionDropChance = Math.max(0, this.potionDropChance - 10);
+        console.log(`Potion dropped! Next chance: ${this.potionDropChance}%`);
       } else {
-        console.log('Sozu equipped. No potion for you!');
+        // ドロップ失敗時は10%増加
+        this.potionDropChance = Math.min(100, this.potionDropChance + 10);
+        console.log(`Potion NOT dropped. Next chance: ${this.potionDropChance}%`);
       }
 
       // レリック（エリート戦、ボス戦、宝箱なら確定）
@@ -1522,15 +1531,15 @@ class Game {
     else if (reward.type === 'card') {
       this.showCardSelection(reward, itemEl);
     } else if (reward.type === 'potion') {
-      // 空きスロットを探す
-      const emptySlotIndex = this.player.potions.indexOf(null);
-      if (emptySlotIndex !== -1) {
-        this.player.potions[emptySlotIndex] = reward.data;
+      const result = this.player.obtainPotion(reward.data);
+      if (result.success) {
         alert(`ポーション「${reward.data.name}」を獲得しました！`);
         reward.taken = true;
         itemEl.style.opacity = '0.5';
         itemEl.style.textDecoration = 'line-through';
-        this.updateGlobalStatusUI(); // UI更新
+        this.updateGlobalStatusUI();
+      } else if (result.reason === 'sozu') {
+        alert('「ししおどし」によりポーションを獲得できません。');
       } else {
         alert('ポーションスロットがいっぱいです！');
       }

@@ -611,6 +611,32 @@ export class Player extends Entity {
   resetEnergy() {
     this.energy = this.maxEnergy;
   }
+
+  // ポーション獲得可能か判定（ししおどしチェック）
+  canObtainPotion(): boolean {
+    return !this.relics.some(r => r.id === 'sozu');
+  }
+
+  // 空きポーションスロットのインデックスを取得
+  getEmptyPotionSlot(): number {
+    return this.potions.indexOf(null);
+  }
+
+  // ポーションを獲得する（共通処理）
+  obtainPotion(potion: any): { success: boolean, reason: 'sozu' | 'full' | 'success' } {
+    if (!this.canObtainPotion()) {
+      console.log('ししおどしによりポーションを獲得できません。');
+      return { success: false, reason: 'sozu' };
+    }
+
+    const emptyIndex = this.getEmptyPotionSlot();
+    if (emptyIndex !== -1) {
+      this.potions[emptyIndex] = potion;
+      return { success: true, reason: 'success' };
+    }
+
+    return { success: false, reason: 'full' };
+  }
 }
 
 export class Enemy extends Entity {

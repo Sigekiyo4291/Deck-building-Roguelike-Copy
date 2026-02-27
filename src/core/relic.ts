@@ -229,7 +229,15 @@ export const RelicLibrary = {
     },
     ART_OF_WAR: new class extends Relic {
         constructor() { super('art_of_war', '孫子兵法', 'このターン、「アタック」を1枚もプレイしなかった場合、次のターン開始時、●を得る。', 'common'); }
-        onPlayerTurnStart(owner, engine) { owner.relicCounters['art_of_war_played_attack'] = false; }
+        onPlayerTurnStart(owner, engine) {
+            if (owner.relicCounters['art_of_war_trigger']) {
+                owner.energy += 1;
+                owner.relicCounters['art_of_war_trigger'] = false;
+                if (engine && engine.showEffectForPlayer) engine.showEffectForPlayer('skill');
+                console.log('孫子兵法が発動！ エナジーが1増加しました。');
+            }
+            owner.relicCounters['art_of_war_played_attack'] = false;
+        }
         onCardPlay(owner, engine, card) { if (card.type === 'attack') owner.relicCounters['art_of_war_played_attack'] = true; }
         onTurnEnd(owner, engine) { if (!owner.relicCounters['art_of_war_played_attack']) owner.relicCounters['art_of_war_trigger'] = true; }
     },

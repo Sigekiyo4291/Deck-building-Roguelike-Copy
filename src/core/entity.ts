@@ -1343,6 +1343,20 @@ export class SlimeBoss extends Enemy {
     this.addStatus('split', 1);
   }
 
+  takeDamage(amount: number, source?: Entity, engine?: any) {
+    const remainingDamage = super.takeDamage(amount, source, engine);
+    // HPが50%以下になった時に即座に分裂をセット
+    if (this.hp > 0 && this.hp <= this.maxHp / 2 && (!this.nextMove || this.nextMove.id !== 'split')) {
+      this.setNextMove({
+        id: 'split',
+        type: 'special',
+        name: '分裂',
+        effect: (self, player, engine) => engine.splitEnemy(self, AcidSlimeL, SpikeSlimeL)
+      });
+    }
+    return remainingDamage;
+  }
+
   decideNextMove() {
     if (this.hp <= this.maxHp / 2) {
       this.setNextMove({

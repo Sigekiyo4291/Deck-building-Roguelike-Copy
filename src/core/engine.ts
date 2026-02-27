@@ -775,6 +775,11 @@ export class BattleEngine {
 
             // 親を削除し、同じ位置に2体挿入
             this.enemies.splice(index, 1, m1, m2);
+
+            // 新しく生成された敵に初期化処理を実行
+            if (m1.onBattleStart) m1.onBattleStart(this.player, this);
+            if (m2.onBattleStart) m2.onBattleStart(this.player, this);
+
             console.log(`${parent.name} split into two!`);
             this.checkBattleEnd();
             this.uiUpdateCallback();

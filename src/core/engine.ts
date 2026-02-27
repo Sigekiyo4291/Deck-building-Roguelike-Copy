@@ -133,7 +133,6 @@ export class BattleEngine {
         });
 
         let drawCount = 5;
-        if (this.player.relics.some(r => r.id === 'snecko_eye')) drawCount += 2;
         await this.drawCards(drawCount);
 
         // ギャンブルチップ (Gambling Chip) の処理

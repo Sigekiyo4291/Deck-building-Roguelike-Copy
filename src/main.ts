@@ -1,5 +1,5 @@
 // import './style.css'; // 静的配信でのMIMEタイプエラー回避のためHTML側で読み込み
-import { GameMap } from './core/map-data';
+import { GameMap, RoomType } from './core/map-data';
 import { MapGenerator } from './core/map-generator';
 import { SceneManager } from './core/scene-manager';
 import { BOSS_DATA } from './core/boss-data';
@@ -270,11 +270,6 @@ class Game {
 
     this.currentFloor++; // 階層を進める
 
-    // レリック: サ・サ・サーペントの頭部 (SSSERPENT_HEAD)
-    if (this.player.relics.some(r => r.id === 'ssserpent_head')) {
-      this.player.gainGold(50);
-    }
-
     this.updateGlobalStatusUI(); // UI更新
     this.map.currentNode = node;
     node.isClear = true;
@@ -517,7 +512,7 @@ class Game {
       alert('イベントかと思いきや、商人がいました！');
       // レリック: onRoomEnter（ショップ入室フック）
       this.player.relics.forEach(relic => {
-        if (relic.onRoomEnter) relic.onRoomEnter(this.player, 'shop');
+        if (relic.onRoomEnter) relic.onRoomEnter(this.player, RoomType.SHOP);
       });
       this.showShopScene();
       return;

@@ -1,4 +1,4 @@
-import { MapNode, GameMap } from './map-data';
+import { MapNode, GameMap, RoomType } from './map-data';
 import { ACT_BOSSES } from './boss-data';
 
 export class MapGenerator {
@@ -16,14 +16,14 @@ export class MapGenerator {
             else nodesCount = 2 + Math.floor(Math.random() * 3);
 
             for (let j = 0; j < nodesCount; j++) {
-                let type = 'enemy';
-                if (i === layersCount - 1) type = 'boss';
-                else if (i === 0) type = 'enemy';
-                else if (i % 5 === 0) type = 'treasure';
-                else if (Math.random() < 0.15) type = 'shop';
-                else if (Math.random() < 0.15) type = 'rest';
-                else if (Math.random() < 0.15) type = 'elite';
-                else if (Math.random() < 0.3) type = 'event';
+                let type: RoomType = RoomType.ENEMY;
+                if (i === layersCount - 1) type = RoomType.BOSS;
+                else if (i === 0) type = RoomType.ENEMY;
+                else if (i % 5 === 0) type = RoomType.TREASURE;
+                else if (Math.random() < 0.15) type = RoomType.SHOP;
+                else if (Math.random() < 0.15) type = RoomType.REST;
+                else if (Math.random() < 0.15) type = RoomType.ELITE;
+                else if (Math.random() < 0.3) type = RoomType.EVENT;
 
                 const node = new MapNode(nodeIdCounter++, i, type);
                 layerNodes.push(node);

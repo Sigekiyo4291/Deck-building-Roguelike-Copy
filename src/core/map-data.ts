@@ -1,15 +1,25 @@
+export enum RoomType {
+    ENEMY = 'enemy',
+    ELITE = 'elite',
+    REST = 'rest',
+    SHOP = 'shop',
+    TREASURE = 'treasure',
+    BOSS = 'boss',
+    EVENT = 'event'
+}
+
 export class MapNode {
     id: string | number;
     layer: number;
-    type: string;
+    type: RoomType;
     nextNodes: (string | number)[];
     isClear: boolean;
     isAvailable: boolean;
 
-    constructor(id, layer, type) {
+    constructor(id, layer, type: RoomType) {
         this.id = id;
         this.layer = layer; // 階層 (0: スタート, 1, 2... 14: ボス)
-        this.type = type;   // 'enemy', 'elite', 'rest', 'shop', 'treasure', 'boss'
+        this.type = type;   // RoomType Enum
         this.nextNodes = []; // 接続先のノードIDリスト
         this.isClear = false;
         this.isAvailable = false; // 現在選択可能かどうか

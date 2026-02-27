@@ -1,5 +1,7 @@
 import { CardLibrary } from './card';
 
+import { RoomType } from './map-data';
+
 export class Relic {
     id: string;
     name: string;
@@ -31,7 +33,7 @@ export class Relic {
     onCardExhaust(owner, engine, card) { }
     onCardAdd(owner, card) { }
     onPotionUse(owner, potion) { }
-    onRoomEnter(owner, roomType) { }
+    onRoomEnter(owner, roomType: RoomType) { }
     onRoomRest(owner) { }
     modifyDamageDealt(owner, target, damage, card?) { return damage; }
     modifyBlockGained(owner, block, card?) { return block; }
@@ -124,7 +126,7 @@ export const RelicLibrary = {
     },
     MEAL_TICKET: new class extends Relic {
         constructor() { super('meal_ticket', 'お食事券', 'ショップに来店するたび、HPを15回復。', 'common'); }
-        onRoomEnter(owner, roomType) { if (roomType === 'shop') owner.heal(15); }
+        onRoomEnter(owner, roomType) { if (roomType === RoomType.SHOP) owner.heal(15); }
     },
     BOOT: new class extends Relic {
         constructor() { super('boot', 'ザ・ブーツ', '自分がアタックで与える、ブロックされなかった4以下のダメージを5ダメージに増加する。', 'common'); }
@@ -195,7 +197,7 @@ export const RelicLibrary = {
     MAW_BANK: new class extends Relic {
         constructor() { super('maw_bank', 'モーバンク', 'フロアを登るたび、12ゴールドを得る。ショップでゴールドを使ったとき、効果を失う。', 'common'); }
         onRoomEnter(owner, roomType) {
-            if (!owner.relicCounters['maw_bank_broken']) owner.gold += 12;
+            if (!owner.relicCounters['maw_bank_broken']) owner.gainGold(12);
         }
         onGoldSpend(owner, amount) { owner.relicCounters['maw_bank_broken'] = true; }
         isUsedUp(owner) { return !!owner.relicCounters['maw_bank_broken']; }
@@ -219,7 +221,7 @@ export const RelicLibrary = {
     },
     ANCIENT_TEA_SET: new class extends Relic {
         constructor() { super('ancient_tea_set', '古代のティーセット', '休憩場所を通過した次の戦闘において、●●を得た状態でスタートする。', 'common'); }
-        onRoomEnter(owner, roomType) { if (roomType === 'rest') owner.relicCounters['ancient_tea_set'] = 1; }
+        onRoomEnter(owner, roomType) { if (roomType === RoomType.REST) owner.relicCounters['ancient_tea_set'] = 1; }
         onPlayerTurnStart(owner, engine) {
             if (engine.turn === 1 && owner.relicCounters['ancient_tea_set'] === 1) {
                 owner.energy += 2;
@@ -396,7 +398,7 @@ export const RelicLibrary = {
     ETERNAL_FEATHER: new class extends Relic {
         constructor() { super('eternal_feather', 'エターナルフェザー', '休憩場所に入るたび、デッキのカード5枚につきHPを3回復する。', 'uncommon'); }
         onRoomEnter(owner, roomType) {
-            if (roomType === 'rest') {
+            if (roomType === RoomType.REST) {
                 const healAmount = Math.floor(owner.masterDeck.length / 5) * 3;
                 owner.heal(healAmount);
             }
@@ -1000,7 +1002,12 @@ export const RelicLibrary = {
         onBattleStart(owner) { owner.addStatus('weak', 1); }
     },
     SSSERPENT_HEAD: new class extends Relic {
-        constructor() { super('ssserpent_head', 'サ・サ・サーペントの頭部', 'イベントを開始するたび、50ゴールドを得る。', 'event'); }
+        constructor() { super('ssserpent_head', 'サ・サ・サーペントの頭部', '?部屋に入るたびに、50ゴールドを得る。', 'event'); }
+        onRoomEnter(owner, roomType) {
+            if (roomType === RoomType.EVENT) {
+                owner.gainGold(50);
+            }
+        }
     },
     NILRY_CODEX: new class extends Relic {
         constructor() { super('nilry_codex', 'ニルリーのコーデックス', 'ターン終了時に、ランダムな3枚のカードから1枚選んで山札に加える。', 'event'); }

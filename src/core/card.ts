@@ -22,6 +22,7 @@ export interface CardInitParams {
     onExhaust?: any;
     isInnate?: boolean;
     isStatus?: boolean;
+    onEndTurnInHand?: any; // ターン終了時に手札にある場合の効果
     bottledId?: string;
     cardClass?: string; // ironclad, colorless, curse, status
 }
@@ -50,6 +51,7 @@ export class Card {
     image: string | null;
     effectType: string;
     onExhaust: any;
+    onEndTurnInHand: any;
     temporaryCost: number | null;
     isStatus: boolean;
     isInnate: boolean;
@@ -85,6 +87,7 @@ export class Card {
         this.image = params.image || null;
         this.effectType = params.effectType || 'slash';
         this.onExhaust = params.onExhaust || null;
+        this.onEndTurnInHand = params.onEndTurnInHand || null;
         this.temporaryCost = null;
         this.isStatus = params.isStatus || false;
         this.isInnate = params.isInnate || false;
@@ -159,6 +162,7 @@ export class Card {
         if (this.upgradeData.baseBlock !== undefined) this.baseBlock = this.upgradeData.baseBlock;
         if (this.upgradeData.blockCalculator) this.blockCalculator = this.upgradeData.blockCalculator;
         if (this.upgradeData.onExhaust) this.onExhaust = this.upgradeData.onExhaust;
+        if (this.upgradeData.onEndTurnInHand) this.onEndTurnInHand = this.upgradeData.onEndTurnInHand;
     }
 
     async play(source, target, engine, freePlay = false) {
@@ -241,6 +245,7 @@ export class Card {
             image: this.image,
             effectType: this.effectType,
             onExhaust: this.onExhaust,
+            onEndTurnInHand: this.onEndTurnInHand,
             isInnate: this.isInnate,
             isStatus: this.isStatus,
             bottledId: this.bottledId,
@@ -2384,9 +2389,17 @@ export const CardLibrary = {
         effect: (s, t) => {
             // 使用不可
         },
+        onEndTurnInHand: async (s, e) => {
+            console.log("火傷発動！手札にあるため2ダメージ。");
+            s.takeDamage(2, null);
+        },
         targetType: 'self',
         upgradeData: {
-            description: '使用できない。ターン終了時に手札にあると4ダメージ。'
+            description: '使用できない。ターン終了時に手札にあると4ダメージ。',
+            onEndTurnInHand: async (s, e) => {
+                console.log("火傷+発動！手札にあるため4ダメージ。");
+                s.takeDamage(4, null);
+            }
         }
     }),
     SLIMED: new Card({
@@ -2411,7 +2424,7 @@ export const CardLibrary = {
         cost: -1,
         type: 'curse',
         rarity: 'curse',
-        description: '消耗。何もしない。',
+        description: '使用不可。',
         effect: (s, t) => {
             // 何もしない
         },
@@ -2423,9 +2436,13 @@ export const CardLibrary = {
         cost: -1,
         type: 'curse',
         rarity: 'curse',
-        description: '何もしない。',
+        description: '使用不可。ターン終了時に脱力1を得る。',
         effect: (s, t) => {
             // 何もしない
+        },
+        onEndTurnInHand: async (s, e) => {
+            console.log("疑念発動！脱力(1)を付与。");
+            s.addStatus('weak', 1);
         },
         targetType: 'self'
     }),
@@ -2435,9 +2452,14 @@ export const CardLibrary = {
         cost: -1,
         type: 'curse',
         rarity: 'curse',
-        description: '何もしない。',
+        description: '使用不可。ターン終了時に、手札のカード1枚につきHPが-1。',
         effect: (s, t) => {
             // 何もしない
+        },
+        onEndTurnInHand: async (s, e) => {
+            const damage = s.hand.length;
+            console.log(`後悔発動！手札枚数(${damage})に応じたHP減少。`);
+            s.loseHP(damage);
         },
         targetType: 'self'
     }),
@@ -2447,7 +2469,7 @@ export const CardLibrary = {
         cost: -1,
         type: 'curse',
         rarity: 'curse',
-        description: 'この呪いはデッキから削除できない。',
+        description: '使用不可。変化させたりデッキから削除すると最大HP-3',
         effect: (s, t) => {
             // 特殊処理: 削除不可
         },

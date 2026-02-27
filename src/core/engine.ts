@@ -660,17 +660,14 @@ export class BattleEngine {
     async endTurn() {
         if (this.phase !== 'player' || this.isEnded) return;
 
-        // 手札にある火傷 (BURN) カードの枚数を確認
-        const burnCards = this.player.hand.filter(c => c.id === 'burn');
-        if (burnCards.length > 0) {
-            let totalBurnDamage = 0;
-            burnCards.forEach(c => {
-                totalBurnDamage += c.isUpgraded ? 4 : 2;
-            });
-            console.log(`手札に火傷が ${burnCards.length} 枚あります。合計 ${totalBurnDamage} ダメージを受けます。`);
-            this.player.takeDamage(totalBurnDamage, null); // 敵ではなくカードからのダメージ
-            if (this.player.isDead()) this.triggerFairyPotionIfDead();
+        // 手札にあるカードのターン終了時効果を実行
+        for (const card of this.player.hand) {
+            if (card.onEndTurnInHand) {
+                await card.onEndTurnInHand(this.player, this);
+            }
         }
+
+        if (this.player.isDead()) this.triggerFairyPotionIfDead();
 
         // 燃焼 (Combust) などのターン終了時処理は StatusEffect.onTurnEndUpdate で処理されるようになりました。
 

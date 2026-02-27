@@ -594,19 +594,26 @@ class Game {
     closeBtn.style.display = 'block';
 
     this.player.masterDeck.forEach((card, index) => {
-      // 削除不可カードの判定
-      const unremovableIds = ['parasite', 'curse_of_the_bell', 'necronomicurse'];
+      // 削除・変化不可カードの判定
+      const unremovableIds = ['curse_of_the_bell', 'necronomicurse'];
       if (unremovableIds.includes(card.id)) {
         const cardEl = this.createRewardCardElement(card);
         cardEl.style.opacity = '0.5';
         cardEl.style.cursor = 'default';
-        cardEl.title = 'このカードは削除できません';
+        cardEl.title = 'このカードは変化・削除できません';
         listEl.appendChild(cardEl);
         return;
       }
 
       const cardEl = this.createRewardCardElement(card);
       cardEl.onclick = () => {
+        // 寄生の特別な処理 (変化)
+        if (card.id === 'parasite') {
+          this.player.maxHp -= 3;
+          this.player.hp = Math.min(this.player.hp, this.player.maxHp);
+          alert(`「寄生」が変化したため、最大HPが3減少しました。`);
+        }
+
         // ランダムなカードに変化 (呪い以外)
         const keys = Object.keys(CardLibrary).filter(k => CardLibrary[k].type !== 'curse' && CardLibrary[k].rarity !== 'basic' && CardLibrary[k].rarity !== 'special');
         const randomKey = keys[Math.floor(Math.random() * keys.length)];
@@ -618,6 +625,7 @@ class Game {
         alert(`${card.name} が ${newCard.name} に変化しました！`);
         overlay.style.display = 'none';
         if (onComplete) onComplete();
+        this.updateGlobalStatusUI();
       };
       listEl.appendChild(cardEl);
     });
@@ -691,7 +699,7 @@ class Game {
 
     this.player.masterDeck.forEach((card, index) => {
       // 削除不可カードの判定
-      const unremovableIds = ['parasite', 'curse_of_the_bell', 'necronomicurse'];
+      const unremovableIds = ['curse_of_the_bell', 'necronomicurse'];
       if (unremovableIds.includes(card.id)) {
         const cardEl = this.createRewardCardElement(card);
         cardEl.style.opacity = '0.5';
@@ -703,10 +711,18 @@ class Game {
 
       const cardEl = this.createRewardCardElement(card);
       cardEl.onclick = () => {
+        // 寄生の特別な処理 (削除)
+        if (card.id === 'parasite') {
+          this.player.maxHp -= 3;
+          this.player.hp = Math.min(this.player.hp, this.player.maxHp);
+          alert(`「寄生」を削除したため、最大HPが3減少しました。`);
+        }
+
         this.player.masterDeck.splice(index, 1);
         alert(`${card.name} をデッキから削除しました。`);
         overlay.style.display = 'none';
         if (onComplete) onComplete();
+        this.updateGlobalStatusUI();
       };
       listEl.appendChild(cardEl);
     });
@@ -1081,7 +1097,7 @@ class Game {
 
     this.player.masterDeck.forEach((card, idx) => {
       // 削除不可カードの判定
-      const unremovableIds = ['parasite', 'curse_of_the_bell', 'necronomicurse'];
+      const unremovableIds = ['curse_of_the_bell', 'necronomicurse'];
       if (unremovableIds.includes(card.id)) {
         const cardEl = this.createRewardCardElement(card);
         cardEl.style.opacity = '0.5';
@@ -1100,6 +1116,13 @@ class Game {
         e.stopPropagation();
 
         if (confirm(`${card.name} を削除しますか？`)) {
+          // 寄生の特別な処理
+          if (card.id === 'parasite') {
+            this.player.maxHp -= 3;
+            this.player.hp = Math.min(this.player.hp, this.player.maxHp);
+            alert(`「寄生」を削除したため、最大HPが3減少しました。`);
+          }
+
           this.player.masterDeck.splice(idx, 1);
           this.player.cardRemovalCount = (this.player.cardRemovalCount || 0) + 1;
 

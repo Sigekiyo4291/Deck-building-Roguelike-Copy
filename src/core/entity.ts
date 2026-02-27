@@ -3,7 +3,7 @@ import { RelicLibrary } from './relic';
 
 export const DEBUFF_TYPES = [
   'vulnerable', 'weak', 'frail', 'entangled', 'no_draw',
-  'strength_down', 'dexterity_down'
+  'strength_down', 'dexterity_down', 'confusion'
 ];
 
 export const BUFF_TYPES = [
@@ -408,6 +408,18 @@ export class Entity {
 
   resetStatus() {
     this.statusEffects = [];
+  }
+
+  // デバフを全解除する（オレンジ色の丸薬用）
+  clearDebuffs() {
+    const prevCount = this.statusEffects.length;
+    this.statusEffects = this.statusEffects.filter(s => {
+      // isDebuff関数を使用して、デバフ以外（または値が0のもの）を残す
+      return !isDebuff(s.type, s.value);
+    });
+    if (this.statusEffects.length < prevCount) {
+      console.log(`${this.name} のデバフを全解除しました。`);
+    }
   }
 
   isDead() {

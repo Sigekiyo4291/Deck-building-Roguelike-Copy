@@ -1095,8 +1095,9 @@ export const RelicLibrary = {
         constructor() { super('orange_pellets', 'オレンジ色の丸薬', '同じターン内で「パワー」「アタック」「スキル」を1枚ずつプレイした時、自分にかかっているすべてのデバフを取り除く。', 'shop'); }
         // 判定はBattleEngine側で行う
         clearDebuffs(owner) {
-            owner.statusEffects = owner.statusEffects.filter(s => !s.isDebuff);
-            console.log('オレンジ色の丸薬発動！ デバフを全解除しました。');
+            if (owner.clearDebuffs) {
+                owner.clearDebuffs();
+            }
         }
     },
     CHEMICAL_X: new class extends Relic {

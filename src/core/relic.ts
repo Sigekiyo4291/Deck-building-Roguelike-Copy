@@ -39,6 +39,9 @@ export class Relic {
     onGoldSpend(owner, amount) { }
     onApplyStatus(owner, target, type, value, engine) { } // ステータス付与時のフック
     onBlockBroken(owner, target, engine) { } // 敵のブロックを破った時のフック
+
+    // UI描写用：レリックが使用済み（効果を失った状態）かどうかを判定する
+    isUsedUp(owner) { return false; }
 }
 
 export const RelicLibrary = {
@@ -117,6 +120,7 @@ export const RelicLibrary = {
         constructor() { super('omamori', 'お守り', '次に受ける「呪い」を2回まで無効にする。', 'common'); }
         onObtain(owner) { owner.relicCounters['omamori'] = 2; }
         // 呪い無効化の判定はカード追加時にフック追加済
+        isUsedUp(owner) { return owner.relicCounters['omamori'] === 0; }
     },
     MEAL_TICKET: new class extends Relic {
         constructor() { super('meal_ticket', 'お食事券', 'ショップに来店するたび、HPを15回復。', 'common'); }
@@ -194,6 +198,7 @@ export const RelicLibrary = {
             if (!owner.relicCounters['maw_bank_broken']) owner.gold += 12;
         }
         onGoldSpend(owner, amount) { owner.relicCounters['maw_bank_broken'] = true; }
+        isUsedUp(owner) { return !!owner.relicCounters['maw_bank_broken']; }
     },
     RED_SKULL: new class extends Relic {
         constructor() { super('red_skull', 'レッドスカル', 'HPが50％以下になると、筋力3を得る。', 'common'); }
@@ -759,6 +764,7 @@ export const RelicLibrary = {
         onBattleStart(owner, engine) {
             owner.relicCounters['fossilized_helix'] = 1; // 1: 有効, 0: 使用済み
         }
+        isUsedUp(owner) { return owner.relicCounters['fossilized_helix'] === 0; }
     },
     CHAMPION_BELT: new class extends Relic {
         constructor() { super('champion_belt', 'チャンピオンベルト', '敵に「脆弱」を付与するたび、対象に「脱力」1を付与する。', 'rare'); }
@@ -776,6 +782,7 @@ export const RelicLibrary = {
                 owner.relicCounters['lizard_tail'] = 1; // 1: 未使用, 0: 使用済み
             }
         }
+        isUsedUp(owner) { return owner.relicCounters['lizard_tail'] === 0; }
     },
     GAMBLING_CHIP: new class extends Relic {
         constructor() { super('gambling_chip', 'ギャンブルチップ', '戦闘開始時、手札を好きな枚数捨てて引き直すことができる。', 'rare'); }

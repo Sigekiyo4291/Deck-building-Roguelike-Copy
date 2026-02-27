@@ -1670,11 +1670,7 @@ class Game {
       }
 
       // 使用済み状態の視覚化
-      let isUsed = false;
-      if (relic.id === 'lizard_tail' && counterValue === 0) isUsed = true;
-      if (relic.id === 'fossilized_helix' && counterValue === 0) isUsed = true;
-      if (relic.id === 'omamori' && counterValue === 0) isUsed = true;
-      // 今後必要に応じて追加
+      const isUsed = relic.isUsedUp ? relic.isUsedUp(this.player) : false;
 
       if (isUsed) {
         icon.classList.add('used');

@@ -81,26 +81,12 @@ export class BattleEngine {
         this.phase = 'player';
         console.log(`--- Turn ${this.turn} ---`);
 
-        // ステータス更新（ターン開始時：無形など）
-        this.player.updateStatusAtTurnStart();
+        // ステータス更新（ターン開始時：無形、悪魔化、残虐など）
+        this.player.updateStatusAtTurnStart(this);
 
         this.player.onTurnStart();
         this.playedTypesThisTurn.clear();
 
-        // 残虐 (Brutality) の処理
-        const brutalityCount = this.player.getStatusValue('brutality');
-        if (brutalityCount > 0) {
-            console.log(`残虐発動！ 1HPを失い ${brutalityCount} 枚ドロー。`);
-            this.player.loseHP(1);
-            await this.drawCards(brutalityCount);
-        }
-
-        // 悪魔化 (demon_form) の処理
-        const dfCount = this.player.getStatusValue('demon_form');
-        if (dfCount > 0) this.player.addStatus('strength', dfCount * 2);
-
-        const dfPlusCount = this.player.getStatusValue('demon_form_plus');
-        if (dfPlusCount > 0) this.player.addStatus('strength', dfPlusCount * 3);
 
         // レリック: アイスクリーム (Ice Cream) - エナジーをリセットしない
         const hasIceCream = this.player.relics.some(r => r.id === 'ice_cream');
@@ -114,9 +100,8 @@ export class BattleEngine {
             console.log(`アイスクリーム発動！ エナジーを持ち越し、現在のエナジー: ${this.player.energy}`);
         }
 
-        if (this.player.getStatusValue('berserk') > 0) {
-            this.player.energy += this.player.getStatusValue('berserk');
-        }
+        // 狂戦士 (Berserk) などのエナジー増加は StatusEffect.onTurnStartUpdate で処理されるようになりました。
+
         if (!this.player.hasStatus('barricade')) {
             const hasCalipers = this.player.relics.some(r => r.id === 'calipers');
             if (hasCalipers) {
@@ -687,20 +672,8 @@ export class BattleEngine {
             if (this.player.isDead()) this.triggerFairyPotionIfDead();
         }
 
-        // 燃焼 (Combust) の処理
-        const combustDamage = this.player.getStatusValue('combust');
-        if (combustDamage > 0) {
-            console.log(`燃焼発動！ 1 HPを失い、全体に ${combustDamage} ダメージ。`);
-            this.player.loseHP(1);
-            if (this.player.isDead()) this.triggerFairyPotionIfDead();
+        // 燃焼 (Combust) などのターン終了時処理は StatusEffect.onTurnEndUpdate で処理されるようになりました。
 
-            for (const enemy of this.enemies) {
-                if (!enemy.isDead()) {
-                    await this.attackWithEffect(this.player, enemy, combustDamage);
-                }
-            }
-            this.checkBattleEnd();
-        }
 
         // 手札を全て捨てる（エセリアルは廃棄）
         const hasRunicPyramid = this.player.relics.some(r => r.id === 'runic_pyramid');
@@ -734,15 +707,9 @@ export class BattleEngine {
 
         // this.player.hand = []; // 既に上記で処理済み
 
-        // 金属音 (metallicize) の処理
-        const metCount = this.player.getStatusValue('metallicize');
-        if (metCount > 0) {
-            this.player.addBlock(metCount);
-            this.showEffectForPlayer('block');
-        }
+        // 金属音 (metallicize) などのステータス更新（持続時間減少・効果発動）
+        this.player.updateStatus(this);
 
-        // ステータス更新（持続時間減少）
-        this.player.updateStatus();
 
         // 一時的なコスト変更をクリア
         const allCards = [...this.player.hand, ...this.player.deck, ...this.player.discard, ...this.player.exhaust];

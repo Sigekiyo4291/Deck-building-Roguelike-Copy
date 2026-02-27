@@ -1,33 +1,17 @@
 import { CardLibrary } from './card';
 import { RelicLibrary } from './relic';
 
-export const DEBUFF_TYPES = [
-  'vulnerable', 'weak', 'frail', 'entangled', 'no_draw',
-  'strength_down', 'dexterity_down', 'confusion'
-];
+import { StatusLibrary } from './status-effect';
 
-export const BUFF_TYPES = [
-  'strength', 'dexterity', 'thorns', 'metallicize', 'demon_form',
-  'demon_form_plus', 'ritual', 'double_tap', 'fire_breathing',
-  'feel_no_pain', 'combust', 'rupture', 'evolve', 'dark_embrace',
-  'juggernaut', 'barricade', 'corruption', 'brutality', 'berserk',
-  'curl_up', 'malleable', 'artifact', 'rage', 'enrage_enemy',
-  'split', 'spore_cloud', 'thievery', 'mode_shift', 'sharp_hide',
-  'plated_armor', 'regeneration', 'duplication', 'pen_nib', 'vigor', 'intangible'
-];
+// DEBUFF_TYPES, BUFF_TYPES は削除され、StatusLibrary で管理されます。
+
 
 export function isDebuff(type: string, value: number): boolean {
-  if (DEBUFF_TYPES.includes(type)) return value > 0;
-  if (type === 'strength' || type === 'dexterity') return value < 0;
-  return false;
+  return StatusLibrary.isDebuff(type, value);
 }
 
 export function isBuff(type: string, value: number): boolean {
-  if (BUFF_TYPES.includes(type)) {
-    if (type === 'strength' || type === 'dexterity') return value > 0;
-    return value > 0;
-  }
-  return false;
+  return StatusLibrary.isBuff(type, value);
 }
 
 export class Entity {
@@ -334,69 +318,26 @@ export class Entity {
     // ターン終了時の処理
   }
 
-  updateStatusAtTurnStart() {
-    // ターン開始時の更新（無形など）
-    const intangible = this.statusEffects.find(s => s.type === 'intangible');
-    if (intangible && intangible.value > 0) {
-      intangible.value--;
-      console.log(`${this.name} の無形が減少しました。残り: ${intangible.value}`);
-    }
+  updateStatusAtTurnStart(engine?: any) {
+    // ターン開始時の更新（無形、一部のデバフなど）
+    this.statusEffects.forEach(s => {
+      const effect = StatusLibrary.get(s.type);
+      if (effect) {
+        s.value = effect.onTurnStartUpdate(this, s.value, engine);
+      }
+    });
   }
 
-  updateStatus() {
+  updateStatus(engine?: any) {
     this.onTurnEnd();
     // ターン終了時の更新
     this.statusEffects.forEach(s => {
-      // 筋力(strength)は自動減少しない
-      // 脆弱(vulnerable)などはターン経過で減少
-      if (['vulnerable', 'weak', 'frail', 'entangled'].includes(s.type)) {
-        if (s.value > 0) s.value--;
-      }
-
-      // ドロー不可(no_draw): ターン終了時に解除（スタックしない）
-      if (s.type === 'no_draw') {
-        s.value = 0;
-      }
-
-      // 激怒(rage): ターン終了時に解除
-      if (s.type === 'rage') {
-        s.value = 0;
-      }
-
-      // フレックス(strength_down): ターン終了時に筋力を失う
-      if (s.type === 'strength_down') {
-        this.addStatus('strength', -s.value);
-        s.value = 0; // 値を0にして削除対象にする
-      }
-
-      // スピード(dexterity_down): ターン終了時に敏捷性を失う
-      if (s.type === 'dexterity_down') {
-        this.addStatus('dexterity', -s.value);
-        s.value = 0; // 値を0にして削除対象にする
-      }
-
-      /* 既存のforEach内に追加 */
-      // 儀式(ritual): ターン終了時に筋力を得る
-      if (s.type === 'ritual') {
-        this.addStatus('strength', s.value);
-      }
-
-      // 再生(regeneration): ターン終了時に回復し、値を1減らす
-      if (s.type === 'regeneration') {
-        this.heal(s.value);
-        s.value--; // 再生自体はターン経過で減少
-      }
-
-      // 金属化(metallicize): ターン終了時にブロック獲得
-      if (s.type === 'metallicize') {
-        this.addBlock(s.value);
-      }
-
-      // プレートアーマー(plated_armor): ターン終了時にブロック獲得
-      if (s.type === 'plated_armor') {
-        this.addBlock(s.value);
+      const effect = StatusLibrary.get(s.type);
+      if (effect) {
+        s.value = effect.onTurnEndUpdate(this, s.value, engine);
       }
     });
+
     // 値が0のものを削除
     this.statusEffects = this.statusEffects.filter(s => s.value !== 0);
   }
@@ -1395,6 +1336,11 @@ export class SlimeBoss extends Enemy {
   constructor() {
     super('スライムボス', 140, 'assets/images/enemies/SlimeBoss.png');
     this.history = [];
+  }
+
+  onBattleStart(player, engine) {
+    super.onBattleStart(player, engine);
+    this.addStatus('split', 1);
   }
 
   decideNextMove() {

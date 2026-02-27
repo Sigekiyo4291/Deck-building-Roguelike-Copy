@@ -3,7 +3,8 @@ import { GameMap } from './core/map-data';
 import { MapGenerator } from './core/map-generator';
 import { SceneManager } from './core/scene-manager';
 import { BOSS_DATA } from './core/boss-data';
-import { Player, Enemy, Louse, Cultist, JawWorm, AcidSlimeM, SpikeSlimeM, AcidSlimeS, SpikeSlimeS, FungiBeast, AcidSlimeL, SpikeSlimeL, BlueSlaver, RedSlaver, Looter, GremlinNob, Lagavulin, Sentry, SlimeBoss, Guardian, Hexaghost, DEBUFF_TYPES, BUFF_TYPES, isDebuff, isBuff } from './core/entity';
+import { Player, Enemy, Louse, Cultist, JawWorm, AcidSlimeM, SpikeSlimeM, AcidSlimeS, SpikeSlimeS, FungiBeast, AcidSlimeL, SpikeSlimeL, BlueSlaver, RedSlaver, Looter, GremlinNob, Lagavulin, Sentry, SlimeBoss, Guardian, Hexaghost, isDebuff, isBuff } from './core/entity';
+import { StatusLibrary } from './core/status-effect';
 import { CardLibrary } from './core/card';
 import { BattleEngine } from './core/engine';
 import { RelicLibrary } from './core/relic';
@@ -14,47 +15,8 @@ import { AudioManager } from './core/audio-manager';
 import { getRandomPotion, PotionLibrary } from './core/potion-data';
 import { ENCOUNTER_POOLS } from './core/encounter-data';
 
-const STATUS_INFO = {
-  vulnerable: { name: '脆弱', desc: '受けるダメージが50%増加する。' },
-  strength: { name: '筋力', desc: 'アタックのダメージが増加する。' },
-  weak: { name: '脱力', desc: 'アタックで与えるダメージが25%減少する。' },
-  frail: { name: '崩壊', desc: 'ブロックの効果が25%減少する。' },
-  dexterity: { name: '敏捷性', desc: 'ブロックの獲得量が増加する。' },
-  thorns: { name: '棘', desc: '攻撃を受けると、攻撃者にその数値分のダメージを与える。' },
-  metallicize: { name: '金属化', desc: 'ターン終了時、その数値分のブロックを得る。' },
-  demon_form: { name: '悪魔化', desc: 'ターン開始時、筋力を得る。' },
-  demon_form_plus: { name: '悪魔化+', desc: 'ターン開始時、筋力を得る。' },
-  ritual: { name: '儀式', desc: 'ターン終了時、筋力を得る。' },
-  entangled: { name: '絡みつき', desc: 'このターン、アタックカードを使用できない。' },
-  curl_up: { name: '丸まり', desc: '攻撃を受けた際、ブロックを得る。' },
-  thievery: { name: 'コソ泥', desc: 'この敵が攻撃するたび、ゴールドを強奪する。' },
-  split: { name: '分裂', desc: 'HPが半分以下になると分裂する。' },
-  spore_cloud: { name: '胞子の雲', desc: '死亡時、相手に脆弱を付与する。' },
-  malleable: { name: '柔軟', desc: '攻撃を受けるたび、ブロックを得る。' },
-  strength_down: { name: '筋力消失', desc: 'ターン終了時、筋力を失う。' },
-  dexterity_down: { name: '俊敏性消失', desc: 'ターン終了時、俊敏性を失う。' },
-  no_draw: { name: 'ドロー不可', desc: 'カードを引くことができない。' },
-  rage: { name: '激怒', desc: 'アタックカードをプレイするたび、ブロックを得る。' },
-  double_tap: { name: 'ダブルタップ', desc: '次にプレイするアタックカードが2回発動する。' },
-  fire_breathing: { name: '炎の吐息', desc: '状態異常や呪いカードを引くたび、敵全体にダメージを与える。' },
-  feel_no_pain: { name: '無痛', desc: 'カードを廃棄するたび、ブロックを得る。' },
-  combust: { name: '燃焼', desc: 'ターン終了時、HPを1失い敵全体にダメージを与える。' },
-  rupture: { name: '破裂', desc: 'カードの効果でHPを失うたび、筋力を得る。' },
-  evolve: { name: '進化', desc: '状態異常カードを引くたび、追加でカードを引く。' },
-  dark_embrace: { name: '闇の抱擁', desc: 'カードが廃棄されるたび、カードを1枚引く。' },
-  juggernaut: { name: 'ジャガーノート', desc: 'ブロックを獲得するたび、ランダムな敵にダメージを与える。' },
-  barricade: { name: 'バリケード', desc: 'ターン開始時にブロックが失われない。' },
-  corruption: { name: '堕落', desc: 'スキルカードのコストが0になる。使用したスキルは廃棄される。' },
-  brutality: { name: '残虐', desc: 'ターン開始時、HPを1失いカードを1枚引く。' },
-  berserk: { name: '狂戦士', desc: 'ターン開始時、エナジーを1得る。' },
-  enrage_enemy: { name: '激怒', desc: 'スキルを1枚プレイするたび、筋力を得ます。' },
-  artifact: { name: 'アーティファクト', desc: '次に受けるデバフを無効化します。' },
-  mode_shift: { name: 'モードシフト', desc: 'この値がXになると、20ブロックを得て防御態勢に入る。ダメージを受けるたびに減少する。' },
-  sharp_hide: { name: 'シャープハイド', desc: 'アタックカードをプレイするたび、Xダメージを受ける。' },
-  plated_armor: { name: 'プレートアーマー', desc: 'ターン終了時、この数値分のブロックを得る。アタックダメージを受けると数値が1減少する。' },
-  regeneration: { name: '再生', desc: 'ターン終了時、この数値分のHPを回復する。ターン経過で数値が1減少する。' },
-  duplication: { name: '複製', desc: '次にプレイするポーションやカードの効果が2回発動する。' },
-};
+// STATUS_INFO は削除され、StatusLibrary で管理されます。
+
 
 
 class Game {
@@ -2252,54 +2214,15 @@ class Game {
     container.innerHTML = '';
 
     entity.statusEffects.forEach(status => {
+      const effect = StatusLibrary.get(status.type);
+      if (!effect) return;
+
       const iconEl = document.createElement('div');
       iconEl.className = 'status-icon';
 
-      let iconChar = '❓';
-      if (status.type === 'vulnerable') iconChar = '💔';
-      if (status.type === 'strength') iconChar = '💪';
-      if (status.type === 'strength_down') iconChar = '🥱';
-      if (status.type === 'dexterity_down') iconChar = '🐢';
-      if (status.type === 'weak') iconChar = '📉';
-      if (status.type === 'frail') iconChar = '🥀';
-      if (status.type === 'dexterity') iconChar = '👟';
-      if (status.type === 'thorns') iconChar = '🌵';
-      if (status.type === 'metallicize') iconChar = '🔩';
-      if (status.type === 'demon_form') iconChar = '😈';
-      if (status.type === 'demon_form_plus') iconChar = '👹';
-      if (status.type === 'ritual') iconChar = '🐦';
-      if (status.type === 'entangled') iconChar = '🕸️';
-      if (status.type === 'no_draw') iconChar = '🚫';
-      if (status.type === 'rage') iconChar = '💢';
-      if (status.type === 'double_tap') iconChar = '⚔️';
-      if (status.type === 'fire_breathing') iconChar = '🔥';
-      if (status.type === 'feel_no_pain') iconChar = '🦴';
-      if (status.type === 'combust') iconChar = '🧨';
-      if (status.type === 'rupture') iconChar = '⤴️';
-      if (status.type === 'evolve') iconChar = '🧬';
-      if (status.type === 'dark_embrace') iconChar = '👐';
-      if (status.type === 'juggernaut') iconChar = '💥';
-      if (status.type === 'barricade') iconChar = '🏰';
-      if (status.type === 'corruption') iconChar = '🔮';
-      if (status.type === 'brutality') iconChar = '🩸';
-      if (status.type === 'berserk') iconChar = '💢';
-      if (status.type === 'curl_up') iconChar = '🐚';
-      if (status.type === 'malleable') iconChar = '💠';
-      if (status.type === 'split') iconChar = '💖';
-      if (status.type === 'spore_cloud') iconChar = '🍄';
-      if (status.type === 'thievery') iconChar = '💰';
-      if (status.type === 'enrage_enemy') iconChar = '💢';
-      if (status.type === 'artifact') iconChar = '💎';
-
-      // ツールチップ設定
-      const info = STATUS_INFO[status.type];
-      if (info) {
-        iconEl.setAttribute('data-tooltip', `${info.name}\n${info.desc}`);
-      } else {
-        iconEl.setAttribute('data-tooltip', `${status.type}\nUnknown Effect`);
-      }
-
-      iconEl.textContent = iconChar;
+      // 名前と説明、アイコンをクラスから取得
+      iconEl.setAttribute('data-tooltip', `${effect.name}\n${effect.description}`);
+      iconEl.textContent = effect.icon;
 
       const valueEl = document.createElement('div');
       valueEl.className = 'status-value';

@@ -1,22 +1,54 @@
 import { Enemy } from '../entity';
 
+import { TorchHead } from './torch-head';
+
 // コレクター
 export class Collector extends Enemy {
     turnCount: number = 0;
     constructor() {
         super('コレクター', 282, 'assets/images/characters/enemies/slime.png');
     }
-    decideNextMove() {
+    decideNextMove(player?: any, engine?: any) {
         this.turnCount++;
-        if (this.turnCount === 1) {
-            this.setNextMove({ type: 'buff', value: 0, name: '超強化', effect: (e, p, eng) => eng.enemies.forEach(x => { if (!x.isDead()) x.addStatus('strength', 3); }) });
-        } else if (this.turnCount === 2) {
+        let torchHeadsCount = 0;
+        if (engine && engine.enemies) {
+            torchHeadsCount = engine.enemies.filter(e => e.name === 'トーチヘッド' && !e.isDead()).length;
+        }
+
+        if (this.turnCount === 1 || (torchHeadsCount <= 1 && Math.random() < 0.25)) {
+            this.setNextMove({
+                type: 'buff', value: 0, name: '召喚', effect: (e, p, eng) => {
+                    if (!eng || !eng.enemies) return;
+                    const currentTorch = eng.enemies.filter(x => x.name === 'トーチヘッド' && !x.isDead()).length;
+                    const spawnCount = Math.min(2, 2 - currentTorch);
+                    for (let i = 0; i < spawnCount; i++) {
+                        const torch = new TorchHead();
+                        eng.enemies.push(torch);
+                        if (torch.onBattleStart) torch.onBattleStart(p, eng);
+                    }
+                    if (eng.uiUpdateCallback) eng.uiUpdateCallback();
+                }
+            });
+            return;
+        }
+
+        if (this.turnCount === 4) {
+            this.setNextMove({ type: 'debuff', value: 0, name: 'お前はわたしの物だ！！', statuses: [{ id: 'weak', value: 3 }, { id: 'vulnerable', value: 3 }, { id: 'frail', value: 3 }] });
+            return;
+        }
+
+        const r = Math.random();
+        let useAttack = false;
+        if (torchHeadsCount >= 2) {
+            useAttack = r < 0.7;
+        } else {
+            useAttack = r < 0.45;
+        }
+
+        if (useAttack) {
             this.setNextMove({ type: 'attack', value: 18, name: 'ファイヤーボール' });
         } else {
-            const r = Math.random();
-            if (r < 0.4) this.setNextMove({ type: 'attack', value: 18, name: 'ファイヤーボール' });
-            else if (r < 0.7) this.setNextMove({ type: 'debuff', value: 0, name: 'メガデバフ', statuses: [{ id: 'weak', value: 3 }, { id: 'vulnerable', value: 3 }, { id: 'frail', value: 3 }] });
-            else this.setNextMove({ type: 'defend', value: 15, name: '防御', effect: (e, p, eng) => eng.enemies.forEach(x => { if (!x.isDead()) x.addBlock(15); }) });
+            this.setNextMove({ type: 'defend', value: 15, name: 'バフ', effect: (e, p, eng) => eng.enemies.forEach(x => { if (!x.isDead()) { x.addBlock(15); x.addStatus('strength', 3); } }) });
         }
     }
 }

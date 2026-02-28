@@ -1,17 +1,46 @@
 import { Enemy } from '../entity';
 
+import { Dagger } from './dagger';
+
 // レプトマンサー
 export class Reptomancer extends Enemy {
+    turnCount: number = 0;
     constructor() { super('レプトマンサー', 200, 'assets/images/characters/enemies/slime.png'); }
-    decideNextMove() {
-        const rand = Math.random();
-        // 1ターンおきにダガー召喚、それ以外は攻撃(16x2)か弱体化。簡単のためランダム。
-        if (rand < 0.3) this.setNextMove({ type: 'attack', value: 16, multi: 2, name: '双撃' });
-        else if (rand < 0.6) this.setNextMove({ type: 'attack_debuff', value: 13, name: '毒牙', statuses: [{ id: 'weak', value: 1 }] });
-        else this.setNextMove({
-            type: 'buff', value: 0, name: 'ダガー召喚', effect: (e, p, eng) => {
-                // Placeholder actions if spawning requires map logic adjustments
-            }
-        });
+    decideNextMove(player?: any, engine?: any) {
+        this.turnCount++;
+        let daggersCount = 0;
+        if (engine && engine.enemies) {
+            daggersCount = engine.enemies.filter(e => e.name === 'ダガー' && !e.isDead()).length;
+        }
+
+        let chooseSummon = false;
+        if (this.turnCount === 1) {
+            chooseSummon = true;
+        } else if (Math.random() < 0.33) {
+            chooseSummon = true;
+        }
+
+        if (chooseSummon && daggersCount < 4) {
+            this.setNextMove({
+                type: 'buff', value: 0, name: 'ダガー召喚', effect: (e, p, eng) => {
+                    if (!eng || !eng.enemies) return;
+                    const daggersNow = eng.enemies.filter(x => x.name === 'ダガー' && !x.isDead()).length;
+                    const maxSpawn = 4 - daggersNow;
+                    if (maxSpawn > 0) {
+                        const dagger = new Dagger();
+                        eng.enemies.push(dagger);
+                        if (dagger.onBattleStart) dagger.onBattleStart(p, eng);
+                        if (eng.uiUpdateCallback) eng.uiUpdateCallback();
+                    }
+                }
+            });
+            return;
+        }
+
+        if (Math.random() < 0.5) {
+            this.setNextMove({ type: 'attack_debuff', value: 13, multi: 2, name: '毒牙', statuses: [{ id: 'weak', value: 2 }] });
+        } else {
+            this.setNextMove({ type: 'attack', value: 30, name: '単発攻撃' });
+        }
     }
 }

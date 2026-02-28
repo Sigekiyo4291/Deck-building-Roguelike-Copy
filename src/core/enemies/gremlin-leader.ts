@@ -1,18 +1,50 @@
 import { Enemy } from '../entity';
 
-// グレムリンリーダー
+import { SneakyGremlin } from './sneaky-gremlin';
+import { MadGremlin } from './mad-gremlin';
+import { GremlinWizard } from './gremlin-wizard';
+import { ShieldGremlin } from './shield-gremlin';
+import { FatGremlin } from './fat-gremlin';
+
 export class GremlinLeader extends Enemy {
     constructor() {
         super('グレムリンリーダー', 140 + Math.floor(Math.random() * 8), 'assets/images/characters/enemies/slime.png');
     }
     decideNextMove(player?: any, engine?: any) {
+        let minionsCount = 0;
+        if (engine && engine.enemies) {
+            minionsCount = engine.enemies.filter(e => e !== this && !e.isDead()).length;
+        }
+
+        // ミニオンが1体以下のとき高確率（ここでは70%）で召喚
+        if (minionsCount <= 1 && Math.random() < 0.7) {
+            this.setNextMove({
+                type: 'buff',
+                value: 0,
+                name: 'みんな集まれ！',
+                effect: (e, p, eng) => {
+                    if (!eng || !eng.enemies) return;
+                    const currentMinions = eng.enemies.filter(x => !x.isDead()).length;
+                    const spawnCount = Math.min(2, 4 - currentMinions);
+
+                    for (let i = 0; i < spawnCount; i++) {
+                        const types = [SneakyGremlin, MadGremlin, GremlinWizard, ShieldGremlin, FatGremlin];
+                        const MinionClass = types[Math.floor(Math.random() * types.length)];
+                        const minion = new MinionClass();
+                        eng.enemies.push(minion);
+                        if (minion.onBattleStart) minion.onBattleStart(p, eng);
+                    }
+                    if (eng.uiUpdateCallback) eng.uiUpdateCallback();
+                }
+            });
+            return;
+        }
+
         const rand = Math.random();
-        if (rand < 0.3) {
-            this.setNextMove({ type: 'buff', value: 0, name: '激励', effect: (e, p, eng) => eng.enemies.forEach(x => { if (!x.isDead()) x.addStatus('strength', 3); }) });
-        } else if (rand < 0.6) {
-            this.setNextMove({ type: 'attack', value: 6, multi: 3, name: '刺突' });
+        if (rand < 0.4) {
+            this.setNextMove({ type: 'defend', value: 10, name: '激励', effect: (e, p, eng) => eng.enemies.forEach(x => { if (!x.isDead()) { x.addBlock(10); x.addStatus('strength', 3); } }) });
         } else {
-            this.setNextMove({ type: 'defend', value: 10, name: '防御', effect: (e, p, eng) => eng.enemies.forEach(x => { if (!x.isDead()) x.addBlock(10); }) });
+            this.setNextMove({ type: 'attack', value: 6, multi: 3, name: 'スマッシュ' });
         }
     }
 }

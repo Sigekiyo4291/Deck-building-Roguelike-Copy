@@ -2093,7 +2093,7 @@ class Game {
 
             if (move.type === IntentType.Attack || move.type === IntentType.AttackDefend || move.type === IntentType.AttackDebuff || move.type === IntentType.AttackBuff || move.type === IntentType.AttackHeal) {
               const damage = enemy.calculateDamage(move.value);
-              const times = move.times || move.multi ? `x${move.times || move.multi}` : '';
+              const times = move.times ? `x${move.times}` : '';
               icons.push(`<span class="intent-attack">🗡️${damage}${times}</span>`);
               hasAttack = true;
             }

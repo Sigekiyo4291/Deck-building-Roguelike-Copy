@@ -22,7 +22,7 @@ export class Byrd extends Enemy {
         const rand = Math.random();
         if (flight > 0) {
             if (rand < 0.5) {
-                this.setNextMove({ type: IntentType.Attack, value: 1, multi: 5, name: 'ついばみ' });
+                this.setNextMove({ type: IntentType.Attack, value: 1, times: 5, name: 'ついばみ' });
             } else if (rand < 0.7) {
                 this.setNextMove({ type: IntentType.Attack, value: 12, name: '急降下' });
             } else {

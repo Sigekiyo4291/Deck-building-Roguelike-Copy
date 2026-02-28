@@ -31,7 +31,7 @@ export class BronzeAutomaton extends Enemy {
 
         const routine = (this.turnCount - 2) % 6;
         if (routine === 0 || routine === 2) {
-            this.setNextMove({ type: IntentType.Attack, value: 7, multi: 2, name: '連撃' });
+            this.setNextMove({ type: IntentType.Attack, value: 7, times: 2, name: '連撃' });
         } else if (routine === 1 || routine === 3) {
             this.setNextMove({ type: IntentType.Defend, value: 9, name: '防御', effect: e => { e.addBlock(9); e.addStatus('strength', 3); } });
         } else if (routine === 4) {

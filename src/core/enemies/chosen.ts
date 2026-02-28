@@ -10,7 +10,7 @@ export class Chosen extends Enemy {
     decideNextMove() {
         this.turnCount++;
         if (this.turnCount === 1) {
-            this.setNextMove({ type: IntentType.Attack, value: 5, multi: 2, name: '攻撃' });
+            this.setNextMove({ type: IntentType.Attack, value: 5, times: 2, name: '攻撃' });
         } else if (this.turnCount === 2) {
             this.setNextMove({
                 type: IntentType.Debuff, value: 0, name: '呪詛',
@@ -19,7 +19,7 @@ export class Chosen extends Enemy {
         } else {
             const rand = Math.random();
             if (this.turnCount % 2 === 0) {
-                if (rand < 0.6) this.setNextMove({ type: IntentType.Attack, value: 5, multi: 2, name: '攻撃' });
+                if (rand < 0.6) this.setNextMove({ type: IntentType.Attack, value: 5, times: 2, name: '攻撃' });
                 else this.setNextMove({ type: IntentType.Attack, value: 18, name: '強攻撃' });
             } else {
                 if (rand < 0.5) {

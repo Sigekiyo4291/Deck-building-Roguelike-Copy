@@ -14,7 +14,7 @@ export class Maw extends Enemy {
         } else if (Math.random() < 0.5) {
             this.setNextMove({ type: IntentType.Attack, value: 25, name: '噛みつき' });
         } else {
-            this.setNextMove({ type: IntentType.Attack, value: 5, multi: 5, name: 'よだれ' });
+            this.setNextMove({ type: IntentType.Attack, value: 5, times: 5, name: 'よだれ' });
         }
     }
 }

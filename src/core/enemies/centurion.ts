@@ -16,7 +16,7 @@ export class Centurion extends Enemy {
             }
         } else {
             if (Math.random() < 0.65) {
-                this.setNextMove({ type: IntentType.Attack, value: 6, multi: 3, name: '猛烈な攻撃' });
+                this.setNextMove({ type: IntentType.Attack, value: 6, times: 3, name: '猛烈な攻撃' });
             } else {
                 this.setNextMove({ type: IntentType.Attack, value: 12, name: '攻撃' });
             }

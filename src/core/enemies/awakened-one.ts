@@ -8,7 +8,7 @@ export class AwakenedOne extends Enemy {
     onBattleStart() { this.addStatus('curiosity', 2); }
     decideNextMove() {
         if (Math.random() < 0.5) this.setNextMove({ type: IntentType.Attack, value: 20, name: '強攻撃' });
-        else this.setNextMove({ type: IntentType.Attack, value: 6, multi: 4, name: '連続攻撃' });
+        else this.setNextMove({ type: IntentType.Attack, value: 6, times: 4, name: '連続攻撃' });
     }
     isDead(): boolean {
         if (this.phase === 1 && this.hp <= 0) {

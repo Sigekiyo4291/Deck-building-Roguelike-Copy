@@ -14,7 +14,7 @@ export class Champ extends Enemy {
             return;
         }
         if (this.phase === 2) {
-            if (Math.random() < 0.3) this.setNextMove({ type: IntentType.Attack, value: 15, multi: 2, name: 'エクセキュート' });
+            if (Math.random() < 0.3) this.setNextMove({ type: IntentType.Attack, value: 15, times: 2, name: 'エクセキュート' });
             else this.setNextMove({ type: IntentType.Attack, value: 18, name: 'フェイススラップ' });
         } else {
             const r = Math.random();

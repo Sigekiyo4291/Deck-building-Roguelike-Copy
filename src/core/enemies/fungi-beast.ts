@@ -1,3 +1,4 @@
+import { IntentType } from '../intent';
 import { Enemy } from '../entity';
 
 /**
@@ -29,13 +30,13 @@ export class FungiBeast extends Enemy {
         if (roll < 40 && lastMove !== 'grow') {
             this.setNextMove({
                 id: 'grow',
-                type: 'buff',
+                type: IntentType.Buff,
                 name: '成長',
                 effect: (self) => self.addStatus('strength', 3)
             });
         } else {
             // 攻撃 (60%): 6ダメージ
-            this.setNextMove({ id: 'attack', type: 'attack', value: 6, name: '咬みつき' });
+            this.setNextMove({ id: 'attack', type: IntentType.Attack, value: 6, name: '咬みつき' });
         }
         this.history.push(this.nextMove.id);
     }

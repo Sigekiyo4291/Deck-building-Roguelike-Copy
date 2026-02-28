@@ -1,3 +1,4 @@
+import { IntentType } from '../intent';
 import { Enemy } from '../entity';
 
 // 目覚めし者
@@ -6,8 +7,8 @@ export class AwakenedOne extends Enemy {
     constructor() { super('目覚めし者', 300, 'assets/images/characters/enemies/slime.png'); }
     onBattleStart() { this.addStatus('curiosity', 2); }
     decideNextMove() {
-        if (Math.random() < 0.5) this.setNextMove({ type: 'attack', value: 20, name: '強攻撃' });
-        else this.setNextMove({ type: 'attack', value: 6, multi: 4, name: '連続攻撃' });
+        if (Math.random() < 0.5) this.setNextMove({ type: IntentType.Attack, value: 20, name: '強攻撃' });
+        else this.setNextMove({ type: IntentType.Attack, value: 6, multi: 4, name: '連続攻撃' });
     }
     isDead(): boolean {
         if (this.phase === 1 && this.hp <= 0) {

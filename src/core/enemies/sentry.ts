@@ -1,3 +1,4 @@
+import { IntentType } from '../intent';
 import { Enemy } from '../entity';
 
 /**
@@ -19,10 +20,10 @@ export class Sentry extends Enemy {
         const isBeamTurn = (this.position === 1) ? (this.turnCount % 2 === 0) : (this.turnCount % 2 === 1);
 
         if (isBeamTurn) {
-            this.setNextMove({ id: 'beam', type: 'attack', value: 9, name: 'ビーム' });
+            this.setNextMove({ id: 'beam', type: IntentType.Attack, value: 9, name: 'ビーム' });
         } else {
             this.setNextMove({
-                id: 'dazed', type: 'debuff', name: 'めまい', effect: (self, player, engine) => {
+                id: 'dazed', type: IntentType.Debuff, name: 'めまい', effect: (self, player, engine) => {
                     if (engine && engine.addCardsToDiscard) {
                         engine.addCardsToDiscard('DAZED', 3);
                     }

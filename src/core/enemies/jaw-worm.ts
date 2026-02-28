@@ -1,3 +1,4 @@
+import { IntentType } from '../intent';
 import { Enemy } from '../entity';
 
 /**
@@ -52,13 +53,13 @@ export class JawWorm extends Enemy {
     }
 
     getChompMove() {
-        return { id: 'chomp', type: 'attack', value: 11, name: '体当たり' };
+        return { id: 'chomp', type: IntentType.Attack, value: 11, name: '体当たり' };
     }
 
     getThrashMove() {
         return {
             id: 'thrash',
-            type: 'attack',
+            type: IntentType.Attack,
             value: 7,
             name: '吸血', // Wiki名称に合わせる
             effect: (self) => self.addBlock(5)
@@ -68,7 +69,7 @@ export class JawWorm extends Enemy {
     getBellowMove() {
         return {
             id: 'bellow',
-            type: 'buff',
+            type: IntentType.Buff,
             name: '咆哮',
             effect: (self) => {
                 self.addStatus('strength', 3);

@@ -1,3 +1,4 @@
+import { IntentType } from '../intent';
 import { Enemy } from '../entity';
 
 /**
@@ -10,7 +11,7 @@ export class FatGremlin extends Enemy {
 
     decideNextMove() {
         this.setNextMove({
-            type: 'attack_debuff',
+            type: IntentType.AttackDebuff,
             value: 4,
             name: 'スマッシュ',
             statuses: [

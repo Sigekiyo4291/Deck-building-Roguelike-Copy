@@ -1,3 +1,4 @@
+import { IntentType } from '../intent';
 import { Enemy } from '../entity';
 import { AcidSlimeM } from './acid-slime-m';
 
@@ -24,7 +25,7 @@ export class AcidSlimeL extends Enemy {
         if (this.hp > 0 && this.hp <= this.maxHp / 2 && (!this.nextMove || this.nextMove.id !== 'split')) {
             this.setNextMove({
                 id: 'split',
-                type: 'special',
+                type: IntentType.Special,
                 name: '分裂',
                 effect: (self, player, engine) => engine.splitEnemy(self, AcidSlimeM)
             });
@@ -37,7 +38,7 @@ export class AcidSlimeL extends Enemy {
         if (this.hp <= this.maxHp / 2) {
             this.setNextMove({
                 id: 'split',
-                type: 'special',
+                type: IntentType.Special,
                 name: '分裂',
                 effect: (self, player, engine) => engine.splitEnemy(self, AcidSlimeM)
             });
@@ -50,7 +51,7 @@ export class AcidSlimeL extends Enemy {
         if (roll < 30) {
             this.setNextMove({
                 id: 'lick',
-                type: 'debuff',
+                type: IntentType.Debuff,
                 name: '舐める',
                 effect: (self, player) => player.addStatus('weak', 2)
             });
@@ -58,7 +59,7 @@ export class AcidSlimeL extends Enemy {
             // 腐食性の粘液 (30%): 11ダメ + 粘液2枚
             this.setNextMove({
                 id: 'tackle',
-                type: 'attack',
+                type: IntentType.Attack,
                 value: 11,
                 name: '腐食性の粘液',
                 effect: (self, player, engine) => {
@@ -69,7 +70,7 @@ export class AcidSlimeL extends Enemy {
             });
         } else {
             // 体当たり (40%): 16ダメ
-            this.setNextMove({ id: 'attack', type: 'attack', value: 16, name: '体当たり' });
+            this.setNextMove({ id: 'attack', type: IntentType.Attack, value: 16, name: '体当たり' });
         }
         this.history.push(this.nextMove.id);
     }

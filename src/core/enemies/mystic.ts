@@ -1,3 +1,4 @@
+import { IntentType } from '../intent';
 import { Enemy } from '../entity';
 
 // ミスティック
@@ -17,7 +18,7 @@ export class Mystic extends Enemy {
         }
         if (needsHeal) {
             this.setNextMove({
-                type: 'heal', value: 16, name: 'ヒール', effect: (e, p, eng) => {
+                type: IntentType.Heal, value: 16, name: 'ヒール', effect: (e, p, eng) => {
                     eng.enemies.forEach(ene => { if (!ene.isDead()) ene.heal(16); });
                 }
             });
@@ -25,10 +26,10 @@ export class Mystic extends Enemy {
         }
 
         if (Math.random() < 0.6) {
-            this.setNextMove({ type: 'attack_debuff', value: 8, name: '弱体化', statuses: [{ id: 'frail', value: 2 }] });
+            this.setNextMove({ type: IntentType.AttackDebuff, value: 8, name: '弱体化', statuses: [{ id: 'frail', value: 2 }] });
         } else {
             this.setNextMove({
-                type: 'buff', value: 0, name: 'バフ', effect: (e, p, eng) => {
+                type: IntentType.Buff, value: 0, name: 'バフ', effect: (e, p, eng) => {
                     eng.enemies.forEach(ene => { if (!ene.isDead()) ene.addStatus('strength', 2); });
                 }
             });

@@ -1,3 +1,4 @@
+import { IntentType } from '../intent';
 import { Enemy } from '../entity';
 import { SpikeSlimeM } from './spike-slime-m';
 
@@ -24,7 +25,7 @@ export class SpikeSlimeL extends Enemy {
         if (this.hp > 0 && this.hp <= this.maxHp / 2 && (!this.nextMove || this.nextMove.id !== 'split')) {
             this.setNextMove({
                 id: 'split',
-                type: 'special',
+                type: IntentType.Special,
                 name: '分裂',
                 effect: (self, player, engine) => engine.splitEnemy(self, SpikeSlimeM)
             });
@@ -37,7 +38,7 @@ export class SpikeSlimeL extends Enemy {
         if (this.hp <= this.maxHp / 2) {
             this.setNextMove({
                 id: 'split',
-                type: 'special',
+                type: IntentType.Special,
                 name: '分裂',
                 effect: (self, player, engine) => engine.splitEnemy(self, SpikeSlimeM)
             });
@@ -50,7 +51,7 @@ export class SpikeSlimeL extends Enemy {
         if (roll < 70) {
             this.setNextMove({
                 id: 'lick',
-                type: 'debuff',
+                type: IntentType.Debuff,
                 name: '舐める',
                 statusEffects: [{ type: 'vulnerable', value: 2 }],
                 effect: (self, player) => player.addStatus('vulnerable', 2)
@@ -59,7 +60,7 @@ export class SpikeSlimeL extends Enemy {
             // 炎の体当たり (30%): 16ダメ + 粘液2枚
             this.setNextMove({
                 id: 'tackle',
-                type: 'attack',
+                type: IntentType.Attack,
                 value: 16,
                 name: '炎の体当たり',
                 effect: (self, player, engine) => {

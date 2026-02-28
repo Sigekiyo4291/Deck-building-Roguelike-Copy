@@ -6,6 +6,7 @@ import { BOSS_DATA } from './core/boss-data';
 import { Player } from './core/player';
 import { Enemy, isDebuff, isBuff } from './core/entity';
 import { Louse, Cultist, JawWorm, AcidSlimeM, SpikeSlimeM, AcidSlimeS, SpikeSlimeS, FungiBeast, AcidSlimeL, SpikeSlimeL, BlueSlaver, RedSlaver, Looter, GremlinNob, Lagavulin, Sentry, SlimeBoss, Guardian, Hexaghost, SneakyGremlin, MadGremlin, GremlinWizard, ShieldGremlin, FatGremlin, SphericGuardian, ShelledParasite, Byrd, Chosen, Mugger, Snecko, SnakePlant, Centurion, Mystic, GremlinLeader, BookOfStabbing, Taskmaster, BronzeOrb, BronzeAutomaton, Champ, TorchHead, Collector, Darkling, Repulsor, Exploder, Spiker, OrbWalker, Maw, Transient, SpireGrowth, WrithingMass, Dagger, Reptomancer, GiantHead, Nemesis, AwakenedOne, Deca, Donu, TimeEater } from './core/enemies';
+import { IntentType } from './core/intent';
 
 import { StatusLibrary } from './core/status-effect';
 import { CardLibrary } from './core/card';
@@ -2086,45 +2087,71 @@ class Game {
             let hasBuff = false;
             let hasDebuff = false;
             let hasSpecial = false;
+            let hasDefend = false;
 
             const nextMoveStatusEffects = move.statusEffects || [];
 
-            if (move.type === 'attack') {
+            if (move.type === IntentType.Attack || move.type === IntentType.AttackDefend || move.type === IntentType.AttackDebuff || move.type === IntentType.AttackBuff || move.type === IntentType.AttackHeal) {
               const damage = enemy.calculateDamage(move.value);
-              const times = move.times ? `x${move.times}` : '';
+              const times = move.times || move.multi ? `x${move.times || move.multi}` : '';
               icons.push(`<span class="intent-attack">🗡️${damage}${times}</span>`);
               hasAttack = true;
             }
 
-            // バフ判定: 元のタイプがbuff、またはステータス効果にバフを含む
-            if (move.type === 'buff' || nextMoveStatusEffects.some(s => isBuff(s.type, s.value))) {
+            if (move.type === IntentType.Defend || move.type === IntentType.AttackDefend) {
+              icons.push('🛡️');
+              hasDefend = true;
+            }
+
+            // バフ判定: 元のタイプがbuff系、またはステータス効果にバフを含む
+            if (move.type === IntentType.Buff || move.type === IntentType.AttackBuff || nextMoveStatusEffects.some(s => isBuff(s.type, s.value))) {
               icons.push('💪');
               hasBuff = true;
             }
 
-            // デバフ判定: 元のタイプがdebuff、またはステータス効果にデバフを含む（burn カード追加も含む）
-            if (move.type === 'debuff' || nextMoveStatusEffects.some(s => isDebuff(s.type, s.value) || s.type === 'burn')) {
+            // デバフ判定: 元のタイプがdebuff系、またはステータス効果にデバフを含む（burn カード追加も含む）
+            if (move.type === IntentType.Debuff || move.type === IntentType.AttackDebuff || nextMoveStatusEffects.some(s => isDebuff(s.type, s.value) || s.type === 'burn')) {
               icons.push('📉');
               hasDebuff = true;
             }
 
-            if (move.type === 'special') {
+            if (move.type === IntentType.Special) {
               const name = move.name || '✨';
               icons.push(`<span class="intent-special">${name}</span>`);
               hasSpecial = true;
             }
 
+            if (move.type === IntentType.Stun) {
+              icons.push('💫');
+            }
+
+            if (move.type === IntentType.Heal || move.type === IntentType.AttackHeal) {
+              icons.push('💖');
+            }
+
+            if (move.type === IntentType.Escape) {
+              icons.push('🏃‍♂️');
+            }
+
             // 行動内容のテキストを自動判定
             if (hasSpecial) {
               intentText = '敵は特殊な行動予定';
+            } else if (move.type === IntentType.Stun) {
+              intentText = '敵は気絶している';
+            } else if (move.type === IntentType.Escape) {
+              intentText = '敵は逃走予定';
             } else {
               const parts = [];
               if (hasBuff) parts.push('バフ');
               if (hasDebuff) parts.push('デバフ');
+              if (hasDefend) parts.push('防御');
               if (hasAttack) parts.push('攻撃');
+              if (move.type === IntentType.Heal || move.type === IntentType.AttackHeal) parts.push('回復');
 
               if (parts.length > 0) {
                 intentText = `敵は${parts.join('・')}予定`;
+              } else {
+                intentText = `敵は${move.name || '行動'}予定`;
               }
             }
 

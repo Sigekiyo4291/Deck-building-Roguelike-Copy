@@ -1,3 +1,4 @@
+import { IntentType } from '../intent';
 import { Enemy } from '../entity';
 
 /**
@@ -21,7 +22,7 @@ export class RedSlaver extends Enemy {
         if (turn > 1 && !this.hasEntangled && roll < 25) {
             this.setNextMove({
                 id: 'entangle',
-                type: 'debuff',
+                type: IntentType.Debuff,
                 name: '絡めとる',
                 statusEffects: [{ type: 'entangled', value: 1 }],
                 effect: (self, player) => {
@@ -30,9 +31,9 @@ export class RedSlaver extends Enemy {
                 }
             });
         } else if (roll < 50 && lastMove !== 'scrape') {
-            this.setNextMove({ id: 'scrape', type: 'attack', value: 8, name: '引っ掻き', statusEffects: [{ type: 'vulnerable', value: 1 }], effect: (self, player) => player.addStatus('vulnerable', 1) });
+            this.setNextMove({ id: 'scrape', type: IntentType.Attack, value: 8, name: '引っ掻き', statusEffects: [{ type: 'vulnerable', value: 1 }], effect: (self, player) => player.addStatus('vulnerable', 1) });
         } else {
-            this.setNextMove({ id: 'stab', type: 'attack', value: 13, name: '突き' });
+            this.setNextMove({ id: 'stab', type: IntentType.Attack, value: 13, name: '突き' });
         }
         this.history.push(this.nextMove.id);
     }

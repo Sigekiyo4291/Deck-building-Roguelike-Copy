@@ -1,3 +1,4 @@
+import { IntentType } from '../intent';
 import { Enemy } from '../entity';
 
 /**
@@ -13,6 +14,6 @@ export class MadGremlin extends Enemy {
     }
 
     decideNextMove() {
-        this.setNextMove({ type: 'attack', value: 4, name: '攻撃' });
+        this.setNextMove({ type: IntentType.Attack, value: 4, name: '攻撃' });
     }
 }

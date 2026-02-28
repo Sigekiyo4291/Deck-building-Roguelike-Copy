@@ -1,3 +1,4 @@
+import { IntentType } from '../intent';
 import { Enemy } from '../entity';
 
 /**
@@ -29,7 +30,7 @@ export class Lagavulin extends Enemy {
         this.isSleeping = false;
         this.removeStatus('metallicize');
         if (byDamage) {
-            this.setNextMove({ id: 'stun', type: 'special', name: 'スタン', effect: () => console.log('Lagavulin is stunned!') });
+            this.setNextMove({ id: 'stun', type: IntentType.Special, name: 'スタン', effect: () => console.log('Lagavulin is stunned!') });
         }
         console.log('Lagavulin has awoken!');
     }
@@ -38,9 +39,9 @@ export class Lagavulin extends Enemy {
         if (this.isSleeping) {
             this.idleTurns++;
             if (this.idleTurns >= 3) {
-                this.setNextMove({ id: 'wake', type: 'special', name: '覚醒', effect: () => this.wakeUp(false) });
+                this.setNextMove({ id: 'wake', type: IntentType.Special, name: '覚醒', effect: () => this.wakeUp(false) });
             } else {
-                this.setNextMove({ id: 'sleep', type: 'special', name: '睡眠中' });
+                this.setNextMove({ id: 'sleep', type: IntentType.Special, name: '睡眠中' });
             }
             return;
         }
@@ -52,10 +53,10 @@ export class Lagavulin extends Enemy {
 
         const m = this.attackCycle % 3;
         if (m === 0 || m === 1) {
-            this.setNextMove({ id: 'attack', type: 'attack', value: 18, name: '攻撃' });
+            this.setNextMove({ id: 'attack', type: IntentType.Attack, value: 18, name: '攻撃' });
         } else {
             this.setNextMove({
-                id: 'siphon', type: 'debuff', name: '魂抽出', statusEffects: [{ type: 'strength', value: -1 }, { type: 'dexterity', value: -1 }], effect: (self, player) => {
+                id: 'siphon', type: IntentType.Debuff, name: '魂抽出', statusEffects: [{ type: 'strength', value: -1 }, { type: 'dexterity', value: -1 }], effect: (self, player) => {
                     player.addStatus('strength', -1);
                     player.addStatus('dexterity', -1);
                 }

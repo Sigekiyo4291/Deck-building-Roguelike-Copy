@@ -1,3 +1,4 @@
+import { IntentType } from '../intent';
 import { Enemy } from '../entity';
 
 /**
@@ -18,12 +19,12 @@ export class Hexaghost extends Enemy {
         let move;
 
         if (turn === 1) {
-            move = { id: 'idle', type: 'special', name: '活性化中' };
+            move = { id: 'idle', type: IntentType.Special, name: '活性化中' };
         } else if (turn === 2) {
             // プレイヤーの現在HPに依存: (HP/12 + 1)x6
             const p = player ? player.hp : 72;
             const dmg = Math.floor(p / 12) + 1;
-            move = { id: 'divider', type: 'attack', value: dmg, times: 6, name: 'ディバイダー' };
+            move = { id: 'divider', type: IntentType.Attack, value: dmg, times: 6, name: 'ディバイダー' };
         } else {
             const loopTurn = (turn - 3) % 7;
             switch (loopTurn) {
@@ -32,7 +33,7 @@ export class Hexaghost extends Enemy {
                 case 5:
                     move = {
                         id: 'sear',
-                        type: 'attack',
+                        type: IntentType.Attack,
                         value: 6,
                         name: 'シアー',
                         statusEffects: [{ type: 'burn', value: 1 }],
@@ -45,12 +46,12 @@ export class Hexaghost extends Enemy {
                     break;
                 case 1: // 二連撃
                 case 4:
-                    move = { id: 'tackle', type: 'attack', value: 5, times: 2, name: '二連撃' };
+                    move = { id: 'tackle', type: IntentType.Attack, value: 5, times: 2, name: '二連撃' };
                     break;
                 case 3: // 発火
                     move = {
                         id: 'ignite',
-                        type: 'buff',
+                        type: IntentType.Buff,
                         name: '発火',
                         effect: (self) => {
                             self.addStatus('strength', 2);
@@ -61,7 +62,7 @@ export class Hexaghost extends Enemy {
                 case 6: // インフェルノ
                     move = {
                         id: 'inferno',
-                        type: 'attack',
+                        type: IntentType.Attack,
                         value: 2,
                         times: 6,
                         name: 'インフェルノ',

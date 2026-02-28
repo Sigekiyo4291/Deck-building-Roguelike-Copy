@@ -1,3 +1,4 @@
+import { IntentType } from '../intent';
 import { Enemy } from '../entity';
 
 // トーチヘッド
@@ -6,6 +7,6 @@ export class TorchHead extends Enemy {
         super('トーチヘッド', 38, 'assets/images/characters/enemies/slime.png');
     }
     decideNextMove() {
-        this.setNextMove({ type: 'attack', value: 7, name: '体当たり' });
+        this.setNextMove({ type: IntentType.Attack, value: 7, name: '体当たり' });
     }
 }

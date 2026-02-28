@@ -1,3 +1,4 @@
+import { IntentType } from '../intent';
 import { Enemy } from '../entity';
 
 import { TorchHead } from './torch-head';
@@ -17,7 +18,7 @@ export class Collector extends Enemy {
 
         if (this.turnCount === 1 || (torchHeadsCount <= 1 && Math.random() < 0.25)) {
             this.setNextMove({
-                type: 'buff', value: 0, name: '召喚', effect: (e, p, eng) => {
+                type: IntentType.Buff, value: 0, name: '召喚', effect: (e, p, eng) => {
                     if (!eng || !eng.enemies) return;
                     const currentTorch = eng.enemies.filter(x => x.name === 'トーチヘッド' && !x.isDead()).length;
                     const spawnCount = Math.min(2, 2 - currentTorch);
@@ -33,7 +34,7 @@ export class Collector extends Enemy {
         }
 
         if (this.turnCount === 4) {
-            this.setNextMove({ type: 'debuff', value: 0, name: 'お前はわたしの物だ！！', statuses: [{ id: 'weak', value: 3 }, { id: 'vulnerable', value: 3 }, { id: 'frail', value: 3 }] });
+            this.setNextMove({ type: IntentType.Debuff, value: 0, name: 'お前はわたしの物だ！！', statuses: [{ id: 'weak', value: 3 }, { id: 'vulnerable', value: 3 }, { id: 'frail', value: 3 }] });
             return;
         }
 
@@ -46,9 +47,9 @@ export class Collector extends Enemy {
         }
 
         if (useAttack) {
-            this.setNextMove({ type: 'attack', value: 18, name: 'ファイヤーボール' });
+            this.setNextMove({ type: IntentType.Attack, value: 18, name: 'ファイヤーボール' });
         } else {
-            this.setNextMove({ type: 'defend', value: 15, name: 'バフ', effect: (e, p, eng) => eng.enemies.forEach(x => { if (!x.isDead()) { x.addBlock(15); x.addStatus('strength', 3); } }) });
+            this.setNextMove({ type: IntentType.Defend, value: 15, name: 'バフ', effect: (e, p, eng) => eng.enemies.forEach(x => { if (!x.isDead()) { x.addBlock(15); x.addStatus('strength', 3); } }) });
         }
     }
 }

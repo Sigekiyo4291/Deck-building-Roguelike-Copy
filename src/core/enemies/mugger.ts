@@ -1,3 +1,4 @@
+import { IntentType } from '../intent';
 import { Enemy } from '../entity';
 
 // 強盗
@@ -12,15 +13,15 @@ export class Mugger extends Enemy {
     decideNextMove(player?: any, engine?: any) {
         this.turnCount++;
         if (this.turnCount <= 2) {
-            this.setNextMove({ type: 'attack', value: 10, name: 'ジャグリング' });
+            this.setNextMove({ type: IntentType.Attack, value: 10, name: 'ジャグリング' });
         } else if (this.turnCount === 3) {
             if (Math.random() < 0.5) {
-                this.setNextMove({ type: 'attack', value: 16, name: '突き刺し' });
+                this.setNextMove({ type: IntentType.Attack, value: 16, name: '突き刺し' });
             } else {
-                this.setNextMove({ type: 'defend', value: 11, name: '煙玉' });
+                this.setNextMove({ type: IntentType.Defend, value: 11, name: '煙玉' });
             }
         } else {
-            this.setNextMove({ type: 'escape', value: 0, name: '逃走', effect: (enemy, player, eng) => eng.removeEnemy(enemy) });
+            this.setNextMove({ type: IntentType.Escape, value: 0, name: '逃走', effect: (enemy, player, eng) => eng.removeEnemy(enemy) });
         }
     }
 }

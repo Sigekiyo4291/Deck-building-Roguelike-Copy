@@ -1,3 +1,4 @@
+import { IntentType } from './intent';
 import { CardLibrary } from './card';
 import { StatusLibrary } from './status-effect';
 
@@ -872,7 +873,7 @@ export class BattleEngine {
                 } else {
                     // 旧ロジック互換
                     const damage = 5 + Math.floor(Math.random() * 5);
-                    enemy.setNextMove({ type: 'attack', value: damage });
+                    enemy.setNextMove({ type: IntentType.Attack, value: damage });
                 }
             } else {
                 enemy.nextMove = null;

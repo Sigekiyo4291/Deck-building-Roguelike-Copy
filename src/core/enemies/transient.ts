@@ -1,3 +1,4 @@
+import { IntentType } from '../intent';
 import { Enemy } from '../entity';
 
 // 消えゆくもの
@@ -13,7 +14,7 @@ export class Transient extends Enemy {
     decideNextMove() {
         this.turnCount++;
         this.baseDamage = 30 + (this.turnCount - 1) * 10;
-        this.setNextMove({ type: 'attack', value: this.baseDamage, name: '攻撃' });
+        this.setNextMove({ type: IntentType.Attack, value: this.baseDamage, name: '攻撃' });
     }
     takeDamage(damage: number, source?: any, engine?: any): number {
         const dealt = super.takeDamage(damage, source, engine);

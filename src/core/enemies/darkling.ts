@@ -1,3 +1,4 @@
+import { IntentType } from '../intent';
 import { Enemy } from '../entity';
 
 // ダークリング
@@ -39,12 +40,12 @@ export class Darkling extends Enemy {
     decideNextMove(player?: any, engine?: any) {
         if (this.reviveTimer > 0) {
             this.reviveTimer--;
-            this.setNextMove({ type: 'buff', value: 0, name: '復活待機' });
+            this.setNextMove({ type: IntentType.Buff, value: 0, name: '復活待機' });
             return;
         } else if (this.reviveTimer === 0) {
             this.reviveTimer = -1;
             this.setNextMove({
-                type: 'heal', value: 0, name: '復活', effect: (e) => {
+                type: IntentType.Heal, value: 0, name: '復活', effect: (e) => {
                     e.heal(Math.floor(e.maxHp / 2));
                 }
             });
@@ -52,8 +53,8 @@ export class Darkling extends Enemy {
         }
 
         const rand = Math.random();
-        if (rand < 0.4) this.setNextMove({ type: 'attack', value: 8, name: '噛みつき' });
-        else if (rand < 0.8) this.setNextMove({ type: 'attack', value: 8, multi: 2, name: '連続噛みつき' });
-        else this.setNextMove({ type: 'defend', value: 12, name: '硬化', effect: e => { e.addBlock(12); e.addStatus('strength', 2); } });
+        if (rand < 0.4) this.setNextMove({ type: IntentType.Attack, value: 8, name: '噛みつき' });
+        else if (rand < 0.8) this.setNextMove({ type: IntentType.Attack, value: 8, multi: 2, name: '連続噛みつき' });
+        else this.setNextMove({ type: IntentType.Defend, value: 12, name: '硬化', effect: e => { e.addBlock(12); e.addStatus('strength', 2); } });
     }
 }

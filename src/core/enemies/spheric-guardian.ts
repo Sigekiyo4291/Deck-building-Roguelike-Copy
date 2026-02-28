@@ -1,3 +1,4 @@
+import { IntentType } from '../intent';
 import { Enemy } from '../entity';
 
 /**
@@ -19,13 +20,13 @@ export class SphericGuardian extends Enemy {
     decideNextMove() {
         this.turnCount++;
         if (this.turnCount === 1) {
-            this.setNextMove({ type: 'defend', value: 25, name: '防御' });
+            this.setNextMove({ type: IntentType.Defend, value: 25, name: '防御' });
         } else if (this.turnCount === 2) {
-            this.setNextMove({ type: 'attack_debuff', value: 10, name: '攻撃+戦略', statuses: [{ id: 'frail', value: 5 }] });
+            this.setNextMove({ type: IntentType.AttackDebuff, value: 10, name: '攻撃+戦略', statuses: [{ id: 'frail', value: 5 }] });
         } else if (this.turnCount % 2 === 1) {
-            this.setNextMove({ type: 'attack', value: 10, multi: 2, name: '攻撃' });
+            this.setNextMove({ type: IntentType.Attack, value: 10, multi: 2, name: '攻撃' });
         } else {
-            this.setNextMove({ type: 'attack_defend', value: 10, block: 15, name: '攻撃+防御' });
+            this.setNextMove({ type: IntentType.AttackDefend, value: 10, block: 15, name: '攻撃+防御' });
         }
     }
 }

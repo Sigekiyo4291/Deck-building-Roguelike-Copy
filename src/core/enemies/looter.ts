@@ -1,3 +1,4 @@
+import { IntentType } from '../intent';
 import { Enemy } from '../entity';
 
 /**
@@ -26,7 +27,7 @@ export class Looter extends Enemy {
             // コソ泥 (1-2ターン目): 10ダメ + ゴールド強奪
             this.setNextMove({
                 id: 'mug',
-                type: 'attack',
+                type: IntentType.Attack,
                 value: 10,
                 name: 'コソ泥',
                 effect: (self, player) => {
@@ -42,7 +43,7 @@ export class Looter extends Enemy {
             if (Math.random() < 0.5) {
                 this.setNextMove({
                     id: 'lunge',
-                    type: 'attack',
+                    type: IntentType.Attack,
                     value: 12,
                     name: '突き',
                     effect: (self, player) => {
@@ -56,7 +57,7 @@ export class Looter extends Enemy {
             } else {
                 this.setNextMove({
                     id: 'smoke',
-                    type: 'buff',
+                    type: IntentType.Buff,
                     name: '煙玉',
                     effect: (self) => self.addBlock(6)
                 });
@@ -65,7 +66,7 @@ export class Looter extends Enemy {
             // 突き（T3）の次は煙玉（T4）
             this.setNextMove({
                 id: 'smoke',
-                type: 'buff',
+                type: IntentType.Buff,
                 name: '煙玉',
                 effect: (self) => self.addBlock(6)
             });
@@ -73,7 +74,7 @@ export class Looter extends Enemy {
             // 煙玉の次は逃走
             this.setNextMove({
                 id: 'escape',
-                type: 'special',
+                type: IntentType.Special,
                 name: '逃走',
                 effect: (self, player, engine) => engine.removeEnemy(self)
             });
@@ -81,7 +82,7 @@ export class Looter extends Enemy {
             // 前に煙玉を使っていた場合は逃走（念のため）
             this.setNextMove({
                 id: 'escape',
-                type: 'special',
+                type: IntentType.Special,
                 name: '逃走',
                 effect: (self, player, engine) => engine.removeEnemy(self)
             });

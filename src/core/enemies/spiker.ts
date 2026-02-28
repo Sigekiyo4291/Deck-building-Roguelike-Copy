@@ -1,3 +1,4 @@
+import { IntentType } from '../intent';
 import { Enemy } from '../entity';
 
 // スパイカー
@@ -10,9 +11,9 @@ export class Spiker extends Enemy {
     }
     decideNextMove() {
         if (Math.random() < 0.5) {
-            this.setNextMove({ type: 'attack', value: 7, name: '攻撃' });
+            this.setNextMove({ type: IntentType.Attack, value: 7, name: '攻撃' });
         } else {
-            this.setNextMove({ type: 'buff', value: 0, name: 'トゲ', effect: e => e.addStatus('thorns', 2) });
+            this.setNextMove({ type: IntentType.Buff, value: 0, name: 'トゲ', effect: e => e.addStatus('thorns', 2) });
         }
     }
 }

@@ -1,3 +1,4 @@
+import { IntentType } from '../intent';
 import { Enemy } from '../entity';
 
 /**
@@ -19,7 +20,7 @@ export class SpikeSlimeM extends Enemy {
         if (roll < 70 && lastMove !== 'lick') {
             this.setNextMove({
                 id: 'lick',
-                type: 'debuff',
+                type: IntentType.Debuff,
                 name: '舐める',
                 effect: (self, player) => player.addStatus('vulnerable', 1)
             });
@@ -27,7 +28,7 @@ export class SpikeSlimeM extends Enemy {
             // 炎の体当たり (30%): 8ダメ + 粘液(TODO)
             this.setNextMove({
                 id: 'tackle',
-                type: 'attack',
+                type: IntentType.Attack,
                 value: 8,
                 name: '炎の体当たり'
             });

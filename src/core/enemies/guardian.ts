@@ -1,3 +1,4 @@
+import { IntentType } from '../intent';
 import { Enemy } from '../entity';
 
 /**
@@ -63,7 +64,7 @@ export class Guardian extends Enemy {
             // 行動を「モードシフト」に差し替え
             this.setNextMove({
                 id: 'mode_shift_action',
-                type: 'buff',
+                type: IntentType.Buff,
                 name: 'モードシフト',
                 effect: (self) => {
                     self.addStatus('sharp_hide', 3);
@@ -103,7 +104,7 @@ export class Guardian extends Enemy {
                 // 防御態勢1ターン目: 通常攻撃9ダメージ
                 this.setNextMove({
                     id: 'normal_attack',
-                    type: 'attack',
+                    type: IntentType.Attack,
                     value: 9,
                     name: '攻撃',
                     effect: (self) => {
@@ -117,7 +118,7 @@ export class Guardian extends Enemy {
                 // 防御態勢2ターン目: ツインスラム → 攻撃態勢へ移行
                 this.setNextMove({
                     id: 'twin_slam',
-                    type: 'attack',
+                    type: IntentType.Attack,
                     value: 8,
                     times: 2,
                     name: 'ツインスラム',
@@ -135,15 +136,15 @@ export class Guardian extends Enemy {
         this.offensiveMoveIndex++;
 
         if (m === 0) {
-            this.setNextMove({ id: 'whirl', type: 'attack', value: 5, times: 4, name: '旋風刃' });
+            this.setNextMove({ id: 'whirl', type: IntentType.Attack, value: 5, times: 4, name: '旋風刃' });
         } else if (m === 1) {
-            this.setNextMove({ id: 'charge', type: 'buff', name: 'チャージ', effect: (self) => self.addBlock(9) });
+            this.setNextMove({ id: 'charge', type: IntentType.Buff, name: 'チャージ', effect: (self) => self.addBlock(9) });
         } else if (m === 2) {
-            this.setNextMove({ id: 'bash', type: 'attack', value: 32, name: 'フィアースバッシュ' });
+            this.setNextMove({ id: 'bash', type: IntentType.Attack, value: 32, name: 'フィアースバッシュ' });
         } else {
             this.setNextMove({
                 id: 'vent',
-                type: 'debuff',
+                type: IntentType.Debuff,
                 name: '蒸気解放',
                 statusEffects: [{ type: 'weak', value: 2 }, { type: 'vulnerable', value: 2 }],
                 effect: (self, player) => {

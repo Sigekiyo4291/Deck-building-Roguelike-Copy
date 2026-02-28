@@ -1,3 +1,4 @@
+import { IntentType } from '../intent';
 import { Enemy } from '../entity';
 
 // 塔で成長するもの
@@ -7,9 +8,9 @@ export class SpireGrowth extends Enemy {
     }
     decideNextMove() {
         if (Math.random() < 0.5) {
-            this.setNextMove({ type: 'attack', value: 22, name: 'スマッシュ' });
+            this.setNextMove({ type: IntentType.Attack, value: 22, name: 'スマッシュ' });
         } else {
-            this.setNextMove({ type: 'attack_debuff', value: 16, name: '締め付け', statuses: [{ id: 'constricted', value: 10 }] });
+            this.setNextMove({ type: IntentType.AttackDebuff, value: 16, name: '締め付け', statuses: [{ id: 'constricted', value: 10 }] });
         }
     }
 }

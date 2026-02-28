@@ -1,3 +1,4 @@
+import { IntentType } from '../intent';
 import { Enemy } from '../entity';
 
 import { SneakyGremlin } from './sneaky-gremlin';
@@ -19,7 +20,7 @@ export class GremlinLeader extends Enemy {
         // ミニオンが1体以下のとき高確率（ここでは70%）で召喚
         if (minionsCount <= 1 && Math.random() < 0.7) {
             this.setNextMove({
-                type: 'buff',
+                type: IntentType.Buff,
                 value: 0,
                 name: 'みんな集まれ！',
                 effect: (e, p, eng) => {
@@ -42,9 +43,9 @@ export class GremlinLeader extends Enemy {
 
         const rand = Math.random();
         if (rand < 0.4) {
-            this.setNextMove({ type: 'defend', value: 10, name: '激励', effect: (e, p, eng) => eng.enemies.forEach(x => { if (!x.isDead()) { x.addBlock(10); x.addStatus('strength', 3); } }) });
+            this.setNextMove({ type: IntentType.Defend, value: 10, name: '激励', effect: (e, p, eng) => eng.enemies.forEach(x => { if (!x.isDead()) { x.addBlock(10); x.addStatus('strength', 3); } }) });
         } else {
-            this.setNextMove({ type: 'attack', value: 6, multi: 3, name: 'スマッシュ' });
+            this.setNextMove({ type: IntentType.Attack, value: 6, multi: 3, name: 'スマッシュ' });
         }
     }
 }

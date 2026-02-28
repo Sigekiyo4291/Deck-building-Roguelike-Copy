@@ -1,3 +1,4 @@
+import { IntentType } from './intent';
 import { CardLibrary } from './card';
 import { RelicLibrary } from './relic';
 
@@ -418,7 +419,7 @@ export class Enemy extends Entity {
   decideNextMove(player?: any) {
     // デフォルト行動
     const damage = 5 + Math.floor(Math.random() * 5);
-    this.setNextMove({ type: 'attack', value: damage });
+    this.setNextMove({ type: IntentType.Attack, value: damage });
   }
 }
 

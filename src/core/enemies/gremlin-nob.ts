@@ -1,3 +1,4 @@
+import { IntentType } from '../intent';
 import { Enemy } from '../entity';
 
 /**
@@ -16,7 +17,7 @@ export class GremlinNob extends Enemy {
         if (turn === 1) {
             this.setNextMove({
                 id: 'enrage',
-                type: 'buff',
+                type: IntentType.Buff,
                 name: '激怒',
                 statusEffects: [{ type: 'enrage_enemy', value: 2 }],
                 effect: (self) => {
@@ -27,9 +28,9 @@ export class GremlinNob extends Enemy {
         } else {
             const roll = Math.random() * 100;
             if (roll < 33) {
-                this.setNextMove({ id: 'bash', type: 'attack', value: 6, name: 'スカルバッシュ', statusEffects: [{ type: 'weak', value: 2 }], effect: (self, player) => player.addStatus('weak', 2) });
+                this.setNextMove({ id: 'bash', type: IntentType.Attack, value: 6, name: 'スカルバッシュ', statusEffects: [{ type: 'weak', value: 2 }], effect: (self, player) => player.addStatus('weak', 2) });
             } else {
-                this.setNextMove({ id: 'rush', type: 'attack', value: 14, name: 'ラッシュ' });
+                this.setNextMove({ id: 'rush', type: IntentType.Attack, value: 14, name: 'ラッシュ' });
             }
         }
         this.history.push(this.nextMove.id);

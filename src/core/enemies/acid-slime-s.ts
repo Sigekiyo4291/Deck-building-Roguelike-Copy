@@ -1,3 +1,4 @@
+import { IntentType } from '../intent';
 import { Enemy } from '../entity';
 
 /**
@@ -14,13 +15,13 @@ export class AcidSlimeS extends Enemy {
     decideNextMove() {
         if (this.isFirstTurn) {
             this.setNextMove({
-                type: 'debuff',
+                type: IntentType.Debuff,
                 name: '舐める',
                 effect: (self, player) => player.addStatus('weak', 1)
             });
             this.isFirstTurn = false;
         } else {
-            this.setNextMove({ type: 'attack', value: 3, name: '体当たり' });
+            this.setNextMove({ type: IntentType.Attack, value: 3, name: '体当たり' });
         }
     }
 }

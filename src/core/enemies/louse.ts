@@ -1,3 +1,4 @@
+import { IntentType } from '../intent';
 import { Enemy } from '../entity';
 
 /**
@@ -35,19 +36,19 @@ export class Louse extends Enemy {
         const roll = Math.random() * 100;
         if (roll < 75) {
             // 攻撃 (75%)
-            this.setNextMove({ type: 'attack', value: this.fixedDamage, name: 'バイト' });
+            this.setNextMove({ type: IntentType.Attack, value: this.fixedDamage, name: 'バイト' });
         } else {
             // 戦略 (25%)
             if (this.color === 'red') {
                 this.setNextMove({
-                    type: 'buff',
+                    type: IntentType.Buff,
                     name: '成長',
                     statusEffects: [{ type: 'strength', value: 3 }],
                     effect: (self) => self.addStatus('strength', 3)
                 });
             } else {
                 this.setNextMove({
-                    type: 'debuff',
+                    type: IntentType.Debuff,
                     name: 'スパイトウェブ',
                     statusEffects: [{ type: 'weak', value: 2 }],
                     effect: (self, player) => player.addStatus('weak', 2)

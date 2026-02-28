@@ -1,3 +1,4 @@
+import { IntentType } from '../intent';
 import { Enemy, Entity } from '../entity';
 import { AcidSlimeL } from './acid-slime-l';
 import { SpikeSlimeL } from './spike-slime-l';
@@ -25,7 +26,7 @@ export class SlimeBoss extends Enemy {
         if (this.hp > 0 && this.hp <= this.maxHp / 2 && (!this.nextMove || this.nextMove.id !== 'split')) {
             this.setNextMove({
                 id: 'split',
-                type: 'special',
+                type: IntentType.Special,
                 name: '分裂',
                 effect: (self, player, engine) => engine.splitEnemy(self, AcidSlimeL, SpikeSlimeL)
             });
@@ -37,7 +38,7 @@ export class SlimeBoss extends Enemy {
         if (this.hp <= this.maxHp / 2) {
             this.setNextMove({
                 id: 'split',
-                type: 'special',
+                type: IntentType.Special,
                 name: '分裂',
                 effect: (self, player, engine) => engine.splitEnemy(self, AcidSlimeL, SpikeSlimeL)
             });
@@ -49,7 +50,7 @@ export class SlimeBoss extends Enemy {
         if (m === 1) {
             this.setNextMove({
                 id: 'spray',
-                type: 'debuff',
+                type: IntentType.Debuff,
                 name: '汚物スプレー',
                 effect: (self, player, engine) => {
                     if (engine && engine.addCardsToDiscard) {
@@ -58,9 +59,9 @@ export class SlimeBoss extends Enemy {
                 }
             });
         } else if (m === 2) {
-            this.setNextMove({ id: 'prepare', type: 'special', name: '準備' });
+            this.setNextMove({ id: 'prepare', type: IntentType.Special, name: '準備' });
         } else {
-            this.setNextMove({ id: 'crush', type: 'attack', value: 35, name: 'スライムクラッシュ' });
+            this.setNextMove({ id: 'crush', type: IntentType.Attack, value: 35, name: 'スライムクラッシュ' });
         }
         this.history.push(this.nextMove.id);
     }

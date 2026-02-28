@@ -1,3 +1,4 @@
+import { IntentType } from '../intent';
 import { Enemy } from '../entity';
 
 /**
@@ -9,6 +10,6 @@ export class SpikeSlimeS extends Enemy {
     }
 
     decideNextMove() {
-        this.setNextMove({ type: 'attack', value: 5, name: '体当たり' });
+        this.setNextMove({ type: IntentType.Attack, value: 5, name: '体当たり' });
     }
 }

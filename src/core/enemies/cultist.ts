@@ -1,3 +1,4 @@
+import { IntentType } from '../intent';
 import { Enemy } from '../entity';
 
 /**
@@ -14,7 +15,7 @@ export class Cultist extends Enemy {
     decideNextMove() {
         if (this.isFirstTurn) {
             this.setNextMove({
-                type: 'buff',
+                type: IntentType.Buff,
                 name: '儀式',
                 effect: (self) => {
                     self.addStatus('ritual', 3);
@@ -23,7 +24,7 @@ export class Cultist extends Enemy {
             });
             this.isFirstTurn = false;
         } else {
-            this.setNextMove({ type: 'attack', value: 6, name: 'ダークストライク' });
+            this.setNextMove({ type: IntentType.Attack, value: 6, name: 'ダークストライク' });
         }
     }
 }

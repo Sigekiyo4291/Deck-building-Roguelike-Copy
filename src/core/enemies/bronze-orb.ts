@@ -1,3 +1,4 @@
+import { IntentType } from '../intent';
 import { Enemy } from '../entity';
 
 // オーブ（ブロンズ・オーブ）
@@ -11,7 +12,7 @@ export class BronzeOrb extends Enemy {
     decideNextMove(player?: any, engine?: any) {
         if (!this.hasStolen && Math.random() < 0.75) {
             this.setNextMove({
-                type: 'debuff', value: 0, name: '停滞', effect: (e, p, eng) => {
+                type: IntentType.Debuff, value: 0, name: '停滞', effect: (e, p, eng) => {
                     if (p && p.deck && p.deck.length > 0) {
                         const randIdx = Math.floor(Math.random() * p.deck.length);
                         this.stolenCard = p.deck.splice(randIdx, 1)[0];
@@ -23,10 +24,10 @@ export class BronzeOrb extends Enemy {
         }
 
         if (Math.random() < 0.3) {
-            this.setNextMove({ type: 'attack', value: 8, name: 'ビーム' });
+            this.setNextMove({ type: IntentType.Attack, value: 8, name: 'ビーム' });
         } else {
             this.setNextMove({
-                type: 'defend', value: 12, name: '防御', effect: (e, p, eng) => {
+                type: IntentType.Defend, value: 12, name: '防御', effect: (e, p, eng) => {
                     if (eng && eng.enemies) {
                         const boss = eng.enemies.find(x => x.name === 'ブロンズ・オートマトン');
                         if (boss && !boss.isDead()) boss.addBlock(12);

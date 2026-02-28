@@ -1,3 +1,4 @@
+import { IntentType } from '../intent';
 import { Enemy } from '../entity';
 
 import { Dagger } from './dagger';
@@ -22,7 +23,7 @@ export class Reptomancer extends Enemy {
 
         if (chooseSummon && daggersCount < 4) {
             this.setNextMove({
-                type: 'buff', value: 0, name: 'ダガー召喚', effect: (e, p, eng) => {
+                type: IntentType.Buff, value: 0, name: 'ダガー召喚', effect: (e, p, eng) => {
                     if (!eng || !eng.enemies) return;
                     const daggersNow = eng.enemies.filter(x => x.name === 'ダガー' && !x.isDead()).length;
                     const maxSpawn = 4 - daggersNow;
@@ -38,9 +39,9 @@ export class Reptomancer extends Enemy {
         }
 
         if (Math.random() < 0.5) {
-            this.setNextMove({ type: 'attack_debuff', value: 13, multi: 2, name: '毒牙', statuses: [{ id: 'weak', value: 2 }] });
+            this.setNextMove({ type: IntentType.AttackDebuff, value: 13, multi: 2, name: '毒牙', statuses: [{ id: 'weak', value: 2 }] });
         } else {
-            this.setNextMove({ type: 'attack', value: 30, name: '単発攻撃' });
+            this.setNextMove({ type: IntentType.Attack, value: 30, name: '単発攻撃' });
         }
     }
 }

@@ -22,8 +22,9 @@ export class Darkling extends Enemy {
             if (engine && engine.enemies) {
                 const aliveDarklings = engine.enemies.filter(e => e.name === 'ダークリング' && e !== this && e.hp > 0);
                 if (aliveDarklings.length > 0) {
-                    this.reviveTimer = 2; // 2ターン後に復活
+                    this.reviveTimer = 0; // 1ターン後に復活
                     this.statusEffects = [];
+                    this.setNextMove({ type: IntentType.Unknown, value: 0, name: '復活待機' });
                     if (engine.uiUpdateCallback) engine.uiUpdateCallback();
                 } else {
                     // 他のダークリングがすべてダウンまたは死んでいる場合、全員を完全に死亡させる

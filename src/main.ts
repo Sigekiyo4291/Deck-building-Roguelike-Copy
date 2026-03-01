@@ -2136,6 +2136,10 @@ class Game {
               icons.push('🏃‍♂️');
             }
 
+            if (move.type === IntentType.Unknown) {
+              icons.push('❓');
+            }
+
             // 行動内容のテキストを自動判定
             if (hasSpecial) {
               intentText = '敵は特殊な行動予定';

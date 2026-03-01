@@ -869,7 +869,7 @@ export class BattleEngine {
             if (!enemy.isDead()) {
                 // Enemyクラスに decideNextMove メソッドがあればそれを使う
                 if (enemy.decideNextMove) {
-                    enemy.decideNextMove(this.player);
+                    enemy.decideNextMove(this.player, this);
                 } else {
                     // 旧ロジック互換
                     const damage = 5 + Math.floor(Math.random() * 5);

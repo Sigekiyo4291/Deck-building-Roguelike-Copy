@@ -416,7 +416,7 @@ export class Enemy extends Entity {
     this.nextMove = move;
   }
 
-  decideNextMove(player?: any) {
+  decideNextMove(player?: any, engine?: any) {
     // デフォルト行動
     const damage = 5 + Math.floor(Math.random() * 5);
     this.setNextMove({ type: IntentType.Attack, value: damage, name: '攻撃' });

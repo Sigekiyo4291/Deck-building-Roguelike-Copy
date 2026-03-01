@@ -22,17 +22,18 @@ view_file c:\Users\somey\Programs\Web\slay-the-spire-like\.agent\skills\card-imp
 ```
 
 ## 3. カード定義の追加
-`src/core/card.js` の `CardLibrary` オブジェクトに新しいカードを追加します。
-- IDは全大文字のスネークケース（例: `SEVER_SOUL`）を推奨。
+`src/core/cards/` 以下のカテゴリに応じたファイル（例: `ironclad/attack.ts`）に新しいカードを追加します。
+- IDは全小文字のスネークケース（例: `sever_soul`）を推奨し、エクスポートするプロパティキーは大文字とします。
+- 引数は `CardInitParams` に合わせたオブジェクト形式で渡します。
 - `upgradeData` を必ず定義し、強化後の挙動を含めます。
 
 ## 4. 必要なエンジン/エンティティ修正
 カードの効果が既存のメソッドで表現できない場合（例：最大HP増加、特殊なターン終了処理）、以下を修正します。
-- `src/core/entity.js`: `Entity` または `Player` クラスへのメソッド追加
-- `src/core/engine.js`: `BattleEngine` のターン処理やカードプレイ処理の変更
+- `src/core/entity.ts`: `Entity` または `Player` クラスへのメソッド追加
+- `src/core/engine.ts`: `BattleEngine` のターン処理やカードプレイ処理の変更
 
 ## 5. UI/リソースの更新（必要な場合）
-- 新しいステータス効果がある場合: `src/main.js` の `STATUS_INFO` に追加
+- 新しいステータス効果がある場合: `src/core/entity.ts` の `BUFF_TYPES` 等に追加し、`src/main.ts` の `STATUS_INFO` に追加
 - 特殊なアセットが必要な場合: 適宜追加
 
 ## 6. 動作確認

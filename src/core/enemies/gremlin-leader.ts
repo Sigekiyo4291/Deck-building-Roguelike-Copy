@@ -43,7 +43,7 @@ export class GremlinLeader extends Enemy {
 
         const rand = Math.random();
         if (rand < 0.4) {
-            this.setNextMove({ type: IntentType.Defend, value: 10, name: '激励', effect: (e, p, eng) => eng.enemies.forEach(x => { if (!x.isDead()) { x.addBlock(10); x.addStatus('strength', 3); } }) });
+            this.setNextMove({ type: IntentType.Defend, name: '激励', effect: (e, p, eng) => eng.enemies.forEach(x => { if (!x.isDead()) { x.addBlock(6); x.addStatus('strength', 3); } }) });
         } else {
             this.setNextMove({ type: IntentType.Attack, value: 6, times: 3, name: 'スマッシュ' });
         }

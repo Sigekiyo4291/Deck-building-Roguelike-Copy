@@ -18,7 +18,7 @@ export class Mugger extends Enemy {
             if (Math.random() < 0.5) {
                 this.setNextMove({ type: IntentType.Attack, value: 16, name: '突き刺し' });
             } else {
-                this.setNextMove({ type: IntentType.Defend, value: 11, name: '煙玉' });
+                this.setNextMove({ type: IntentType.Defend, name: '煙玉', effect: (e) => e.addBlock(11) });
             }
         } else {
             this.setNextMove({ type: IntentType.Escape, value: 0, name: '逃走', effect: (enemy, player, eng) => eng.removeEnemy(enemy) });

@@ -20,7 +20,7 @@ export class Champ extends Enemy {
             const r = Math.random();
             if (r < 0.4) this.setNextMove({ type: IntentType.Attack, value: 12, name: 'フェイススラップ' });
             else if (r < 0.7) this.setNextMove({ type: IntentType.AttackDebuff, value: 10, name: '嘲り', effect: (self, player) => player.addStatus('vulnerable', 2) });
-            else this.setNextMove({ type: IntentType.Defend, value: 15, name: '防御態勢' });
+            else this.setNextMove({ type: IntentType.Defend, name: '防御態勢', effect: self => { self.addBlock(15); } });
         }
     }
 }

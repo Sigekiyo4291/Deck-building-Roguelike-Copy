@@ -10,7 +10,7 @@ export class Centurion extends Enemy {
         const mystic = engine?.enemies?.find(e => e.name === 'ミスティック' && !e.isDead());
         if (mystic) {
             if (Math.random() < 0.65) {
-                this.setNextMove({ type: IntentType.Defend, value: 15, name: '防御', effect: (e) => mystic.addBlock(15) });
+                this.setNextMove({ type: IntentType.Defend, name: '防御', effect: (e) => mystic.addBlock(15) });
             } else {
                 this.setNextMove({ type: IntentType.Attack, value: 12, name: '攻撃' });
             }

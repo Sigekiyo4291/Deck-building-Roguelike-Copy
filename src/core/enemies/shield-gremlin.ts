@@ -15,7 +15,14 @@ export class ShieldGremlin extends Enemy {
         if (Math.random() < 0.5) {
             this.setNextMove({ type: IntentType.Attack, value: 6, name: '攻撃' });
         } else {
-            this.setNextMove({ type: IntentType.Defend, value: 7, name: 'かばう' });
+            this.setNextMove({
+                type: IntentType.Defend, name: 'かばう',
+                effect: (e, p, eng) => {
+                    eng.enemies.forEach(x => {
+                        if (!x.isDead()) x.addBlock(7);
+                    });
+                }
+            });
         }
     }
 }

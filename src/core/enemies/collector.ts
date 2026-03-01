@@ -58,7 +58,7 @@ export class Collector extends Enemy {
         if (useAttack) {
             this.setNextMove({ type: IntentType.Attack, value: 18, name: 'ファイヤーボール' });
         } else {
-            this.setNextMove({ type: IntentType.Defend, value: 15, name: 'バフ', effect: (e, p, eng) => eng.enemies.forEach(x => { if (!x.isDead()) { x.addBlock(15); x.addStatus('strength', 3); } }) });
+            this.setNextMove({ type: IntentType.Defend, name: 'バフ', effect: (e, p, eng) => eng.enemies.forEach(x => { if (!x.isDead()) { x.addBlock(15); x.addStatus('strength', 3); } }) });
         }
     }
 }

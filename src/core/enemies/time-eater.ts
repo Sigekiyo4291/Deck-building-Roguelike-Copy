@@ -19,6 +19,6 @@ export class TimeEater extends Enemy {
         }
         if (Math.random() < 0.5) this.setNextMove({ type: IntentType.Attack, value: 26, name: 'スマッシュ' });
         else if (Math.random() < 0.8) this.setNextMove({ type: IntentType.AttackDebuff, value: 8, times: 3, name: '連撃', effect: (self, player) => { player.addStatus('frail', 1); player.addStatus('vulnerable', 1); } });
-        else this.setNextMove({ type: IntentType.Defend, value: 20, name: '防御', effect: e => e.addBlock(20) });
+        else this.setNextMove({ type: IntentType.Defend, name: '防御', effect: e => e.addBlock(20) });
     }
 }

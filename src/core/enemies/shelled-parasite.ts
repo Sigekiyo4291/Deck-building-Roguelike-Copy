@@ -31,7 +31,7 @@ export class ShelledParasite extends Enemy {
                 }
             });
         } else {
-            this.setNextMove({ type: IntentType.AttackDebuff, value: 18, name: 'スマッシュ', statuses: [{ id: 'vulnerable', value: 2 }] });
+            this.setNextMove({ type: IntentType.AttackDebuff, value: 18, name: 'スマッシュ', effect: (self, player) => player.addStatus('vulnerable', 2) });
         }
     }
 }

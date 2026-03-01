@@ -17,7 +17,7 @@ export class BlueSlaver extends Enemy {
         const lastMove = this.history[this.history.length - 1];
 
         if (roll < 40 && lastMove !== 'rake') {
-            this.setNextMove({ id: 'rake', type: IntentType.Attack, value: 7, name: 'レーキ', statusEffects: [{ type: 'weak', value: 1 }], effect: (self, player) => player.addStatus('weak', 1) });
+            this.setNextMove({ id: 'rake', type: IntentType.Attack, value: 7, name: 'レーキ', effect: (self, player) => player.addStatus('weak', 1) });
         } else {
             this.setNextMove({ id: 'stab', type: IntentType.Attack, value: 12, name: '突き' });
         }

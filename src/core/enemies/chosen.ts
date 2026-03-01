@@ -23,7 +23,7 @@ export class Chosen extends Enemy {
                 else this.setNextMove({ type: IntentType.Attack, value: 18, name: '強攻撃' });
             } else {
                 if (rand < 0.5) {
-                    this.setNextMove({ type: IntentType.AttackDebuff, value: 10, name: '弱体化', statuses: [{ id: 'vulnerable', value: 2 }] });
+                    this.setNextMove({ type: IntentType.AttackDebuff, value: 10, name: '弱体化', effect: (self, player) => player.addStatus('vulnerable', 2) });
                 } else {
                     this.setNextMove({
                         type: IntentType.Debuff, value: 0, name: 'ドレイン',

@@ -13,7 +13,7 @@ export class Snecko extends Enemy {
             this.setNextMove({ type: IntentType.Debuff, value: 0, name: '混乱の凝視', effect: (e, p) => p.addStatus('confusion', 1) });
         } else {
             if (Math.random() < 0.4) {
-                this.setNextMove({ type: IntentType.AttackDebuff, value: 8, name: 'テイルウィップ', statuses: [{ id: 'vulnerable', value: 2 }, { id: 'weak', value: 2 }] });
+                this.setNextMove({ type: IntentType.AttackDebuff, value: 8, name: 'テイルウィップ', effect: (self, player) => { player.addStatus('vulnerable', 2); player.addStatus('weak', 2); } });
             } else {
                 this.setNextMove({ type: IntentType.Attack, value: 15, name: '噛みつき' });
             }

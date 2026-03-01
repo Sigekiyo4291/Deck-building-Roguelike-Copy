@@ -87,7 +87,7 @@ export class Guardian extends Enemy {
     }
 
     // プレイヤーがアタックカードを使用した際のシャープハイドダメージ
-    onPlayerPlayCard(card, player, engine) {
+    onPlayerPlayCard(card: any, player?: any, engine?: any) {
         if (this.mode === 'defensive' && card.type === 'attack') {
             const sharpHideVal = this.getStatusValue('sharp_hide');
             if (sharpHideVal > 0) {
@@ -146,7 +146,6 @@ export class Guardian extends Enemy {
                 id: 'vent',
                 type: IntentType.Debuff,
                 name: '蒸気解放',
-                statusEffects: [{ type: 'weak', value: 2 }, { type: 'vulnerable', value: 2 }],
                 effect: (self, player) => {
                     player.addStatus('weak', 2);
                     player.addStatus('vulnerable', 2);

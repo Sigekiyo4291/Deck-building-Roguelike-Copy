@@ -1,4 +1,4 @@
-import { IntentType } from './intent';
+import { IntentType, EnemyMove } from './intent';
 import { CardLibrary } from './card';
 import { RelicLibrary } from './relic';
 
@@ -405,21 +405,21 @@ export class Entity {
 }
 
 export class Enemy extends Entity {
-  nextMove: any;
+  nextMove: EnemyMove | null;
 
   constructor(name, hp, sprite) {
     super(name, hp, sprite);
     this.nextMove = null;
   }
 
-  setNextMove(move) {
+  setNextMove(move: EnemyMove) {
     this.nextMove = move;
   }
 
   decideNextMove(player?: any) {
     // デフォルト行動
     const damage = 5 + Math.floor(Math.random() * 5);
-    this.setNextMove({ type: IntentType.Attack, value: damage });
+    this.setNextMove({ type: IntentType.Attack, value: damage, name: '攻撃' });
   }
 }
 

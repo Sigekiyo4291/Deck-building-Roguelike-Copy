@@ -14,10 +14,10 @@ export class FatGremlin extends Enemy {
             type: IntentType.AttackDebuff,
             value: 4,
             name: 'スマッシュ',
-            statuses: [
-                { id: 'weak', value: 1 },
-                { id: 'vulnerable', value: 1 }
-            ]
+            effect: (self, player) => {
+                player.addStatus('weak', 1);
+                player.addStatus('vulnerable', 1);
+            }
         });
     }
 }

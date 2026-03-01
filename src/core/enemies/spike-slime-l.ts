@@ -53,7 +53,6 @@ export class SpikeSlimeL extends Enemy {
                 id: 'lick',
                 type: IntentType.Debuff,
                 name: '舐める',
-                statusEffects: [{ type: 'vulnerable', value: 2 }],
                 effect: (self, player) => player.addStatus('vulnerable', 2)
             });
         } else {
@@ -70,6 +69,6 @@ export class SpikeSlimeL extends Enemy {
                 }
             });
         }
-        this.history.push(this.nextMove.id);
+        this.history.push(this.nextMove!.id as string);
     }
 }

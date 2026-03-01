@@ -26,7 +26,7 @@ export class Mystic extends Enemy {
         }
 
         if (Math.random() < 0.6) {
-            this.setNextMove({ type: IntentType.AttackDebuff, value: 8, name: '弱体化', statuses: [{ id: 'frail', value: 2 }] });
+            this.setNextMove({ type: IntentType.AttackDebuff, value: 8, name: '弱体化', effect: (self, player) => player.addStatus('frail', 2) });
         } else {
             this.setNextMove({
                 type: IntentType.Buff, value: 0, name: 'バフ', effect: (e, p, eng) => {

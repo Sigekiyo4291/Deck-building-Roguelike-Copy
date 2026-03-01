@@ -13,3 +13,12 @@ export enum IntentType {
     Escape = 'escape',
     Unknown = 'unknown'
 }
+
+export interface EnemyMove {
+    id?: string;
+    type: IntentType;
+    name: string;
+    value?: number;
+    times?: number;
+    effect?: (self: any, player: any, engine: any) => void;
+}

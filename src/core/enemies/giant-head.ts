@@ -9,7 +9,7 @@ export class GiantHead extends Enemy {
     decideNextMove() {
         this.turnCount++;
         if (this.turnCount <= 4) {
-            this.setNextMove({ type: IntentType.AttackDebuff, value: 13, name: 'カウントダウン', statuses: [{ id: 'weak', value: 1 }] });
+            this.setNextMove({ type: IntentType.AttackDebuff, value: 13, name: 'カウントダウン', effect: (self, player) => player.addStatus('weak', 1) });
         } else {
             const damage = 30 + (this.turnCount - 5) * 10;
             this.setNextMove({ type: IntentType.Attack, value: damage, name: 'It is Time' });

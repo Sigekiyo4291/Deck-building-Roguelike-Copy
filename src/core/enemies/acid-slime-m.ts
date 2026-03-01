@@ -22,7 +22,6 @@ export class AcidSlimeM extends Enemy {
                 id: 'lick',
                 type: IntentType.Debuff,
                 name: '舐める',
-                statusEffects: [{ type: 'weak', value: 1 }],
                 effect: (self, player) => player.addStatus('weak', 1)
             });
         } else if (roll < 60) {

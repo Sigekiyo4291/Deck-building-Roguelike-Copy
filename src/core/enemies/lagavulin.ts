@@ -56,7 +56,7 @@ export class Lagavulin extends Enemy {
             this.setNextMove({ id: 'attack', type: IntentType.Attack, value: 18, name: '攻撃' });
         } else {
             this.setNextMove({
-                id: 'siphon', type: IntentType.Debuff, name: '魂抽出', statusEffects: [{ type: 'strength', value: -1 }, { type: 'dexterity', value: -1 }], effect: (self, player) => {
+                id: 'siphon', type: IntentType.Debuff, name: '魂抽出', effect: (self, player) => {
                     player.addStatus('strength', -1);
                     player.addStatus('dexterity', -1);
                 }

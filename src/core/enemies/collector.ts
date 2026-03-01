@@ -34,7 +34,16 @@ export class Collector extends Enemy {
         }
 
         if (this.turnCount === 4) {
-            this.setNextMove({ type: IntentType.Debuff, value: 0, name: 'お前はわたしの物だ！！', statuses: [{ id: 'weak', value: 3 }, { id: 'vulnerable', value: 3 }, { id: 'frail', value: 3 }] });
+            this.setNextMove({
+                type: IntentType.Debuff,
+                value: 0,
+                name: 'お前はわたしの物だ！！',
+                effect: (self, player) => {
+                    player.addStatus('weak', 3);
+                    player.addStatus('vulnerable', 3);
+                    player.addStatus('frail', 3);
+                }
+            });
             return;
         }
 

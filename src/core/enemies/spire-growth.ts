@@ -10,7 +10,7 @@ export class SpireGrowth extends Enemy {
         if (Math.random() < 0.5) {
             this.setNextMove({ type: IntentType.Attack, value: 22, name: 'スマッシュ' });
         } else {
-            this.setNextMove({ type: IntentType.AttackDebuff, value: 16, name: '締め付け', statuses: [{ id: 'constricted', value: 10 }] });
+            this.setNextMove({ type: IntentType.AttackDebuff, value: 16, name: '締め付け', effect: (self, player) => player.addStatus('constricted', 10) });
         }
     }
 }

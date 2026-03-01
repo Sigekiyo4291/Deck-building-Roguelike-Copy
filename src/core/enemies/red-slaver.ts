@@ -24,14 +24,13 @@ export class RedSlaver extends Enemy {
                 id: 'entangle',
                 type: IntentType.Debuff,
                 name: '絡めとる',
-                statusEffects: [{ type: 'entangled', value: 1 }],
                 effect: (self, player) => {
                     player.addStatus('entangled', 1);
                     this.hasEntangled = true;
                 }
             });
         } else if (roll < 50 && lastMove !== 'scrape') {
-            this.setNextMove({ id: 'scrape', type: IntentType.Attack, value: 8, name: '引っ掻き', statusEffects: [{ type: 'vulnerable', value: 1 }], effect: (self, player) => player.addStatus('vulnerable', 1) });
+            this.setNextMove({ id: 'scrape', type: IntentType.Attack, value: 8, name: '引っ掻き', effect: (self, player) => player.addStatus('vulnerable', 1) });
         } else {
             this.setNextMove({ id: 'stab', type: IntentType.Attack, value: 13, name: '突き' });
         }

@@ -36,7 +36,6 @@ export class Hexaghost extends Enemy {
                         type: IntentType.Attack,
                         value: 6,
                         name: 'シアー',
-                        statusEffects: [{ type: 'burn', value: 1 }],
                         effect: (self, p, engine) => {
                             if (engine && engine.addCardsToDiscard) {
                                 engine.addCardsToDiscard('BURN', 1, this.isInfernoUsed);
@@ -66,7 +65,6 @@ export class Hexaghost extends Enemy {
                         value: 2,
                         times: 6,
                         name: 'インフェルノ',
-                        statusEffects: [{ type: 'burn', value: 3 }],
                         effect: (self, p, engine) => {
                             // 1. 強化済み火傷3枚を捨て札に追加
                             if (engine && engine.addCardsToDiscard) {

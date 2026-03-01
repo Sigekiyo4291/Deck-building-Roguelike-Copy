@@ -43,14 +43,12 @@ export class Louse extends Enemy {
                 this.setNextMove({
                     type: IntentType.Buff,
                     name: '成長',
-                    statusEffects: [{ type: 'strength', value: 3 }],
                     effect: (self) => self.addStatus('strength', 3)
                 });
             } else {
                 this.setNextMove({
                     type: IntentType.Debuff,
                     name: 'スパイトウェブ',
-                    statusEffects: [{ type: 'weak', value: 2 }],
                     effect: (self, player) => player.addStatus('weak', 2)
                 });
             }

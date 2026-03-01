@@ -2098,19 +2098,22 @@ class Game {
               hasAttack = true;
             }
 
-            if (move.type === IntentType.Defend || move.type === IntentType.AttackDefend) {
+            if (move.type === IntentType.Defend || move.type === IntentType.AttackDefend ||
+              move.type === IntentType.DefendDebuff || move.type === IntentType.DefendBuff || move.type === IntentType.DefendHeal) {
               icons.push('🛡️');
               hasDefend = true;
             }
 
             // バフ判定: 元のタイプがbuff系、またはステータス効果にバフを含む
-            if (move.type === IntentType.Buff || move.type === IntentType.AttackBuff || nextMoveStatusEffects.some(s => isBuff(s.type, s.value))) {
+            if (move.type === IntentType.Buff || move.type === IntentType.AttackBuff || move.type === IntentType.DefendBuff ||
+              nextMoveStatusEffects.some(s => isBuff(s.type, s.value))) {
               icons.push('💪');
               hasBuff = true;
             }
 
             // デバフ判定: 元のタイプがdebuff系、またはステータス効果にデバフを含む（burn カード追加も含む）
-            if (move.type === IntentType.Debuff || move.type === IntentType.AttackDebuff || nextMoveStatusEffects.some(s => isDebuff(s.type, s.value) || s.type === 'burn')) {
+            if (move.type === IntentType.Debuff || move.type === IntentType.AttackDebuff || move.type === IntentType.DefendDebuff ||
+              nextMoveStatusEffects.some(s => isDebuff(s.type, s.value) || s.type === 'burn')) {
               icons.push('📉');
               hasDebuff = true;
             }
@@ -2125,7 +2128,7 @@ class Game {
               icons.push('💫');
             }
 
-            if (move.type === IntentType.Heal || move.type === IntentType.AttackHeal) {
+            if (move.type === IntentType.Heal || move.type === IntentType.AttackHeal || move.type === IntentType.DefendHeal) {
               icons.push('💖');
             }
 
@@ -2146,7 +2149,7 @@ class Game {
               if (hasDebuff) parts.push('デバフ');
               if (hasDefend) parts.push('防御');
               if (hasAttack) parts.push('攻撃');
-              if (move.type === IntentType.Heal || move.type === IntentType.AttackHeal) parts.push('回復');
+              if (move.type === IntentType.Heal || move.type === IntentType.AttackHeal || move.type === IntentType.DefendHeal) parts.push('回復');
 
               if (parts.length > 0) {
                 intentText = `敵は${parts.join('・')}予定`;

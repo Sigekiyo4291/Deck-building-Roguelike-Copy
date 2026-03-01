@@ -33,7 +33,7 @@ export class BronzeAutomaton extends Enemy {
         if (routine === 0 || routine === 2) {
             this.setNextMove({ type: IntentType.Attack, value: 7, times: 2, name: '連撃' });
         } else if (routine === 1 || routine === 3) {
-            this.setNextMove({ type: IntentType.Defend, name: '防御', effect: e => { e.addBlock(9); e.addStatus('strength', 3); } });
+            this.setNextMove({ type: IntentType.DefendBuff, name: '防御', effect: e => { e.addBlock(9); e.addStatus('strength', 3); } });
         } else if (routine === 4) {
             this.setNextMove({ type: IntentType.Attack, value: 45, name: 'ハイパービーム' });
         } else {

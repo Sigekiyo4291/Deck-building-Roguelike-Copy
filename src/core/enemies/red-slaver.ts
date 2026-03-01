@@ -30,10 +30,12 @@ export class RedSlaver extends Enemy {
                 }
             });
         } else if (roll < 50 && lastMove !== 'scrape') {
-            this.setNextMove({ id: 'scrape', type: IntentType.Attack, value: 8, name: '引っ掻き', effect: (self, player) => player.addStatus('vulnerable', 1) });
+            this.setNextMove({ id: 'scrape', type: IntentType.AttackDebuff, value: 8, name: '引っ掻き', effect: (self, player) => player.addStatus('vulnerable', 1) });
         } else {
             this.setNextMove({ id: 'stab', type: IntentType.Attack, value: 13, name: '突き' });
         }
-        this.history.push(this.nextMove.id);
+        if (this.nextMove) {
+            this.history.push(this.nextMove.id);
+        }
     }
 }

@@ -20,19 +20,21 @@ export class GremlinNob extends Enemy {
                 type: IntentType.Buff,
                 name: '激怒',
                 effect: (self) => {
-                    this.addStatus('enrage_enemy', 2);
+                    self.addStatus('enrage_enemy', 2);
                     console.log('Gremlin Nob is enraged! Skill play will buff him!');
                 }
             });
         } else {
             const roll = Math.random() * 100;
             if (roll < 33) {
-                this.setNextMove({ id: 'bash', type: IntentType.Attack, value: 6, name: 'スカルバッシュ', effect: (self, player) => player.addStatus('weak', 2) });
+                this.setNextMove({ id: 'bash', type: IntentType.AttackDebuff, value: 6, name: 'スカルバッシュ', effect: (self, player) => player.addStatus('weak', 2) });
             } else {
                 this.setNextMove({ id: 'rush', type: IntentType.Attack, value: 14, name: 'ラッシュ' });
             }
         }
-        this.history.push(this.nextMove.id);
+        if (this.nextMove) {
+            this.history.push(this.nextMove.id);
+        }
     }
 
     onPlayerPlayCard(card) {

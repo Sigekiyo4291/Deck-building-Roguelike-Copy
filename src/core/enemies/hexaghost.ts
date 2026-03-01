@@ -50,7 +50,7 @@ export class Hexaghost extends Enemy {
                 case 3: // 発火
                     move = {
                         id: 'ignite',
-                        type: IntentType.Buff,
+                        type: IntentType.DefendBuff,
                         name: '発火',
                         effect: (self) => {
                             self.addStatus('strength', 2);

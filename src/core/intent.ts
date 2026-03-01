@@ -11,6 +11,9 @@ export enum IntentType {
     Stun = 'stun',
     Heal = 'heal',
     Escape = 'escape',
+    DefendDebuff = 'defend_debuff',
+    DefendBuff = 'defend_buff',
+    DefendHeal = 'defend_heal',
     Unknown = 'unknown'
 }
 

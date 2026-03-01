@@ -104,7 +104,7 @@ export class Guardian extends Enemy {
                 // 防御態勢1ターン目: 通常攻撃9ダメージ
                 this.setNextMove({
                     id: 'normal_attack',
-                    type: IntentType.Attack,
+                    type: IntentType.AttackBuff,
                     value: 9,
                     name: '攻撃',
                     effect: (self) => {
@@ -118,7 +118,7 @@ export class Guardian extends Enemy {
                 // 防御態勢2ターン目: ツインスラム → 攻撃態勢へ移行
                 this.setNextMove({
                     id: 'twin_slam',
-                    type: IntentType.Attack,
+                    type: IntentType.AttackBuff,
                     value: 8,
                     times: 2,
                     name: 'ツインスラム',
@@ -138,7 +138,7 @@ export class Guardian extends Enemy {
         if (m === 0) {
             this.setNextMove({ id: 'whirl', type: IntentType.Attack, value: 5, times: 4, name: '旋風刃' });
         } else if (m === 1) {
-            this.setNextMove({ id: 'charge', type: IntentType.Buff, name: 'チャージ', effect: (self) => self.addBlock(9) });
+            this.setNextMove({ id: 'charge', type: IntentType.Defend, name: 'チャージ', effect: (self) => self.addBlock(9) });
         } else if (m === 2) {
             this.setNextMove({ id: 'bash', type: IntentType.Attack, value: 32, name: 'フィアースバッシュ' });
         } else {

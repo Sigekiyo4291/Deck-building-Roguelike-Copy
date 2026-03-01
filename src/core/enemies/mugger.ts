@@ -5,7 +5,7 @@ import { Enemy } from '../entity';
 export class Mugger extends Enemy {
     turnCount: number = 0;
     constructor() {
-        super('強盗', 48 + Math.floor(Math.random() * 5), 'assets/images/characters/enemies/slime.png');
+        super('強盗', 48 + Math.floor(Math.random() * 5), 'assets/images/enemies/slime.png');
     }
     onBattleStart() {
         this.addStatus('thievery', 15);

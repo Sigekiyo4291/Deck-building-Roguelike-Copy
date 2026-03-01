@@ -8,7 +8,7 @@ export class GremlinWizard extends Enemy {
     turnCount: number = 0;
 
     constructor() {
-        super('グレムリンウィザード', 21 + Math.floor(Math.random() * 5), 'assets/images/characters/enemies/slime.png');
+        super('グレムリンウィザード', 21 + Math.floor(Math.random() * 5), 'assets/images/enemies/slime.png');
     }
 
     decideNextMove() {

@@ -5,7 +5,7 @@ import { Enemy } from '../entity';
 export class Maw extends Enemy {
     turnCount: number = 0;
     constructor() {
-        super('モー', 300, 'assets/images/characters/enemies/slime.png');
+        super('モー', 300, 'assets/images/enemies/slime.png');
     }
     decideNextMove() {
         this.turnCount++;

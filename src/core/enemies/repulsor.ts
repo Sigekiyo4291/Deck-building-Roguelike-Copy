@@ -4,7 +4,7 @@ import { Enemy } from '../entity';
 // リパルサー
 export class Repulsor extends Enemy {
     constructor() {
-        super('リパルサー', 35, 'assets/images/characters/enemies/slime.png');
+        super('リパルサー', 35, 'assets/images/enemies/slime.png');
     }
     decideNextMove() {
         if (Math.random() < 0.5) this.setNextMove({ type: IntentType.Attack, value: 11, name: '攻撃' });

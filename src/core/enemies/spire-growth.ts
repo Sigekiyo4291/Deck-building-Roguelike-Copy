@@ -4,7 +4,7 @@ import { Enemy } from '../entity';
 // 塔で成長するもの
 export class SpireGrowth extends Enemy {
     constructor() {
-        super('塔で成長するもの', 170, 'assets/images/characters/enemies/slime.png');
+        super('塔で成長するもの', 170, 'assets/images/enemies/slime.png');
     }
     decideNextMove() {
         if (Math.random() < 0.5) {

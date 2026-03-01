@@ -6,7 +6,7 @@ import { Enemy } from '../entity';
  */
 export class SneakyGremlin extends Enemy {
     constructor() {
-        super('スニーキーグレムリン', 10 + Math.floor(Math.random() * 5), 'assets/images/characters/enemies/slime.png');
+        super('スニーキーグレムリン', 10 + Math.floor(Math.random() * 5), 'assets/images/enemies/slime.png');
     }
 
     decideNextMove() {

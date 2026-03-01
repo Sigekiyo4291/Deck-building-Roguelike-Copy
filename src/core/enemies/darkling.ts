@@ -6,7 +6,7 @@ export class Darkling extends Enemy {
     reviveTimer: number = -1;
 
     constructor() {
-        super('ダークリング', 48, 'assets/images/characters/enemies/slime.png');
+        super('ダークリング', 48, 'assets/images/enemies/slime.png');
     }
 
     isDead(): boolean {

@@ -6,7 +6,7 @@ import { Enemy } from '../entity';
  */
 export class ShieldGremlin extends Enemy {
     constructor() {
-        super('シールドグレムリン', 12 + Math.floor(Math.random() * 4), 'assets/images/characters/enemies/slime.png');
+        super('シールドグレムリン', 12 + Math.floor(Math.random() * 4), 'assets/images/enemies/slime.png');
     }
 
     decideNextMove(player?: any) {

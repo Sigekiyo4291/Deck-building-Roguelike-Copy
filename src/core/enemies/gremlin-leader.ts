@@ -9,7 +9,7 @@ import { FatGremlin } from './fat-gremlin';
 
 export class GremlinLeader extends Enemy {
     constructor() {
-        super('グレムリンリーダー', 140 + Math.floor(Math.random() * 8), 'assets/images/characters/enemies/slime.png');
+        super('グレムリンリーダー', 140 + Math.floor(Math.random() * 8), 'assets/images/enemies/slime.png');
     }
     decideNextMove(player?: any, engine?: any) {
         let minionsCount = 0;

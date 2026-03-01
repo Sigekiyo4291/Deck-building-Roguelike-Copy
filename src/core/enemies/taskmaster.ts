@@ -4,7 +4,7 @@ import { Enemy } from '../entity';
 // タスクマスター
 export class Taskmaster extends Enemy {
     constructor() {
-        super('タスクマスター', 54, 'assets/images/characters/enemies/slime.png');
+        super('タスクマスター', 54, 'assets/images/enemies/slime.png');
     }
     decideNextMove() {
         if (Math.random() < 0.6) {

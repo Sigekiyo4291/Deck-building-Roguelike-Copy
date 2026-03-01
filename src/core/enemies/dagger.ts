@@ -4,7 +4,7 @@ import { Enemy } from '../entity';
 // ダガー
 export class Dagger extends Enemy {
     turnCount: number = 0;
-    constructor() { super('ダガー', 25, 'assets/images/characters/enemies/slime.png'); }
+    constructor() { super('ダガー', 25, 'assets/images/enemies/slime.png'); }
     decideNextMove() {
         this.turnCount++;
         // 1ターン目: 9ダメージ, 2ターン目: 自爆 (25ダメージ)

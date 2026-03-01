@@ -4,7 +4,7 @@ import { Enemy } from '../entity';
 // タイムイーター
 export class TimeEater extends Enemy {
     phase: number = 1;
-    constructor() { super('タイムイーター', 480, 'assets/images/characters/enemies/slime.png'); }
+    constructor() { super('タイムイーター', 480, 'assets/images/enemies/slime.png'); }
     onBattleStart() { this.addStatus('time_warp', 12); }
     decideNextMove() {
         if (this.phase === 1 && this.hp <= this.maxHp / 2) {

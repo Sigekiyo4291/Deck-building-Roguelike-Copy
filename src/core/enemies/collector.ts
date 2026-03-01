@@ -7,7 +7,7 @@ import { TorchHead } from './torch-head';
 export class Collector extends Enemy {
     turnCount: number = 0;
     constructor() {
-        super('コレクター', 282, 'assets/images/characters/enemies/slime.png');
+        super('コレクター', 282, 'assets/images/enemies/slime.png');
     }
     decideNextMove(player?: any, engine?: any) {
         this.turnCount++;

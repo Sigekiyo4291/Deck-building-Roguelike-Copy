@@ -7,7 +7,7 @@ export class BronzeOrb extends Enemy {
     hasStolen: boolean = false;
 
     constructor() {
-        super('オーブ', 58, 'assets/images/characters/enemies/slime.png');
+        super('オーブ', 58, 'assets/images/enemies/slime.png');
     }
     decideNextMove(player?: any, engine?: any) {
         if (!this.hasStolen && Math.random() < 0.75) {

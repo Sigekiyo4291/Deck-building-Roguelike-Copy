@@ -5,7 +5,7 @@ import { Enemy } from '../entity';
 export class BookOfStabbing extends Enemy {
     attackTimes: number = 1;
     constructor() {
-        super('刺創の本', 160, 'assets/images/characters/enemies/slime.png');
+        super('刺創の本', 160, 'assets/images/enemies/slime.png');
     }
     onBattleStart() {
         this.addStatus('painful_stabs', 1);

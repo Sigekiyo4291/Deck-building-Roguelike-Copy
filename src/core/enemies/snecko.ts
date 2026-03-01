@@ -5,7 +5,7 @@ import { Enemy } from '../entity';
 export class Snecko extends Enemy {
     turnCount: number = 0;
     constructor() {
-        super('スネッコ', 114 + Math.floor(Math.random() * 7), 'assets/images/characters/enemies/slime.png');
+        super('スネッコ', 114 + Math.floor(Math.random() * 7), 'assets/images/enemies/slime.png');
     }
     decideNextMove() {
         this.turnCount++;

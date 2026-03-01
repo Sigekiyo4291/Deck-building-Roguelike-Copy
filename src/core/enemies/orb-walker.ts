@@ -4,7 +4,7 @@ import { Enemy } from '../entity';
 // オーブウォーカー
 export class OrbWalker extends Enemy {
     constructor() {
-        super('オーブウォーカー', 90, 'assets/images/characters/enemies/slime.png');
+        super('オーブウォーカー', 90, 'assets/images/enemies/slime.png');
     }
     decideNextMove() {
         if (Math.random() < 0.6) {

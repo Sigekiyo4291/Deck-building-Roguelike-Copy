@@ -6,7 +6,7 @@ import { Enemy } from '../entity';
  */
 export class FatGremlin extends Enemy {
     constructor() {
-        super('太っちょグレムリン', 13 + Math.floor(Math.random() * 5), 'assets/images/characters/enemies/slime.png');
+        super('太っちょグレムリン', 13 + Math.floor(Math.random() * 5), 'assets/images/enemies/slime.png');
     }
 
     decideNextMove() {

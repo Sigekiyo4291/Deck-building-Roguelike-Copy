@@ -6,7 +6,7 @@ import { Enemy } from '../entity';
  */
 export class MadGremlin extends Enemy {
     constructor() {
-        super('マッドグレムリン', 20 + Math.floor(Math.random() * 5), 'assets/images/characters/enemies/slime.png');
+        super('マッドグレムリン', 20 + Math.floor(Math.random() * 5), 'assets/images/enemies/slime.png');
     }
 
     onBattleStart() {

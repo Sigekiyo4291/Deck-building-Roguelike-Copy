@@ -4,7 +4,7 @@ import { Enemy } from '../entity';
 // ネメシス
 export class Nemesis extends Enemy {
     turnCount: number = 0;
-    constructor() { super('ネメシス', 200, 'assets/images/characters/enemies/slime.png'); }
+    constructor() { super('ネメシス', 200, 'assets/images/enemies/slime.png'); }
     updateStatusAtTurnStart() {
         super.updateStatusAtTurnStart();
         this.turnCount++;

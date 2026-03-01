@@ -6,7 +6,7 @@ import { Dagger } from './dagger';
 // レプトマンサー
 export class Reptomancer extends Enemy {
     turnCount: number = 0;
-    constructor() { super('レプトマンサー', 200, 'assets/images/characters/enemies/slime.png'); }
+    constructor() { super('レプトマンサー', 200, 'assets/images/enemies/slime.png'); }
     decideNextMove(player?: any, engine?: any) {
         this.turnCount++;
         let daggersCount = 0;

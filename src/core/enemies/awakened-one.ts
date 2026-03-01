@@ -4,7 +4,7 @@ import { Enemy } from '../entity';
 // 目覚めし者
 export class AwakenedOne extends Enemy {
     phase: number = 1;
-    constructor() { super('目覚めし者', 300, 'assets/images/characters/enemies/slime.png'); }
+    constructor() { super('目覚めし者', 300, 'assets/images/enemies/slime.png'); }
     onBattleStart() { this.addStatus('curiosity', 2); }
     decideNextMove() {
         if (Math.random() < 0.5) this.setNextMove({ type: IntentType.Attack, value: 20, name: '強攻撃' });

@@ -4,7 +4,7 @@ import { Enemy } from '../entity';
 // ジャイアントヘッド
 export class GiantHead extends Enemy {
     turnCount: number = 0;
-    constructor() { super('ジャイアントヘッド', 500, 'assets/images/characters/enemies/slime.png'); }
+    constructor() { super('ジャイアントヘッド', 500, 'assets/images/enemies/slime.png'); }
     onBattleStart() { this.addStatus('slow', 1); }
     decideNextMove() {
         this.turnCount++;

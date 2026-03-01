@@ -3,7 +3,7 @@ import { Enemy } from '../entity';
 
 // ドヌー
 export class Donu extends Enemy {
-    constructor() { super('ドヌー', 250, 'assets/images/characters/enemies/slime.png'); }
+    constructor() { super('ドヌー', 250, 'assets/images/enemies/slime.png'); }
     onBattleStart() { this.addStatus('artifact', 2); }
     decideNextMove() {
         if (Math.random() < 0.5) this.setNextMove({ type: IntentType.Attack, value: 12, times: 2, name: 'ビーム' });

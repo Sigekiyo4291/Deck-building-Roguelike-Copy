@@ -4,7 +4,7 @@ import { Enemy } from '../entity';
 // ミスティック
 export class Mystic extends Enemy {
     constructor() {
-        super('ミスティック', 48 + Math.floor(Math.random() * 9), 'assets/images/characters/enemies/slime.png');
+        super('ミスティック', 48 + Math.floor(Math.random() * 9), 'assets/images/enemies/slime.png');
     }
     decideNextMove(player?: any, engine?: any) {
         let needsHeal = false;

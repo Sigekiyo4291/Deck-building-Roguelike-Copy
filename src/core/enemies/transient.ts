@@ -6,7 +6,7 @@ export class Transient extends Enemy {
     turnCount: number = 0;
     baseDamage: number = 30;
     constructor() {
-        super('消えゆくもの', 999, 'assets/images/characters/enemies/slime.png');
+        super('消えゆくもの', 999, 'assets/images/enemies/slime.png');
     }
     onBattleStart() {
         this.addStatus('fading', 6); // 1ターン目で次とカウントされるため

@@ -8,7 +8,7 @@ export class SphericGuardian extends Enemy {
     turnCount: number = 0;
 
     constructor() {
-        super('スフィアガーディアン', 20, 'assets/images/characters/enemies/slime.png');
+        super('スフィアガーディアン', 20, 'assets/images/enemies/slime.png');
     }
 
     onBattleStart() {

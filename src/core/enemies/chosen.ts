@@ -5,7 +5,7 @@ import { Enemy } from '../entity';
 export class Chosen extends Enemy {
     turnCount: number = 0;
     constructor() {
-        super('選ばれし者', 95 + Math.floor(Math.random() * 5), 'assets/images/characters/enemies/slime.png');
+        super('選ばれし者', 95 + Math.floor(Math.random() * 5), 'assets/images/enemies/slime.png');
     }
     decideNextMove() {
         this.turnCount++;

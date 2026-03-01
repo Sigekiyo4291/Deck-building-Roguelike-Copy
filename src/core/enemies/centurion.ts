@@ -4,7 +4,7 @@ import { Enemy } from '../entity';
 // センチュリオン
 export class Centurion extends Enemy {
     constructor() {
-        super('センチュリオン', 76 + Math.floor(Math.random() * 5), 'assets/images/characters/enemies/slime.png');
+        super('センチュリオン', 76 + Math.floor(Math.random() * 5), 'assets/images/enemies/slime.png');
     }
     decideNextMove(player?: any, engine?: any) {
         const mystic = engine?.enemies?.find(e => e.name === 'ミスティック' && !e.isDead());

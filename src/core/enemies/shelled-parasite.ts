@@ -5,7 +5,7 @@ import { Enemy } from '../entity';
 export class ShelledParasite extends Enemy {
     stunned: boolean = false;
     constructor() {
-        super('ヤドカリパラサイト', 68 + Math.floor(Math.random() * 5), 'assets/images/characters/enemies/slime.png');
+        super('ヤドカリパラサイト', 68 + Math.floor(Math.random() * 5), 'assets/images/enemies/slime.png');
     }
     onBattleStart() {
         this.addStatus('plated_armor', 14);

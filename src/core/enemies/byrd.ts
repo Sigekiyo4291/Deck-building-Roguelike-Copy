@@ -5,7 +5,7 @@ import { Enemy } from '../entity';
 export class Byrd extends Enemy {
     flied: boolean = true;
     constructor() {
-        super('ビャード', 25 + Math.floor(Math.random() * 7), 'assets/images/characters/enemies/slime.png');
+        super('ビャード', 25 + Math.floor(Math.random() * 7), 'assets/images/enemies/slime.png');
     }
     onBattleStart() {
         this.addStatus('flight', 3);

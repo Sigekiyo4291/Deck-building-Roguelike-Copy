@@ -5,7 +5,7 @@ import { Enemy } from '../entity';
 export class Exploder extends Enemy {
     turnCount: number = 0;
     constructor() {
-        super('エクスプローダー', 30, 'assets/images/characters/enemies/slime.png');
+        super('エクスプローダー', 30, 'assets/images/enemies/slime.png');
     }
     decideNextMove() {
         this.turnCount++;

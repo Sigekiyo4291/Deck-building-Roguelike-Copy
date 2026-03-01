@@ -5,7 +5,7 @@ import { Enemy } from '../entity';
 export class Champ extends Enemy {
     phase: number = 1;
     constructor() {
-        super('チャンプ', 420, 'assets/images/characters/enemies/slime.png');
+        super('チャンプ', 420, 'assets/images/enemies/slime.png');
     }
     decideNextMove() {
         if (this.phase === 1 && this.hp <= this.maxHp / 2) {

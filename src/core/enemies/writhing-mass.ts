@@ -3,7 +3,7 @@ import { Enemy } from '../entity';
 
 // もがき蠢く塊
 export class WrithingMass extends Enemy {
-    constructor() { super('もがき蠢く塊', 160, 'assets/images/characters/enemies/slime.png'); }
+    constructor() { super('もがき蠢く塊', 160, 'assets/images/enemies/slime.png'); }
     decideNextMove() {
         this.randomizeMove();
     }

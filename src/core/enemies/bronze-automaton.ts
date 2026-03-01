@@ -7,7 +7,7 @@ import { BronzeOrb } from './bronze-orb';
 export class BronzeAutomaton extends Enemy {
     turnCount: number = 0;
     constructor() {
-        super('ブロンズ・オートマトン', 300, 'assets/images/characters/enemies/slime.png');
+        super('ブロンズ・オートマトン', 300, 'assets/images/enemies/slime.png');
     }
     onBattleStart() {
         this.addStatus('artifact', 3);

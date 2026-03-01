@@ -44,10 +44,11 @@ export class Darkling extends Enemy {
             this.setNextMove({ type: IntentType.Buff, value: 0, name: '復活待機' });
             return;
         } else if (this.reviveTimer === 0) {
-            this.reviveTimer = -1;
             this.setNextMove({
                 type: IntentType.Heal, value: 0, name: '復活', effect: (e) => {
-                    e.heal(Math.floor(e.maxHp / 2));
+                    const dark = e as Darkling;
+                    dark.reviveTimer = -1;
+                    dark.heal(Math.floor(dark.maxHp / 2));
                 }
             });
             return;

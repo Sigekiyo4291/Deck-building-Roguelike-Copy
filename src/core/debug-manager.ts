@@ -59,11 +59,31 @@ export class DebugManager {
                     <button class="debug-tab" data-tab="potion">Potion</button>
                 </div>
                 <div class="debug-content" id="debug-content-battle" style="display: block;">
-                    <h3>Start Battle</h3>
+                    <div class="debug-control-group">
+                        <h3>Quick Battle Actions</h3>
+                        <button id="debug-win-battle-btn" class="debug-action-btn win">Win Battle</button>
+                    </div>
+
+                    <h3>Start Battle from Pool</h3>
+                    <div class="debug-row">
+                        <label>Act:</label>
+                        <select id="debug-act-select">
+                            <option value="1">Act 1</option>
+                            <option value="2">Act 2</option>
+                            <option value="3">Act 3</option>
+                        </select>
+                    </div>
+                    <div class="debug-actions-grid">
+                        <button id="debug-pool-weak-btn" class="debug-action-btn">Normal (Weak)</button>
+                        <button id="debug-pool-strong-btn" class="debug-action-btn">Normal (Strong)</button>
+                        <button id="debug-pool-elite-btn" class="debug-action-btn elite">Elite Battle</button>
+                    </div>
+
+                    <h3>Custom Battle</h3>
                     <div class="debug-list" id="debug-enemy-list"></div>
                     <div class="debug-actions">
                          <div id="debug-selected-enemies"></div>
-                         <button id="debug-start-battle-btn" class="debug-action-btn">Start Battle</button>
+                         <button id="debug-start-battle-btn" class="debug-action-btn">Start Custom Battle</button>
                     </div>
                 </div>
                 <div class="debug-content" id="debug-content-event" style="display: none;">
@@ -193,6 +213,13 @@ export class DebugManager {
 
         enemyClasses.forEach((enemyDef, index) => {
             const btn = document.createElement('button');
+            try {
+                // インスタンスを生成して実際の名前（日本語など）を取得
+                const tempInstance = new (enemyDef.cls as any)(...(enemyDef.args || []));
+                enemyDef.name = tempInstance.name;
+            } catch (e) {
+                console.warn(`Could not get name for ${enemyDef.name}`, e);
+            }
             btn.textContent = enemyDef.name;
             btn.className = 'debug-item-btn';
             btn.onclick = () => {
@@ -207,10 +234,34 @@ export class DebugManager {
                 alert('No enemies selected!');
                 return;
             }
-            const enemies = selectedEnemies.map(def => new def.cls(...(def.args || [])));
+            const enemies = selectedEnemies.map(def => new (def.cls as any)(...(def.args || [])));
             this.game.startDebugBattle(enemies);
             selectedEnemies = [];
             this.updateSelectedEnemies(selectedEnemies, selectedContainer);
+            this.toggleOverlay();
+        };
+
+        // Pool Battle Actions
+        const actSelect = document.getElementById('debug-act-select') as HTMLSelectElement;
+        document.getElementById('debug-pool-weak-btn').onclick = () => {
+            const act = parseInt(actSelect.value);
+            this.game.startDebugBattleFromPool(act, 'weak');
+            this.toggleOverlay();
+        };
+        document.getElementById('debug-pool-strong-btn').onclick = () => {
+            const act = parseInt(actSelect.value);
+            this.game.startDebugBattleFromPool(act, 'strong');
+            this.toggleOverlay();
+        };
+        document.getElementById('debug-pool-elite-btn').onclick = () => {
+            const act = parseInt(actSelect.value);
+            this.game.startDebugBattleFromPool(act, 'elite');
+            this.toggleOverlay();
+        };
+
+        // Win Battle Action
+        document.getElementById('debug-win-battle-btn').onclick = () => {
+            this.game.debugWinBattle();
             this.toggleOverlay();
         };
     }

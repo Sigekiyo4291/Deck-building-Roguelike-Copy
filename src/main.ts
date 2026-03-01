@@ -1260,36 +1260,12 @@ class Game {
   startBattle(type) {
     console.log(`Game.startBattle: type=${type}`);
     // 敵データ生成
-    let enemies = [];
-    this.isEliteBattle = (type === 'elite');
+    let enemies = this.getEncounterEnemies(this.currentAct, type as any);
+
+    this.isEliteBattle = (type === 'elite' || type === 'boss');
     this.isBossBattle = (type === 'boss');
     console.log(`Game.startBattle: isEliteBattle=${this.isEliteBattle}, isBossBattle=${this.isBossBattle}`);
     this.selectedEnemyIndex = 0; // ターゲットインデックスをリセット
-
-    if (type === 'boss') {
-      // マップ生成時に抽選されたボスを使用
-      const bossId = this.map.bossId;
-      const bossData = bossId ? BOSS_DATA[bossId] : null;
-
-      if (bossData) {
-        enemies = bossData.createEnemies();
-      } else {
-        // フォールバック
-        enemies = [new SlimeBoss()];
-      }
-    } else if (type === 'elite') {
-      const pool = ENCOUNTER_POOLS[this.currentAct]?.elite || ENCOUNTER_POOLS[1].elite;
-      enemies = selectWeightedEncounter(pool);
-    } else {
-      // 通常戦闘
-      const pools = ENCOUNTER_POOLS[this.currentAct] || ENCOUNTER_POOLS[1];
-      const weakThreshold = (this.currentAct === 1) ? 3 : 2;
-      if (this.battleCount < weakThreshold) {
-        enemies = selectWeightedEncounter(pools.weak);
-      } else {
-        enemies = selectWeightedEncounter(pools.strong);
-      }
-    }
 
     // ネオーの哀歌 (NEOW_LAMENT) 判定
     const neowLamentCount = this.player.relicCounters['neow_lament'] || 0;
@@ -1341,6 +1317,66 @@ class Game {
       this.audioManager.playBgm('battle');
     }
   }
+
+  // 抽選ロジックの共通化
+  getEncounterEnemies(act: number, type: 'weak' | 'strong' | 'elite' | 'boss'): Enemy[] {
+    let enemies: Enemy[] = [];
+    if (type === 'boss') {
+      // マップ生成時に抽選されたボスを使用
+      const bossId = this.map?.bossId || BOSS_DATA[Object.keys(BOSS_DATA)[0]].id;
+      const bossData = BOSS_DATA[bossId];
+
+      if (bossData) {
+        enemies = bossData.createEnemies();
+      } else {
+        // フォールバック
+        enemies = [new SlimeBoss()];
+      }
+    } else if (type === 'elite') {
+      const pool = ENCOUNTER_POOLS[act]?.elite || ENCOUNTER_POOLS[1].elite;
+      enemies = selectWeightedEncounter(pool);
+    } else {
+      // 通常戦闘
+      const pools = ENCOUNTER_POOLS[act] || ENCOUNTER_POOLS[1];
+      const weakThreshold = (act === 1) ? 3 : 2;
+
+      // デバッグ呼び出し時は type 指定を尊重する
+      if (type === 'weak') {
+        enemies = selectWeightedEncounter(pools.weak);
+      } else if (type === 'strong') {
+        enemies = selectWeightedEncounter(pools.strong);
+      } else {
+        // startBattle(node.type) からの呼び出しなど、type が 'enemy' の場合
+        if (this.battleCount < weakThreshold) {
+          enemies = selectWeightedEncounter(pools.weak);
+        } else {
+          enemies = selectWeightedEncounter(pools.strong);
+        }
+      }
+    }
+    return enemies;
+  }
+
+  // デバッグ用: 共通プールからの戦闘開始
+  startDebugBattleFromPool(act: number, type: 'weak' | 'strong' | 'elite') {
+    const enemies = this.getEncounterEnemies(act, type);
+    this.startDebugBattle(enemies);
+  }
+
+  // デバッグ用: 強制勝利
+  debugWinBattle() {
+    if (this.battleEngine && !this.battleEngine.isEnded) {
+      console.log('Debug: Forcing win...');
+      this.battleEngine.enemies.forEach(enemy => {
+        if (!enemy.isDead()) {
+          enemy.hp = 0;
+        }
+      });
+      this.battleEngine.checkBattleEnd();
+      this.updateBattleUI();
+    }
+  }
+
 
   async onBattleEscape() {
     alert('戦闘から逃走しました！');

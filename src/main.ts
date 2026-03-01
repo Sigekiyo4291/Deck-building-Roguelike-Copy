@@ -17,7 +17,7 @@ import { DebugManager } from './core/debug-manager';
 import { EffectManager } from './core/effect-manager';
 import { AudioManager } from './core/audio-manager';
 import { getRandomPotion, PotionLibrary } from './core/potion-data';
-import { ENCOUNTER_POOLS } from './core/encounter-data';
+import { ENCOUNTER_POOLS, selectWeightedEncounter } from './core/encounter-data';
 
 // STATUS_INFO は削除され、StatusLibrary で管理されます。
 
@@ -1279,17 +1279,15 @@ class Game {
       }
     } else if (type === 'elite') {
       const pool = ENCOUNTER_POOLS[this.currentAct]?.elite || ENCOUNTER_POOLS[1].elite;
-      const index = Math.floor(Math.random() * pool.length);
-      enemies = pool[index]();
+      enemies = selectWeightedEncounter(pool);
     } else {
       // 通常戦闘
       const pools = ENCOUNTER_POOLS[this.currentAct] || ENCOUNTER_POOLS[1];
-      if (this.battleCount < 3) {
-        const index = Math.floor(Math.random() * pools.weak.length);
-        enemies = pools.weak[index]();
+      const weakThreshold = (this.currentAct === 1) ? 3 : 2;
+      if (this.battleCount < weakThreshold) {
+        enemies = selectWeightedEncounter(pools.weak);
       } else {
-        const index = Math.floor(Math.random() * pools.strong.length);
-        enemies = pools.strong[index]();
+        enemies = selectWeightedEncounter(pools.strong);
       }
     }
 
@@ -1346,6 +1344,10 @@ class Game {
 
   async onBattleEscape() {
     alert('戦闘から逃走しました！');
+    // 通常戦闘の場合、カウントアップ
+    if (!this.isEliteBattle && this.map.currentNode && this.map.currentNode.type === 'enemy') {
+      this.battleCount++;
+    }
     if (this.map) {
       this.map.updateAvailableNodes();
     }

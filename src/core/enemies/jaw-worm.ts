@@ -6,10 +6,12 @@ import { Enemy } from '../entity';
  */
 export class JawWorm extends Enemy {
     history: any[];
+    act: number;
 
-    constructor() {
+    constructor(act: number = 1) {
         super('あご虫', 40 + Math.floor(Math.random() * 5), 'assets/images/enemies/JawWorm.png');
         this.history = [];
+        this.act = act;
     }
 
     decideNextMove() {
@@ -17,8 +19,13 @@ export class JawWorm extends Enemy {
         let move;
 
         if (turn === 1) {
-            // 1ターン目は必ず「体当たり」
-            move = this.getChompMove();
+            // 1ターン目の行動
+            // Act 3 では必ず「咆哮」、それ以外は必ず「体当たり」
+            if (this.act === 3) {
+                move = this.getBellowMove();
+            } else {
+                move = this.getChompMove();
+            }
         } else {
             // 行動の選択（確率と制限）
             // Wiki: 咆哮(45%), 吸血(30%), 体当たり(25%)

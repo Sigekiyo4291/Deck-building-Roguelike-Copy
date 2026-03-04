@@ -48,6 +48,7 @@ class Game {
   currentEventState: any;
   private currentPotionPopup: HTMLElement | null = null;
   pendingOrreryCards: number = 0; // 太陽系儀用の残り選択枚数
+  eventBattleCallback: (() => void) | null = null; // イベント戦闘専用のコールバック
 
   constructor() {
     this.player = new Player();
@@ -398,13 +399,9 @@ class Game {
 
   handleShovelDig() {
     // ショベルで「掘る」：ランダムなレリックを獲得
-    const ownedIds = this.player.relics.map(r => r.id);
-    const candidates = Object.values(RelicLibrary).filter(r =>
-      !ownedIds.includes(r.id) && r.rarity !== 'starter' && r.rarity !== 'boss' && (!r.character || r.character === 'ironclad')
-    );
+    const relic = this.getRelicFromPool(['common', 'uncommon', 'rare']);
 
-    if (candidates.length > 0) {
-      const relic = candidates[Math.floor(Math.random() * candidates.length)];
+    if (relic) {
       this.player.relics.push(relic);
       if (relic.onObtain) relic.onObtain(this.player, this);
       alert(`掘り当てた！ ${relic.name} を獲得しました。`);
@@ -737,11 +734,24 @@ class Game {
     };
   }
 
-  gainRandomRelicByRarity(rarity) {
+  // 新しいレリック抽選ヘルパー
+  getRelicFromPool(allowedRarities: string[], excludeIds: string[] = []): any {
     const ownedIds = this.player.relics.map(r => r.id);
-    const candidates = Object.values(RelicLibrary).filter(r => r.rarity === rarity && !ownedIds.includes(r.id));
+    const candidates = Object.values(RelicLibrary).filter(r =>
+      (!r.character || r.character === 'ironclad') &&
+      !ownedIds.includes(r.id) &&
+      !excludeIds.includes(r.id) &&
+      allowedRarities.includes(r.rarity)
+    );
     if (candidates.length > 0) {
-      const relic = candidates[Math.floor(Math.random() * candidates.length)];
+      return candidates[Math.floor(Math.random() * candidates.length)];
+    }
+    return null;
+  }
+
+  gainRandomRelicByRarity(rarity) {
+    const relic = this.getRelicFromPool([rarity]);
+    if (relic) {
       this.player.relics.push(relic);
       if (relic.onObtain) relic.onObtain(this.player, this);
       alert(`レリック「${relic.name}」を獲得しました！`);
@@ -877,14 +887,11 @@ class Game {
       return getPrice(150);
     };
 
-    const renderRelicSlot = (container: HTMLElement) => {
+    const renderRelicSlot = (container: HTMLElement, isShopExclusive: boolean = false) => {
       container.innerHTML = '';
-      const ownedRelicIds = this.player.relics.map(r => r.id);
-      const candidates = Object.values(RelicLibrary).filter(r =>
-        !ownedRelicIds.includes(r.id) && r.rarity !== 'starter' && r.rarity !== 'boss' && (!r.character || r.character === 'ironclad')
-      );
 
-      const relic = getRandomItem(candidates);
+      const allowedRarities = isShopExclusive ? ['shop'] : ['common', 'uncommon', 'rare'];
+      const relic = this.getRelicFromPool(allowedRarities);
       if (!relic) return;
 
       const price = getRelicPrice(relic.rarity);
@@ -908,7 +915,7 @@ class Game {
           this.updateGlobalStatusUI();
 
           if (this.player.relics.some(r => r.id === 'the_courier')) {
-            renderRelicSlot(container);
+            renderRelicSlot(container, isShopExclusive);
           } else {
             wrapper.classList.add('sold-out');
           }
@@ -926,7 +933,7 @@ class Game {
       const slot = document.createElement('div');
       slot.className = 'shop-slot';
       relicsCenterContainer.appendChild(slot);
-      renderRelicSlot(slot);
+      renderRelicSlot(slot, i === 0); // 最初のスロットはショップ専用
     }
 
     // 4. ポーション
@@ -1318,6 +1325,46 @@ class Game {
     }
   }
 
+  // イベント専用戦闘開始
+  startEventBattle(enemies: Enemy[], onWin: () => void) {
+    console.log('Game.startEventBattle called');
+    this.isEliteBattle = false;
+    this.isBossBattle = false;
+    this.selectedEnemyIndex = 0;
+    this.eventBattleCallback = onWin;
+
+    if (this.battleEngine) {
+      this.battleEngine = null;
+    }
+
+    this.battleEngine = new BattleEngine(
+      this.player,
+      enemies,
+      () => this.updateBattleUI(),
+      (result) => {
+        if (result === 'win') {
+          this.onBattleWin();
+        } else if (result === 'escape') {
+          this.onBattleEscape();
+        } else {
+          alert('Game Over...');
+          location.reload();
+        }
+      },
+      (title, pile, callback, options) => this.showCardSelectionFromPile(title, pile, callback, options),
+      false,
+      false,
+      this.effectManager,
+      this.audioManager
+    );
+
+    this.sceneManager.showBattle();
+    this.battleEngine.start();
+    this.updateBattleUI();
+    this.updateGlobalStatusUI();
+    this.audioManager.playBgm('battle');
+  }
+
   // 抽選ロジックの共通化
   getEncounterEnemies(act: number, type: 'weak' | 'strong' | 'elite' | 'boss'): Enemy[] {
     let enemies: Enemy[] = [];
@@ -1397,6 +1444,13 @@ class Game {
     try {
       this.deselectCard();
 
+      // イベント戦闘のコールバックがあれば優先実行
+      if (this.eventBattleCallback) {
+        this.eventBattleCallback();
+        this.eventBattleCallback = null;
+        return;
+      }
+
       // 通常戦闘の場合、カウントアップ
       if (!this.isEliteBattle && this.map.currentNode && this.map.currentNode.type === 'enemy') {
         this.battleCount++;
@@ -1416,8 +1470,8 @@ class Game {
     }
   }
 
-  showRewardScene(isElite, isBoss = false, isTreasure = false) {
-    console.log('Game: showRewardScene called, isElite:', isElite, 'isBoss:', isBoss);
+  showRewardScene(isElite, isBoss = false, isTreasure = false, extraRewards: any[] = [], onDone?: () => void, includeNormalRewards: boolean = true) {
+    console.log('Game: showRewardScene called, isElite:', isElite, 'isBoss:', isBoss, 'includeNormal:', includeNormalRewards);
     this.audioManager.playBgm('map'); // リワード画面でマップBGMに戻す（勝利ファンファーレ実装まではこれで）
     try {
       this.sceneManager.showReward();
@@ -1431,47 +1485,48 @@ class Game {
       listEl.innerHTML = '';
 
       // ランダム報酬生成
-      const rewards = [];
-      // ゴールド
-      let goldValue = 10 + Math.floor(Math.random() * 20);
-      if (isElite) goldValue += 20;
-      if (isBoss) goldValue += 100;
-      rewards.push({ type: 'gold', value: goldValue, taken: false });
+      const rewards = [...extraRewards];
 
-      // カード
-      rewards.push({ type: 'card', isRare: isBoss, taken: false });
+      if (includeNormalRewards) {
+        // ゴールド
+        let goldValue = 10 + Math.floor(Math.random() * 20);
+        if (isElite) goldValue += 20;
+        if (isBoss) goldValue += 100;
+        rewards.push({ type: 'gold', value: goldValue, taken: false });
 
-      // レリック: ブラックスター (Black Star)
-      if (isElite && this.player.relics.some(r => r.id === 'black_star')) {
-        const ownedRelicIds = this.player.relics.map(r => r.id);
-        const candidates = Object.values(RelicLibrary).filter(r => !ownedRelicIds.includes(r.id) && r.rarity !== 'starter' && r.rarity !== 'boss');
-        if (candidates.length > 0) {
-          const extraRelic = candidates[Math.floor(Math.random() * candidates.length)];
-          rewards.push({ type: 'relic', data: extraRelic, taken: false });
-          console.log('ブラックスター発動！ 追加のレリックをドロップ。');
+        // カード
+        rewards.push({ type: 'card', isRare: isBoss, taken: false });
+
+        // レリック: ブラックスター (Black Star)
+        if (isElite && this.player.relics.some(r => r.id === 'black_star')) {
+          const extraRelic = this.getRelicFromPool(['common', 'uncommon', 'rare']);
+          if (extraRelic) {
+            rewards.push({ type: 'relic', data: extraRelic, taken: false });
+            console.log('ブラックスター発動！ 追加のレリックをドロップ。');
+          }
         }
-      }
 
-      // レリック: 祈りのルーレット (Prayer Wheel)
-      // 通常戦闘（エリートでもボスでも宝箱でもない）かつ所持している場合
-      if (!isElite && !isBoss && !isTreasure && this.player.relics.some(r => r.id === 'prayer_wheel')) {
-        rewards.push({ type: 'card', isRare: false, taken: false });
-        console.log('祈りのルーレット発動！ 追加のカード報酬を提示します。');
-      }
+        // レリック: 祈りのルーレット (Prayer Wheel)
+        // 通常戦闘（エリートでもボスでも宝箱でもない）かつ所持している場合
+        if (!isElite && !isBoss && !isTreasure && this.player.relics.some(r => r.id === 'prayer_wheel')) {
+          rewards.push({ type: 'card', isRare: false, taken: false });
+          console.log('祈りのルーレット発動！ 追加のカード報酬を提示します。');
+        }
 
-      // ポーション（ドロップ率チェック）
-      const hasWhiteBeast = this.player.relics.some(r => r.id === 'white_beast_statue');
-      if (hasWhiteBeast || Math.random() * 100 < this.potionDropChance) {
-        // ドロップ成功
-        const potion = getRandomPotion();
-        rewards.push({ type: 'potion', data: potion, taken: false });
-        // ドロップ率は10%減少
-        if (!hasWhiteBeast) this.potionDropChance = Math.max(0, this.potionDropChance - 10);
-        console.log(`Potion dropped! Next chance: ${this.potionDropChance}%`);
-      } else {
-        // ドロップ失敗時は10%増加
-        this.potionDropChance = Math.min(100, this.potionDropChance + 10);
-        console.log(`Potion NOT dropped. Next chance: ${this.potionDropChance}%`);
+        // ポーション（ドロップ率チェック）
+        const hasWhiteBeast = this.player.relics.some(r => r.id === 'white_beast_statue');
+        if (hasWhiteBeast || Math.random() * 100 < this.potionDropChance) {
+          // ドロップ成功
+          const potion = getRandomPotion();
+          rewards.push({ type: 'potion', data: potion, taken: false });
+          // ドロップ率は10%減少
+          if (!hasWhiteBeast) this.potionDropChance = Math.max(0, this.potionDropChance - 10);
+          console.log(`Potion dropped! Next chance: ${this.potionDropChance}%`);
+        } else {
+          // ドロップ失敗時は10%増加
+          this.potionDropChance = Math.min(100, this.potionDropChance + 10);
+          console.log(`Potion NOT dropped. Next chance: ${this.potionDropChance}%`);
+        }
       }
 
       // レリック（エリート戦、ボス戦、宝箱なら確定）
@@ -1489,13 +1544,10 @@ class Game {
 
       for (let i = 0; i < relicCount; i++) {
         // 未所持かつ報酬に未追加のレリックからランダムに1つ選ぶ
-        const ownedIds = [...this.player.relics.map(r => r.id), ...rewards.filter(r => r.type === 'relic').map(r => r.data.id)];
-        const candidates = Object.values(RelicLibrary).filter(r =>
-          !ownedIds.includes(r.id) && r.rarity !== 'starter' && r.rarity !== 'boss' && (!r.character || r.character === 'ironclad')
-        );
+        const excludeRewardIds = rewards.filter(r => r.type === 'relic').map(r => r.data.id);
+        const relic = this.getRelicFromPool(['common', 'uncommon', 'rare'], excludeRewardIds);
 
-        if (candidates.length > 0) {
-          const relic = candidates[Math.floor(Math.random() * candidates.length)];
+        if (relic) {
           rewards.push({ type: 'relic', data: relic, taken: false });
         }
       }
@@ -1521,7 +1573,9 @@ class Game {
       const doneBtn = document.getElementById('reward-done-btn');
       if (doneBtn) {
         doneBtn.onclick = async () => {
-          if (isBoss) {
+          if (onDone) {
+            onDone();
+          } else if (isBoss) {
             // ボスレリック選択へ
             this.showBossRelicSelection();
           } else {

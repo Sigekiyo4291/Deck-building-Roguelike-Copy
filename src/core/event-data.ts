@@ -1,5 +1,11 @@
 import { CardLibrary } from './card';
 import { RelicLibrary } from './relic';
+import {
+    createMaskedBanditsEncounter, createDeadAdventurerEncounter, createLouseGroup,
+    createColosseumSlaversEncounter, createColosseumEliteEncounter,
+    createMysteriousSphereEncounter, createMindBloomBossEncounter
+} from './encounter-data';
+import { FungiBeast } from './enemies';
 
 /**
  * イベントライブラリ
@@ -256,12 +262,8 @@ export const EventLibrary = {
                         const roll = Math.random() * 100;
                         if (roll < chance) {
                             // レリック獲得
-                            const ownedIds = game.player.relics.map(r => r.id);
-                            const candidates = Object.values(RelicLibrary).filter(r =>
-                                !ownedIds.includes(r.id) && r.rarity !== 'starter' && r.rarity !== 'boss'
-                            );
-                            if (candidates.length > 0) {
-                                const relic = candidates[Math.floor(Math.random() * candidates.length)];
+                            const relic = game.getRelicFromPool(['common', 'uncommon', 'rare']);
+                            if (relic) {
                                 game.player.relics.push(relic);
                                 if (relic.onObtain) relic.onObtain(game.player, game);
                                 alert(`レリック「${relic.name}」を獲得しました！`);
@@ -361,12 +363,8 @@ export const EventLibrary = {
             {
                 text: '[箱] レリックを受け取る。呪い-後悔を受け取る。',
                 action: (game, updateState) => {
-                    const ownedIds = game.player.relics.map(r => r.id);
-                    const candidates = Object.values(RelicLibrary).filter(r =>
-                        !ownedIds.includes(r.id) && r.rarity !== 'starter' && r.rarity !== 'boss'
-                    );
-                    if (candidates.length > 0) {
-                        const relic = candidates[Math.floor(Math.random() * candidates.length)];
+                    const relic = game.getRelicFromPool(['common', 'uncommon', 'rare']);
+                    if (relic) {
                         game.player.relics.push(relic);
                         if (relic.onObtain) relic.onObtain(game.player, game);
                         if (game.player.addCard(CardLibrary.REGRET.clone())) {
@@ -400,19 +398,29 @@ export const EventLibrary = {
                         if (roll < encounterChance) {
                             // モンスターに遭遇
                             alert('モンスターに見つかった！');
-                            // TODO: 実際の戦闘開始処理を実装する場合はここで呼び出す
-                            game.finishEvent();
+                            const enemies = createDeadAdventurerEncounter(game.currentAct);
+                            game.startEventBattle(createDeadAdventurerEncounter(game.currentAct), () => {
+                                const extraRewards = [];
+                                if (!foundRelic) {
+                                    const relic = game.getRelicFromPool(['common', 'uncommon', 'rare']);
+                                    if (relic) {
+                                        extraRewards.push({ type: 'relic', data: relic, taken: false });
+                                    }
+                                }
+                                if (!foundGold) {
+                                    extraRewards.push({ type: 'gold', value: 30, taken: false });
+                                }
+                                game.showRewardScene(false, false, false, extraRewards, () => {
+                                    game.finishEvent();
+                                }, false);
+                            }, false);
                         } else {
                             // 戦利品を発見
                             const lootRoll = Math.random();
                             if (!foundRelic && lootRoll < 0.4) {
                                 // レリック獲得
-                                const ownedIds = game.player.relics.map(r => r.id);
-                                const candidates = Object.values(RelicLibrary).filter(r =>
-                                    !ownedIds.includes(r.id) && r.rarity !== 'starter' && r.rarity !== 'boss'
-                                );
-                                if (candidates.length > 0) {
-                                    const relic = candidates[Math.floor(Math.random() * candidates.length)];
+                                const relic = game.getRelicFromPool(['common', 'uncommon', 'rare']);
+                                if (relic) {
                                     game.player.relics.push(relic);
                                     if (relic.onObtain) relic.onObtain(game.player, game);
                                     alert(`レリック「${relic.name}」を発見しました！`);
@@ -450,11 +458,16 @@ export const EventLibrary = {
         image: '🍄',
         getChoices: (game, state = {}) => [
             {
-                text: '[踏み潰す] キノコビーストx3と戦闘。(未実装: 戦闘後レリック獲得)',
+                text: '[踏み潰す] キノコビーストx3と戦闘。',
                 action: (game, updateState) => {
-                    alert('キノコビーストとの戦闘は未実装です。イベントを終了します。');
-                    // TODO: 実際の戦闘開始処理を実装する場合はここで呼び出す
-                    game.finishEvent();
+                    const enemies = [new FungiBeast(), new FungiBeast(), new FungiBeast()];
+                    game.startEventBattle(enemies, () => {
+                        // 通常報酬（カード、ゴールド）+ 特定のレリック（奇妙なキノコ）
+                        const extraRewards = [{ type: 'relic', data: RelicLibrary.ODD_MUSHROOM, taken: false }];
+                        game.showRewardScene(false, false, false, extraRewards, () => {
+                            game.finishEvent();
+                        });
+                    });
                 }
             },
             {
@@ -773,11 +786,16 @@ export const EventLibrary = {
                 }
             },
             {
-                text: '[戦闘！] モンスターを撃退する。(未実装: 戦闘後レリック獲得)',
+                text: '[戦闘！] モンスターを撃退する。',
                 action: (game, updateState) => {
-                    alert('盗賊との戦闘は未実装です。代わりにレッドマスクを獲得して終了します。');
-                    game.player.relics.push(RelicLibrary.RED_MASK);
-                    game.finishEvent();
+                    const enemies = createMaskedBanditsEncounter();
+                    game.startEventBattle(enemies, () => {
+                        // 通常報酬 + レッドマスク
+                        const extraRewards = [{ type: 'relic', data: RelicLibrary.RED_MASK, taken: false }];
+                        game.showRewardScene(false, false, false, extraRewards, () => {
+                            game.finishEvent();
+                        });
+                    });
                 }
             }
         ]
@@ -1014,12 +1032,18 @@ export const EventLibrary = {
                     {
                         text: '[勝利を!] 屈強な敵に挑み、沢山の褒賞を手にする。',
                         action: (game, updateState) => {
-                            // 本来はタスクマスター＋ボスグレムリンと戦闘
-                            alert('コロシアム第2戦は未実装です。代わりに報酬（100G、アンコモン、レアレリック）を受け取って終了します。');
-                            game.player.gold += 100;
-                            game.gainRandomRelicByRarity('uncommon');
-                            game.gainRandomRelicByRarity('rare');
-                            game.finishEvent();
+                            const enemies = createColosseumEliteEncounter();
+                            game.startEventBattle(enemies, () => {
+                                // 勝利報酬: 100ゴールド、アンコモンレリック、レアレリック + 通常報酬
+                                const extraRewards = [
+                                    { type: 'gold', value: 100, taken: false },
+                                    { type: 'relic', data: game.getRelicFromPool(['uncommon']), taken: false },
+                                    { type: 'relic', data: game.getRelicFromPool(['rare']), taken: false }
+                                ];
+                                game.showRewardScene(false, false, false, extraRewards, () => {
+                                    game.finishEvent();
+                                }, false);
+                            }, false);
                         }
                     }
                 ];
@@ -1028,9 +1052,15 @@ export const EventLibrary = {
                 {
                     text: '[戦闘！] スレイバー+スレイバー赤との強制戦闘。',
                     action: (game, updateState) => {
-                        // 本来は戦闘開始。未実装のためスキップして次のフェーズへ
-                        alert('コロシアム第1戦は未実装です。勝利したと仮定して次の選択に進みます。');
-                        updateState({ phase: 'victory_selection' });
+                        const enemies = createColosseumSlaversEncounter();
+                        game.startEventBattle(enemies, () => {
+                            // 1戦目に通常の戦闘報酬はない
+                            game.showRewardScene(false, false, false, [], () => {
+                                // 報酬画面終了後にイベント画面を表示して連戦へ
+                                game.sceneManager.showEvent();
+                                updateState({ phase: 'victory_selection' });
+                            }, false);
+                        }, false);
                     }
                 }
             ];
@@ -1183,11 +1213,16 @@ export const EventLibrary = {
         image: '🔮',
         getChoices: (game, state = {}) => [
             {
-                text: '[球体を開く] 戦闘。(未実装: 戦闘後レアレリック獲得)',
+                text: '[球体を開く] 大いなる守護者と戦闘。',
                 action: (game, updateState) => {
-                    alert('神秘の球体との戦闘は未実装です。代わりにレアレリックを獲得して終了します。');
-                    game.gainRandomRelicByRarity('rare');
-                    game.finishEvent();
+                    const enemies = createMysteriousSphereEncounter();
+                    game.startEventBattle(enemies, () => {
+                        // 勝利報酬: レアレリック + 通常報酬
+                        const extraRewards = [{ type: 'relic', data: game.getRelicFromPool(['rare']), taken: false }];
+                        game.showRewardScene(true, false, false, extraRewards, () => {
+                            game.finishEvent();
+                        }, true);
+                    }, false); // エリート扱い
                 }
             },
             {
@@ -1289,9 +1324,14 @@ export const EventLibrary = {
                 {
                     text: '[私は闘争者] アクト1のボスと戦う。レアレリックを一つ獲得する。',
                     action: (game, updateState) => {
-                        alert('ボスとの戦闘は未実装です。代わりにレアレリックを獲得して終了します。');
-                        game.gainRandomRelicByRarity('rare');
-                        game.finishEvent();
+                        const enemies = createMindBloomBossEncounter();
+                        game.startEventBattle(enemies, () => {
+                            // 勝利報酬: レアレリック + 通常報酬
+                            const extraRewards = [{ type: 'relic', data: game.getRelicFromPool(['rare']), taken: false }];
+                            game.showRewardScene(true, false, false, extraRewards, () => {
+                                game.finishEvent();
+                            }, true);
+                        }, true); // ボス扱いではないがエリート扱いで良いか
                     }
                 },
                 {

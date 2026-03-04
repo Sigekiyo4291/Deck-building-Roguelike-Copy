@@ -6,11 +6,13 @@ import {
     SphericGuardian, ShelledParasite, Byrd, Chosen, Mugger, Snecko, SnakePlant, Centurion, Mystic,
     GremlinLeader, BookOfStabbing, Taskmaster,
     Darkling, OrbWalker, Repulsor, Exploder, Spiker, Maw, SpireGrowth, Transient, WrithingMass,
-    GiantHead, Nemesis, Reptomancer, Dagger
+    GiantHead, Nemesis, Reptomancer, Dagger,
+    Pointy, Romeo, Bear
 } from './enemies';
+import { ACT_BOSSES, BOSS_DATA } from './boss-data';
 
 // ヘルパー関数: 指定された数の寄生虫（赤/緑 50%ずつ）を生成
-const createLouseGroup = (count: number) => {
+export const createLouseGroup = (count: number) => {
     return Array.from({ length: count }, () => new Louse(Math.random() < 0.5 ? 'red' : 'green'));
 };
 
@@ -156,6 +158,39 @@ const createSphericGuardianAndShapes = () => {
 // ヘルパー関数: レプトマンサーとダガー2体
 const createReptomancerEncounter = () => {
     return [new Dagger(), new Reptomancer(), new Dagger()];
+};
+
+// ヘルパー関数: 仮面の強盗団 (Masked Bandits)
+export const createMaskedBanditsEncounter = () => {
+    return [new Bear(), new Romeo(), new Pointy()];
+};
+
+// ヘルパー関数: コロシアム第1戦 (スレイバー青、赤)
+export const createColosseumSlaversEncounter = () => {
+    return [new BlueSlaver(), new RedSlaver()];
+};
+
+// ヘルパー関数: コロシアム第2戦 (タスクマスター、グレムリンノブ)
+export const createColosseumEliteEncounter = () => {
+    return [new Taskmaster(), new GremlinNob()];
+};
+
+// ヘルパー関数: 神秘の球体 (オーブウォーカー2体)
+export const createMysteriousSphereEncounter = () => {
+    return [new OrbWalker(), new OrbWalker()];
+};
+
+// ヘルパー関数: マインドブルーム (Act 1 ボスランダム)
+export const createMindBloomBossEncounter = () => {
+    const act1BossIds = ACT_BOSSES[1];
+    const bossId = act1BossIds[Math.floor(Math.random() * act1BossIds.length)];
+    return BOSS_DATA[bossId].createEnemies();
+};
+
+// ヘルパー関数: 冒険者の屍 (Dead Adventurer) - ランダムにエリートを1体
+export const createDeadAdventurerEncounter = (act: number) => {
+    const elitePool = ENCOUNTER_POOLS[act].elite;
+    return selectWeightedEncounter(elitePool);
 };
 
 // エンカウントの重み付き定義

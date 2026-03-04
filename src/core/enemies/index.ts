@@ -59,4 +59,6 @@ export { AwakenedOne } from './awakened-one';
 export { Deca } from './deca';
 export { Donu } from './donu';
 export { TimeEater } from './time-eater';
-
+export { Pointy } from './pointy';
+export { Romeo } from './romeo';
+export { Bear } from './bear';

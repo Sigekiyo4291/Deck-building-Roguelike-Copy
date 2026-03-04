@@ -24,4 +24,5 @@ export interface EnemyMove {
     value?: number;
     times?: number;
     effect?: (self: any, player: any, engine: any) => void;
+    statusEffects?: { type: string; value: number }[];
 }

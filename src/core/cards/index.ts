@@ -4,6 +4,7 @@ import { ironcladSkillCards } from './ironclad/skill';
 import { ironcladPowerCards } from './ironclad/power';
 import { curseCards } from './curse/curse';
 import { statusCards } from './status/status';
+import { eventCards } from './event/event';
 
 export const CardLibrary = {
     ...ironcladCards,
@@ -12,4 +13,5 @@ export const CardLibrary = {
     ...ironcladPowerCards,
     ...curseCards,
     ...statusCards,
+    ...eventCards,
 };

@@ -523,7 +523,7 @@ class Game {
     }
 
     // 通常のイベント
-    const event = getRandomEvent();
+    const event = getRandomEvent(this.currentAct);
     this.currentEvent = event;
     this.currentEventState = {};
 
@@ -1726,6 +1726,10 @@ class Game {
 
       container.appendChild(icon);
     });
+  }
+
+  onCardSelectionRequest(title: string, pile: any[], callback: (card: any, index?: number) => void) {
+    this.showCardSelectionFromPile(title, pile, callback);
   }
 
   showCardSelectionFromPile(title, pile, callback, options: any = {}) {

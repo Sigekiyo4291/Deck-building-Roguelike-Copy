@@ -18,6 +18,7 @@ export class BattleEngine {
     isBossBattle: boolean = false;
     currentPlayingCard: any = null;
     playedTypesThisTurn: Set<string> = new Set(); // オレンジ色の丸薬用
+    cardsPlayedThisTurn: number = 0;
 
     constructor(player, enemies, uiUpdateCallback, onBattleEnd, onCardSelectionRequest, isEliteBattle = false, isBossBattle = false, effectManager = null, audioManager = null) {
         this.player = player;
@@ -288,6 +289,14 @@ export class BattleEngine {
                 return;
             }
 
+            // 凡庸 (Normality) のチェック: 手札にある場合、3枚までしかプレイできない
+            const hasNormality = this.player.hand.some(c => c.id === 'normality');
+            if (hasNormality && this.cardsPlayedThisTurn >= 3) {
+                alert("これ以上カードをプレイできません！（凡庸）");
+                console.log("アタック不能！凡庸により3枚制限されています。");
+                return;
+            }
+
             const currentCost = card.getCost(this.player);
             if (currentCost === 'X' || isStatusPlayable || isCursePlayable || (typeof currentCost === 'number' && currentCost >= 0 && this.player.energy >= currentCost)) {
                 if (!card.canPlay(this.player, this) && !isStatusPlayable && !isCursePlayable) {
@@ -332,6 +341,16 @@ export class BattleEngine {
                 this.currentPlayingCard = card;
                 await card.play(this.player, target, this);
                 this.currentPlayingCard = null;
+
+                this.cardsPlayedThisTurn++;
+
+                // 痛み (Pain) のチェック: 手札にある場合、カードをプレイするたびにHPを1失う
+                const hasPain = this.player.hand.some(c => c.id === 'pain');
+                if (hasPain) {
+                    console.log("痛み発動！HPを1失います。");
+                    this.player.loseHP(1);
+                    if (this.uiUpdateCallback) this.uiUpdateCallback();
+                }
 
                 // レリック: ブルーキャンドル - 呪い使用時にHP-1（ブロック無視）
                 if (isCursePlayable) {

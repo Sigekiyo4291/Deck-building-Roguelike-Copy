@@ -1,5 +1,6 @@
 import { IntentType } from '../intent';
 import { Enemy } from '../entity';
+import { IEntity, IBattleEngine } from '../types';
 
 /**
  * ガーディアン
@@ -23,7 +24,7 @@ export class Guardian extends Enemy {
     }
 
     // 戦闘開始時: チャージを使用し、モードシフトを付与
-    onBattleStart(player, engine) {
+    onBattleStart(player: IEntity, engine: IBattleEngine) {
         super.onBattleStart(player, engine);
         // モードシフト初期付与（値=閾値）
         this.addStatus('mode_shift', this.modeShiftThreshold);
@@ -32,9 +33,9 @@ export class Guardian extends Enemy {
     }
 
     // ダメージを受けるたびにモードシフト値を減少
-    takeDamage(amount, source) {
+    takeDamage(amount: number, source: IEntity | null = null, engine?: IBattleEngine): number {
         const prevHp = this.hp;
-        const damage = super.takeDamage(amount, source);
+        const damage = super.takeDamage(amount, source, engine);
         const actualLoss = prevHp - this.hp;
 
         if (this.mode === 'offensive' && actualLoss > 0) {
@@ -52,7 +53,7 @@ export class Guardian extends Enemy {
     }
 
     // 態勢変更処理
-    changeMode(newMode) {
+    changeMode(newMode: string) {
         this.mode = newMode;
         if (newMode === 'defensive') {
             // 20ブロック獲得
@@ -66,7 +67,7 @@ export class Guardian extends Enemy {
                 id: 'mode_shift_action',
                 type: IntentType.Buff,
                 name: 'モードシフト',
-                effect: (self) => {
+                effect: (self: any) => {
                     self.addStatus('sharp_hide', 3);
                 }
             });
@@ -87,12 +88,12 @@ export class Guardian extends Enemy {
     }
 
     // プレイヤーがアタックカードを使用した際のシャープハイドダメージ
-    onPlayerPlayCard(card: any, player?: any, engine?: any) {
+    onPlayerPlayCard(card: any, player?: IEntity, engine?: IBattleEngine) {
         if (this.mode === 'defensive' && card.type === 'attack') {
             const sharpHideVal = this.getStatusValue('sharp_hide');
             if (sharpHideVal > 0) {
                 console.log(`シャープハイド発動！ プレイヤーに ${sharpHideVal} ダメージ。`);
-                player.takeDamage(sharpHideVal, this);
+                if (player) player.takeDamage(sharpHideVal, this);
             }
         }
     }
@@ -107,7 +108,7 @@ export class Guardian extends Enemy {
                     type: IntentType.AttackBuff,
                     value: 9,
                     name: '攻撃',
-                    effect: (self) => {
+                    effect: (self: any) => {
                         // シャープハイドを付与（まだ付与されていない場合）
                         if (!self.hasStatus('sharp_hide')) {
                             self.addStatus('sharp_hide', 3);
@@ -122,9 +123,9 @@ export class Guardian extends Enemy {
                     value: 8,
                     times: 2,
                     name: 'ツインスラム',
-                    effect: (self) => {
+                    effect: (self: any) => {
                         // シャープハイド解除 → 攻撃態勢へ
-                        self.changeMode('offensive');
+                        (self as any).changeMode('offense');
                     }
                 });
             }
@@ -138,7 +139,7 @@ export class Guardian extends Enemy {
         if (m === 0) {
             this.setNextMove({ id: 'whirl', type: IntentType.Attack, value: 5, times: 4, name: '旋風刃' });
         } else if (m === 1) {
-            this.setNextMove({ id: 'charge', type: IntentType.Defend, name: 'チャージ', effect: (self) => self.addBlock(9) });
+            this.setNextMove({ id: 'charge', type: IntentType.Defend, name: 'チャージ', effect: (self: any) => self.addBlock(9) });
         } else if (m === 2) {
             this.setNextMove({ id: 'bash', type: IntentType.Attack, value: 32, name: 'フィアースバッシュ' });
         } else {
@@ -146,7 +147,7 @@ export class Guardian extends Enemy {
                 id: 'vent',
                 type: IntentType.Debuff,
                 name: '蒸気解放',
-                effect: (self, player) => {
+                effect: (self: any, player: any) => {
                     player.addStatus('weak', 2);
                     player.addStatus('vulnerable', 2);
                 }

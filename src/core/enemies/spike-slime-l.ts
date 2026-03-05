@@ -1,6 +1,7 @@
 import { IntentType } from '../intent';
 import { Enemy } from '../entity';
 import { SpikeSlimeM } from './spike-slime-m';
+import { IEntity, IBattleEngine } from '../types';
 
 /**
  * 大型スパイクスライム
@@ -14,20 +15,20 @@ export class SpikeSlimeL extends Enemy {
         this.history = [];
     }
 
-    onBattleStart(player, engine) {
+    onBattleStart(player: IEntity, engine: IBattleEngine) {
         super.onBattleStart(player, engine);
         this.addStatus('split', 1);
     }
 
-    takeDamage(amount, source) {
-        const remainingDamage = super.takeDamage(amount, source);
+    takeDamage(amount: number, source: IEntity | null = null, engine?: IBattleEngine): number {
+        const remainingDamage = super.takeDamage(amount, source, engine);
         // HPが50%以下になった時に即座に分裂をセット
-        if (this.hp > 0 && this.hp <= this.maxHp / 2 && (!this.nextMove || this.nextMove.id !== 'split')) {
+        if (this.hp > 0 && this.hp <= this.maxHp / 2 && (!this.nextMove || (this.nextMove as any).id !== 'split')) {
             this.setNextMove({
                 id: 'split',
                 type: IntentType.Special,
                 name: '分裂',
-                effect: (self, player, engine) => engine.splitEnemy(self, SpikeSlimeM)
+                effect: (self: any, player: any, engine: any) => (engine as any).splitEnemy(self, SpikeSlimeM)
             });
         }
         return remainingDamage;
@@ -40,7 +41,7 @@ export class SpikeSlimeL extends Enemy {
                 id: 'split',
                 type: IntentType.Special,
                 name: '分裂',
-                effect: (self, player, engine) => engine.splitEnemy(self, SpikeSlimeM)
+                effect: (self: any, player: any, engine: any) => (engine as any).splitEnemy(self, SpikeSlimeM)
             });
             return;
         }
@@ -53,7 +54,7 @@ export class SpikeSlimeL extends Enemy {
                 id: 'lick',
                 type: IntentType.Debuff,
                 name: '舐める',
-                effect: (self, player) => player.addStatus('vulnerable', 2)
+                effect: (self: any, player: any) => player.addStatus('vulnerable', 2)
             });
         } else {
             // 炎の体当たり (30%): 16ダメ + 粘液2枚
@@ -62,13 +63,15 @@ export class SpikeSlimeL extends Enemy {
                 type: IntentType.Attack,
                 value: 16,
                 name: '炎の体当たり',
-                effect: (self, player, engine) => {
+                effect: (self: any, player: any, engine: any) => {
                     if (engine && engine.addCardsToDiscard) {
                         engine.addCardsToDiscard('slimed', 2);
                     }
                 }
             });
         }
-        this.history.push(this.nextMove!.id as string);
+        if (this.nextMove) {
+            this.history.push((this.nextMove as any).id);
+        }
     }
 }

@@ -36,7 +36,7 @@ export class Hexaghost extends Enemy {
                         type: IntentType.Attack,
                         value: 6,
                         name: 'シアー',
-                        effect: (self, p, engine) => {
+                        effect: (self: any, p: any, engine: any) => {
                             if (engine && engine.addCardsToDiscard) {
                                 engine.addCardsToDiscard('BURN', 1, this.isInfernoUsed);
                             }
@@ -52,7 +52,7 @@ export class Hexaghost extends Enemy {
                         id: 'ignite',
                         type: IntentType.DefendBuff,
                         name: '発火',
-                        effect: (self) => {
+                        effect: (self: any) => {
                             self.addStatus('strength', 2);
                             self.addBlock(12);
                         }
@@ -65,14 +65,14 @@ export class Hexaghost extends Enemy {
                         value: 2,
                         times: 6,
                         name: 'インフェルノ',
-                        effect: (self, p, engine) => {
+                        effect: (self: any, p: any, engine: any) => {
                             // 1. 強化済み火傷3枚を捨て札に追加
                             if (engine && engine.addCardsToDiscard) {
                                 engine.addCardsToDiscard('BURN', 3, true);
                             }
                             // 2. 手札・山札・捨て札にある全ての「火傷」カードを強化
-                            const upgradeBurnsInList = (list) => {
-                                list.forEach(card => {
+                            const upgradeBurnsInList = (list: any) => {
+                                list.forEach((card: any) => {
                                     if (card.id === 'burn') card.upgrade();
                                 });
                             };
@@ -88,7 +88,9 @@ export class Hexaghost extends Enemy {
                     break;
             }
         }
-        this.setNextMove(move);
-        this.history.push(move.id);
+        if (move) {
+            this.setNextMove(move as any);
+            this.history.push((move as any).id);
+        }
     }
 }

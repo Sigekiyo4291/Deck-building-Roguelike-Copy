@@ -1,5 +1,6 @@
 import { IntentType } from '../intent';
 import { Enemy } from '../entity';
+import { IEntity, IBattleEngine } from '../types';
 
 /**
  * 略奪者
@@ -14,7 +15,7 @@ export class Looter extends Enemy {
         this.stolenGold = 0;
     }
 
-    onBattleStart(player, engine) {
+    onBattleStart(player: IEntity, engine: IBattleEngine) {
         super.onBattleStart(player, engine);
         this.addStatus('thievery', 15);
     }
@@ -30,7 +31,7 @@ export class Looter extends Enemy {
                 type: IntentType.Attack,
                 value: 10,
                 name: 'コソ泥',
-                effect: (self, player) => {
+                effect: (self: any, player: any) => {
                     const stealAmount = self.getStatusValue('thievery') || 15;
                     const amount = Math.min(player.gold, stealAmount);
                     player.gold -= amount;
@@ -46,7 +47,7 @@ export class Looter extends Enemy {
                     type: IntentType.Attack,
                     value: 12,
                     name: '突き',
-                    effect: (self, player) => {
+                    effect: (self: any, player: any) => {
                         const stealAmount = self.getStatusValue('thievery') || 15;
                         const amount = Math.min(player.gold, stealAmount);
                         player.gold -= amount;
@@ -59,7 +60,7 @@ export class Looter extends Enemy {
                     id: 'smoke',
                     type: IntentType.Buff,
                     name: '煙玉',
-                    effect: (self) => self.addBlock(6)
+                    effect: (self: any) => self.addBlock(6)
                 });
             }
         } else if (lastMove === 'lunge') {
@@ -68,7 +69,7 @@ export class Looter extends Enemy {
                 id: 'smoke',
                 type: IntentType.Buff,
                 name: '煙玉',
-                effect: (self) => self.addBlock(6)
+                effect: (self: any) => self.addBlock(6)
             });
         } else if (lastMove === 'smoke') {
             // 煙玉の次は逃走
@@ -76,7 +77,7 @@ export class Looter extends Enemy {
                 id: 'escape',
                 type: IntentType.Special,
                 name: '逃走',
-                effect: (self, player, engine) => engine.removeEnemy(self)
+                effect: (self: any, player: any, engine: IBattleEngine) => engine.removeEnemy(self)
             });
         } else {
             // 前に煙玉を使っていた場合は逃走（念のため）
@@ -84,15 +85,17 @@ export class Looter extends Enemy {
                 id: 'escape',
                 type: IntentType.Special,
                 name: '逃走',
-                effect: (self, player, engine) => engine.removeEnemy(self)
+                effect: (self: any, player: any, engine: IBattleEngine) => engine.removeEnemy(self)
             });
         }
-        this.history.push(this.nextMove.id);
+        if (this.nextMove) {
+            this.history.push((this.nextMove as any).id);
+        }
     }
 
-    onDeath(player, engine) {
+    onDeath(player: IEntity, engine: IBattleEngine) {
         if (this.stolenGold > 0) {
-            player.gold += this.stolenGold;
+            (player as any).gold += this.stolenGold;
             console.log(`Recovered ${this.stolenGold} gold from Looter!`);
         }
     }

@@ -1,4 +1,5 @@
 import { Card } from '../../card-class';
+import { IPlayer, IBattleEngine } from '../../types';
 
 export const curseCards = {
     INJURY: new Card({
@@ -23,7 +24,7 @@ export const curseCards = {
         effect: (s, t) => {
             // 何もしない
         },
-        onEndTurnInHand: async (s, e) => {
+        onEndTurnInHand: async (s: any, e: any) => {
             console.log("疑念発動！脱力(1)を付与。");
             s.addStatus('weak', 1);
         },
@@ -39,10 +40,11 @@ export const curseCards = {
         effect: (s, t) => {
             // 何もしない
         },
-        onEndTurnInHand: async (s, e) => {
-            const damage = s.hand.length;
+        onEndTurnInHand: async (s: any, e: any) => {
+            const player = s as IPlayer;
+            const damage = player.hand.length;
             console.log(`後悔発動！手札枚数(${damage})に応じたHP減少。`);
-            s.loseHP(damage);
+            player.loseHP(damage);
         },
         targetType: 'self'
     }),
@@ -92,7 +94,7 @@ export const curseCards = {
         effect: (s, t) => {
             // 使用不可
         },
-        onEndTurnInHand: async (s, e) => {
+        onEndTurnInHand: async (s: any, e: any) => {
             console.log("羞恥発動！脆弱(1)を付与。");
             s.addStatus('vulnerable', 1);
         },
@@ -121,7 +123,7 @@ export const curseCards = {
         effect: (s, t) => {
             // 使用不可
         },
-        onEndTurnInHand: async (s, e) => {
+        onEndTurnInHand: async (s: any, e: any) => {
             console.log("腐敗発動！HPを2失う。");
             s.loseHP(2);
         },

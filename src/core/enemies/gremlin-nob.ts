@@ -19,7 +19,7 @@ export class GremlinNob extends Enemy {
                 id: 'enrage',
                 type: IntentType.Buff,
                 name: '激怒',
-                effect: (self) => {
+                effect: (self: any) => {
                     self.addStatus('enrage_enemy', 2);
                     console.log('Gremlin Nob is enraged! Skill play will buff him!');
                 }
@@ -37,7 +37,7 @@ export class GremlinNob extends Enemy {
         }
     }
 
-    onPlayerPlayCard(card) {
+    onPlayerPlayCard(card: any) {
         const enrageValue = this.getStatusValue('enrage_enemy');
         if (enrageValue > 0 && card.type === 'skill') {
             this.addStatus('strength', enrageValue);

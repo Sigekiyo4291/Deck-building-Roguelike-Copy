@@ -12,10 +12,10 @@ export class EffectManager {
      * @param {string} effectType - エフェクトタイプ ('slash', 'impact', etc.)
      * @param {Function} callback - エフェクト完了後のコールバック
      */
-    showAttackEffect(targetElement, effectType = 'slash', callback) {
+    showAttackEffect(targetElement: HTMLElement, effectType = 'slash', callback: any) {
         if (!targetElement) {
             console.warn('ターゲット要素が見つかりません');
-            if (callback) callback();
+            if (callback) (callback as any)?.();
             return;
         }
 
@@ -41,7 +41,7 @@ export class EffectManager {
             if (isCompleted) return;
             isCompleted = true;
             this.removeEffect(effectEl);
-            if (callback) callback();
+            if (callback) (callback as any)?.();
         };
 
         // アニメーション終了後に削除
@@ -57,7 +57,7 @@ export class EffectManager {
      * @param {string} effectType - エフェクトタイプ ('slash', 'impact', etc.)
      * @returns {Promise} エフェクト完了時に解決されるPromise
      */
-    showAttackEffectAsync(targetElement, effectType = 'slash') {
+    showAttackEffectAsync(targetElement: HTMLElement, effectType = 'slash') {
         return new Promise((resolve) => {
             this.showAttackEffect(targetElement, effectType, resolve);
         });
@@ -68,7 +68,7 @@ export class EffectManager {
      * @param {string} effectType - エフェクトタイプ
      * @returns {HTMLElement} エフェクト要素
      */
-    createEffectElement(effectType) {
+    createEffectElement(effectType: any) {
         const effectEl = document.createElement('div');
         effectEl.className = `attack-effect ${effectType}-effect`;
 
@@ -125,7 +125,7 @@ export class EffectManager {
      * エフェクトを削除
      * @param {HTMLElement} effectElement - 削除するエフェクト要素
      */
-    removeEffect(effectElement) {
+    removeEffect(effectElement: any) {
         const index = this.activeEffects.indexOf(effectElement);
         if (index > -1) {
             this.activeEffects.splice(index, 1);
@@ -153,9 +153,9 @@ export class EffectManager {
      * @param {'left' | 'right'} direction - 動く方向
      * @param {Function} callback - 完了後のコールバック
      */
-    showBumpAnimation(element, direction, callback = null) {
+    showBumpAnimation(element: HTMLElement, direction: 'left' | 'right', callback = null) {
         if (!element) {
-            if (callback) callback();
+            if (callback) (callback as any)?.();
             return;
         }
 
@@ -165,7 +165,7 @@ export class EffectManager {
         const onEnd = () => {
             element.removeEventListener('animationend', onEnd);
             element.classList.remove(className);
-            if (callback) callback();
+            if (callback) (callback as any)?.();
         };
 
         element.addEventListener('animationend', onEnd);
@@ -185,9 +185,9 @@ export class EffectManager {
      * @param {string} color - 投擲物の色 (CSS color string, default: 'white')
      * @param {Function} callback - 完了後のコールバック
      */
-    showProjectileEffect(startElement, targetElement, color = 'white', callback = null) {
+    showProjectileEffect(startElement: HTMLElement, targetElement: HTMLElement, color = 'white', callback = null) {
         if (!startElement || !targetElement) {
-            if (callback) callback();
+            if (callback) (callback as any)?.();
             return;
         }
 
@@ -216,7 +216,7 @@ export class EffectManager {
         const duration = 500; // ms
         const startTime = performance.now();
 
-        const animate = (time) => {
+        const animate = (time: number) => {
             const elapsed = time - startTime;
             const progress = Math.min(elapsed / duration, 1);
 
@@ -239,7 +239,7 @@ export class EffectManager {
                 requestAnimationFrame(animate);
             } else {
                 this.removeEffect(projectile);
-                if (callback) callback();
+                if (callback) (callback as any)?.();
             }
         };
 
@@ -252,9 +252,9 @@ export class EffectManager {
      * @param {number} amount - 回復量
      * @param {Function} callback - コールバック
      */
-    showHealEffect(targetElement, amount, callback = null) {
+    showHealEffect(targetElement: HTMLElement, amount: number, callback = null) {
         if (!targetElement) {
-            if (callback) callback();
+            if (callback) (callback as any)?.();
             return;
         }
 
@@ -288,7 +288,7 @@ export class EffectManager {
             if (effectEl.parentNode) {
                 effectEl.parentNode.removeChild(effectEl);
             }
-            if (callback) callback();
+            if (callback) (callback as any)?.();
         }, 1000);
     }
 }

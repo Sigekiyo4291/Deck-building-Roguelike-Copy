@@ -34,7 +34,7 @@ export class Bear extends Enemy {
                 type: IntentType.AttackDefend,
                 value: 9,
                 name: '攻撃+防御',
-                effect: (self) => {
+                effect: (self: any) => {
                     self.addBlock(9);
                 }
             });

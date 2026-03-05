@@ -2,10 +2,10 @@ import { Potion } from './potion';
 import { CardLibrary } from './card';
 
 function getRandomCardsForPotion(type: string, count: number): any[] {
-    let keys = Object.keys(CardLibrary).filter(k => CardLibrary[k].type === type && CardLibrary[k].rarity !== 'basic' && CardLibrary[k].rarity !== 'special');
+    let keys = Object.keys(CardLibrary).filter(k => (CardLibrary as any)[k].type === type && (CardLibrary as any)[k].rarity !== 'basic' && (CardLibrary as any)[k].rarity !== 'special');
 
     if (type === 'colorless') {
-        keys = Object.keys(CardLibrary).filter(k => CardLibrary[k].cardClass === 'colorless');
+        keys = Object.keys(CardLibrary).filter(k => (CardLibrary as any)[k].cardClass === 'colorless');
     }
 
     const result = [];
@@ -13,7 +13,7 @@ function getRandomCardsForPotion(type: string, count: number): any[] {
     for (let i = 0; i < count; i++) {
         if (temp.length === 0) break;
         const idx = Math.floor(Math.random() * temp.length);
-        result.push(CardLibrary[temp.splice(idx, 1)[0]].clone());
+        result.push((CardLibrary as any)[temp.splice(idx, 1)[0]].clone());
     }
     return result;
 }
@@ -160,7 +160,7 @@ export const PotionLibrary = {
         }
         onUse(player: any, target: any, engine: any) {
             if (player.hand) {
-                player.hand.forEach(card => {
+                player.hand.forEach((card: any) => {
                     if (!card.isUpgraded) card.upgrade();
                 });
             }
@@ -419,7 +419,7 @@ export const PotionLibrary = {
                 const amount = 5 * this.getMultiplier(player);
                 await engine.drawCards(amount);
                 // 手札の全カードのコストをランダム化 (0~3)
-                player.hand.forEach(card => {
+                player.hand.forEach((card: any) => {
                     if (card.cost !== -1 && card.cost !== 'X') { // Xコストやプレイ不可は除外
                         card.temporaryCost = Math.floor(Math.random() * 4);
                     }
@@ -455,7 +455,7 @@ export const PotionLibrary = {
             super('entropic_brew', 'エントロピー醸造', 'すべての空きポーションスロットをランダムなポーションで満たす。', 'rare', 'none', false);
         }
         onUse(player: any, target: any, engine: any) {
-            player.potions.forEach((potion, index) => {
+            player.potions.forEach((potion: any, index: any) => {
                 if (!potion) {
                     player.potions[index] = getRandomPotion();
                 }

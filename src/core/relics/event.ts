@@ -1,6 +1,7 @@
 import { Relic } from '../relic-class';
 import { RoomType } from '../map-data';
 import { CardLibrary } from '../card';
+import { IEntity, IBattleEngine, IPlayer } from '../types';
 
 export const EventRelics = {
     ODD_MUSHROOM: new class extends Relic {
@@ -8,11 +9,11 @@ export const EventRelics = {
     },
     GREMLIN_VISAGE: new class extends Relic {
         constructor() { super('gremlin_visage', 'グレムリンの顔つき', '戦闘開始時、脱力1を得る。', 'event'); }
-        onBattleStart(owner) { owner.addStatus('weak', 1); }
+        onBattleStart(owner: IEntity, engine: IBattleEngine) { owner.addStatus('weak', 1); }
     },
     SSSERPENT_HEAD: new class extends Relic {
         constructor() { super('ssserpent_head', 'サ・サ・サーペントの頭部', '?部屋に入るたびに、50ゴールドを得る。', 'event'); }
-        onRoomEnter(owner, roomType) {
+        onRoomEnter(owner: any, roomType: any) {
             if (roomType === RoomType.EVENT) {
                 owner.gainGold(50);
             }
@@ -29,27 +30,27 @@ export const EventRelics = {
     },
     NEOW_LAMENT: new class extends Relic {
         constructor() { super('neow_lament', 'ネオーの哀歌', '最初の3回の戦闘で、敵のHPを1にする。', 'event'); }
-        onObtain(owner) { owner.relicCounters['neow_lament'] = 3; }
+        onObtain(owner: any) { owner.relicCounters['neow_lament'] = 3; }
     },
     NECRONOMICON: new class extends Relic {
         constructor() { super('necronomicon', 'ネクロノミコン', 'ターンの最初にプレイする2コスト以上の「アタック」を2回プレイする。獲得時、呪いを獲得。', 'event'); }
-        onObtain(owner) {
-            const curse = CardLibrary.NECRONOMICURSE ? CardLibrary.NECRONOMICURSE.clone() : CardLibrary.REGRET.clone();
+        onObtain(owner: any) {
+            const curse = (CardLibrary as any).NECRONOMICURSE ? (CardLibrary as any).NECRONOMICURSE.clone() : (CardLibrary as any).REGRET.clone();
             owner.addCard(curse);
         }
-        onPlayerTurnStart(owner) { owner.relicCounters['necronomicon'] = 1; }
+        onPlayerTurnStart(owner: IEntity, engine: IBattleEngine) { owner.relicCounters['necronomicon'] = 1; }
     },
     RED_MASK: new class extends Relic {
         constructor() { super('red_mask', 'レッドマスク', '戦闘開始時、敵全体に1の脱力を与える。', 'event'); }
-        onBattleStart(owner, engine) {
-            engine.enemies.forEach(e => { if (!e.isDead()) e.addStatus('weak', 1); });
+        onBattleStart(owner: IEntity, engine: IBattleEngine) {
+            engine.enemies.forEach((e: any) => { if (!e.isDead()) e.addStatus('weak', 1); });
         }
     },
     TWISTED_TONGS: new class extends Relic {
         constructor() { super('twisted_tongs', '捻じれたトング', 'ターン開始時、あなたの手札のランダムなカードを1枚アップグレードする。', 'event'); }
-        onPlayerTurnStart(owner, engine) {
-            if (owner.hand.length > 0) {
-                const upgradable = owner.hand.filter(c => !c.isUpgraded);
+        onPlayerTurnStart(owner: IEntity, engine: IBattleEngine) {
+            if ((owner as IPlayer).hand.length > 0) {
+                const upgradable = (owner as IPlayer).hand.filter((c: any) => !c.isUpgraded);
                 if (upgradable.length > 0) {
                     const card = upgradable[Math.floor(Math.random() * upgradable.length)];
                     card.upgrade();
@@ -60,10 +61,10 @@ export const EventRelics = {
     },
     ENCHIRIDION: new class extends Relic {
         constructor() { super('enchiridion', '教えの書', '戦闘開始時、手札にランダムな「パワー」を1枚加える。そのコストは0になる。', 'event'); }
-        onBattleStart(owner, engine) {
-            const powers = Object.values(CardLibrary).filter(c => c.type === 'power');
+        onBattleStart(owner: IEntity, engine: IBattleEngine) {
+            const powers = Object.values(CardLibrary).filter((c: any) => (c as any).type === 'power');
             if (powers.length > 0) {
-                const card = powers[Math.floor(Math.random() * powers.length)].clone();
+                const card = (powers[Math.floor(Math.random() * powers.length)] as any).clone();
                 card.cost = 0;
                 engine.addCardToHand(card);
                 console.log(`教えの書発動！ ${card.name} を手札に加えました。`);
@@ -75,7 +76,7 @@ export const EventRelics = {
     },
     MUTAGENIC_STRENGTH: new class extends Relic {
         constructor() { super('mutagenic_strength', '突然変異性筋肥大', '戦闘開始時、筋力3を得る。最初のターン終了時に筋力3を失う。', 'event'); }
-        onBattleStart(owner) {
+        onBattleStart(owner: IEntity, engine: IBattleEngine) {
             owner.addStatus('strength', 3);
             owner.addStatus('strength_down', 3);
         }

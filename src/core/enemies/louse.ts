@@ -11,7 +11,7 @@ export class Louse extends Enemy {
     fixedDamage: number;
     history: any[];
 
-    constructor(color) {
+    constructor(color: any) {
         const hp = 10 + Math.floor(Math.random() * 8); // 10-17
         const name = color === 'red' ? '赤の寄生虫' : '緑の寄生虫';
         super(name, hp, 'assets/images/enemies/Louse.png');
@@ -22,13 +22,13 @@ export class Louse extends Enemy {
         this.history = [];
     }
 
-    onBattleStart(player, engine) {
+    onBattleStart(player: any, engine: any) {
         super.onBattleStart(player, engine);
         this.addStatus('curl_up', this.curlUpValue);
         console.log(`${this.name} will curl up for ${this.curlUpValue} block.`);
     }
 
-    takeDamage(amount, source) {
+    takeDamage(amount: any, source: any) {
         return super.takeDamage(amount, source);
     }
 
@@ -43,7 +43,7 @@ export class Louse extends Enemy {
                 this.setNextMove({
                     type: IntentType.Buff,
                     name: '成長',
-                    effect: (self) => self.addStatus('strength', 3)
+                    effect: (self: any) => self.addStatus('strength', 3)
                 });
             } else {
                 this.setNextMove({

@@ -1,6 +1,7 @@
 import { IntentType } from '../intent';
 import { Enemy } from '../entity';
 import { AcidSlimeM } from './acid-slime-m';
+import { IEntity, IBattleEngine } from '../types';
 
 /**
  * 大型酸性スライム
@@ -14,20 +15,20 @@ export class AcidSlimeL extends Enemy {
         this.history = [];
     }
 
-    onBattleStart(player, engine) {
+    onBattleStart(player: IEntity, engine: IBattleEngine) {
         super.onBattleStart(player, engine);
         this.addStatus('split', 1);
     }
 
-    takeDamage(amount, source) {
-        const remainingDamage = super.takeDamage(amount, source);
+    takeDamage(amount: number, source: IEntity | null = null, engine?: IBattleEngine): number {
+        const remainingDamage = super.takeDamage(amount, source, engine);
         // HPが50%以下になった時に即座に分裂をセット
-        if (this.hp > 0 && this.hp <= this.maxHp / 2 && (!this.nextMove || this.nextMove.id !== 'split')) {
+        if (this.hp > 0 && this.hp <= this.maxHp / 2 && (!this.nextMove || (this.nextMove as any).id !== 'split')) {
             this.setNextMove({
                 id: 'split',
                 type: IntentType.Special,
                 name: '分裂',
-                effect: (self, player, engine) => engine.splitEnemy(self, AcidSlimeM)
+                effect: (self: any, player: any, engine: any) => (engine as any).splitEnemy(self, AcidSlimeM)
             });
         }
         return remainingDamage;
@@ -40,7 +41,7 @@ export class AcidSlimeL extends Enemy {
                 id: 'split',
                 type: IntentType.Special,
                 name: '分裂',
-                effect: (self, player, engine) => engine.splitEnemy(self, AcidSlimeM)
+                effect: (self: any, player: any, engine: any) => (engine as any).splitEnemy(self, AcidSlimeM)
             });
             return;
         }
@@ -53,7 +54,7 @@ export class AcidSlimeL extends Enemy {
                 id: 'lick',
                 type: IntentType.Debuff,
                 name: '舐める',
-                effect: (self, player) => player.addStatus('weak', 2)
+                effect: (self: any, player: any) => player.addStatus('weak', 2)
             });
         } else if (roll < 60) {
             // 腐食性の粘液 (30%): 11ダメ + 粘液2枚
@@ -62,7 +63,7 @@ export class AcidSlimeL extends Enemy {
                 type: IntentType.Attack,
                 value: 11,
                 name: '腐食性の粘液',
-                effect: (self, player, engine) => {
+                effect: (self: any, player: any, engine: any) => {
                     if (engine && engine.addCardsToDiscard) {
                         engine.addCardsToDiscard('slimed', 2);
                     }
@@ -72,6 +73,8 @@ export class AcidSlimeL extends Enemy {
             // 体当たり (40%): 16ダメ
             this.setNextMove({ id: 'attack', type: IntentType.Attack, value: 16, name: '体当たり' });
         }
-        this.history.push(this.nextMove.id);
+        if (this.nextMove) {
+            this.history.push((this.nextMove as any).id);
+        }
     }
 }

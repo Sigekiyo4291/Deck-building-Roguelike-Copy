@@ -1,5 +1,6 @@
 import { IntentType } from '../intent';
 import { Enemy } from '../entity';
+import { IEntity, IBattleEngine } from '../types';
 
 /**
  * アシッドスライム(M)
@@ -12,7 +13,7 @@ export class AcidSlimeM extends Enemy {
         this.history = [];
     }
 
-    decideNextMove() {
+    decideNextMove(player?: IEntity, engine?: IBattleEngine) {
         const roll = Math.random() * 100;
         const lastMove = this.history[this.history.length - 1];
 
@@ -22,7 +23,7 @@ export class AcidSlimeM extends Enemy {
                 id: 'lick',
                 type: IntentType.Debuff,
                 name: '舐める',
-                effect: (self, player) => player.addStatus('weak', 1)
+                effect: (self: any, player: any) => player.addStatus('weak', 1)
             });
         } else if (roll < 60) {
             // 膿んだ一撃 (30%): 7ダメ + 粘液(TODO)
@@ -31,12 +32,14 @@ export class AcidSlimeM extends Enemy {
                 type: IntentType.Attack,
                 value: 7,
                 name: '膿んだ一撃',
-                effect: (self, player) => console.log('Slimed!') // 本来はカード追加
+                effect: (self: any, player: any) => console.log('Slimed!') // 本来はカード追加
             });
         } else {
             // 攻撃 (40%)
             this.setNextMove({ id: 'attack', type: IntentType.Attack, value: 10, name: '体当たり' });
         }
-        this.history.push(this.nextMove.id);
+        if (this.nextMove) {
+            this.history.push((this.nextMove as any).id);
+        }
     }
 }

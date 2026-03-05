@@ -16,7 +16,7 @@ export class MapNode {
     isClear: boolean;
     isAvailable: boolean;
 
-    constructor(id, layer, type: RoomType) {
+    constructor(id: any, layer: any, type: RoomType) {
         this.id = id;
         this.layer = layer; // 階層 (0: スタート, 1, 2... 14: ボス)
         this.type = type;   // RoomType Enum
@@ -37,11 +37,11 @@ export class GameMap {
         this.bossId = null;
     }
 
-    addLayer(nodes) {
+    addLayer(nodes: any) {
         this.layers.push(nodes);
     }
 
-    getNode(id) {
+    getNode(id: any) {
         for (const layer of this.layers) {
             for (const node of layer) {
                 if (node.id === id) return node;

@@ -21,6 +21,6 @@ export class BlueSlaver extends Enemy {
         } else {
             this.setNextMove({ id: 'stab', type: IntentType.Attack, value: 12, name: '突き' });
         }
-        this.history.push(this.nextMove.id);
+        if (this.nextMove) this.history.push((this.nextMove as any).id);
     }
 }

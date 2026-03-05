@@ -69,7 +69,7 @@ export class JawWorm extends Enemy {
             type: IntentType.Attack,
             value: 7,
             name: '吸血', // Wiki名称に合わせる
-            effect: (self) => self.addBlock(5)
+            effect: (self: any) => self.addBlock(5)
         };
     }
 
@@ -78,7 +78,7 @@ export class JawWorm extends Enemy {
             id: 'bellow',
             type: IntentType.Buff,
             name: '咆哮',
-            effect: (self) => {
+            effect: (self: any) => {
                 self.addStatus('strength', 3);
                 self.addBlock(6);
             }

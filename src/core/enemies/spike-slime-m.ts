@@ -1,5 +1,6 @@
 import { IntentType } from '../intent';
 import { Enemy } from '../entity';
+import { IEntity, IBattleEngine } from '../types';
 
 /**
  * スパイクスライム(M)
@@ -12,7 +13,7 @@ export class SpikeSlimeM extends Enemy {
         this.history = [];
     }
 
-    decideNextMove() {
+    decideNextMove(player?: IEntity, engine?: IBattleEngine) {
         const roll = Math.random() * 100;
         const lastMove = this.history[this.history.length - 1];
 
@@ -22,7 +23,7 @@ export class SpikeSlimeM extends Enemy {
                 id: 'lick',
                 type: IntentType.Debuff,
                 name: '舐める',
-                effect: (self, player) => player.addStatus('vulnerable', 1)
+                effect: (self: any, player: any) => player.addStatus('vulnerable', 1)
             });
         } else {
             // 炎の体当たり (30%): 8ダメ + 粘液(TODO)
@@ -33,6 +34,8 @@ export class SpikeSlimeM extends Enemy {
                 name: '炎の体当たり'
             });
         }
-        this.history.push(this.nextMove.id);
+        if (this.nextMove) {
+            this.history.push((this.nextMove as any).id);
+        }
     }
 }

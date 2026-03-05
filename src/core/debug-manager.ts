@@ -17,7 +17,7 @@ export class DebugManager {
     game: any;
     isVisible: boolean;
 
-    constructor(game) {
+    constructor(game: any) {
         this.game = game;
         this.isVisible = false;
 
@@ -42,7 +42,7 @@ export class DebugManager {
         // Overlay
         const overlay = document.createElement('div');
         overlay.id = 'debug-overlay';
-        overlay.style.display = 'none';
+        if (overlay) overlay.style.display = 'none';
 
         overlay.innerHTML = `
             <div class="debug-container">
@@ -111,7 +111,7 @@ export class DebugManager {
         document.body.appendChild(overlay);
 
         // Bind Events
-        document.getElementById('debug-close-btn').onclick = () => this.toggleOverlay();
+        document.getElementById('debug-close-btn')!.onclick = () => this.toggleOverlay();
 
         // Tab Switching
         const tabs = overlay.querySelectorAll('.debug-tab');
@@ -140,7 +140,7 @@ export class DebugManager {
     toggleOverlay() {
         const overlay = document.getElementById('debug-overlay');
         this.isVisible = !this.isVisible;
-        overlay.style.display = this.isVisible ? 'flex' : 'none';
+        if (overlay) overlay.style.display = this.isVisible ? 'flex' : 'none';
     }
 
     // --- Battle Tab ---
@@ -209,7 +209,7 @@ export class DebugManager {
 
         const listContainer = document.getElementById('debug-enemy-list');
         const selectedContainer = document.getElementById('debug-selected-enemies');
-        let selectedEnemies = [];
+        let selectedEnemies: any[] = [];
 
         enemyClasses.forEach((enemyDef, index) => {
             const btn = document.createElement('button');
@@ -226,10 +226,10 @@ export class DebugManager {
                 selectedEnemies.push(enemyDef);
                 this.updateSelectedEnemies(selectedEnemies, selectedContainer);
             };
-            listContainer.appendChild(btn);
+            if (listContainer) listContainer.appendChild(btn);
         });
 
-        document.getElementById('debug-start-battle-btn').onclick = () => {
+        document.getElementById('debug-start-battle-btn')!.onclick = () => {
             if (selectedEnemies.length === 0) {
                 alert('No enemies selected!');
                 return;
@@ -243,31 +243,31 @@ export class DebugManager {
 
         // Pool Battle Actions
         const actSelect = document.getElementById('debug-act-select') as HTMLSelectElement;
-        document.getElementById('debug-pool-weak-btn').onclick = () => {
+        document.getElementById('debug-pool-weak-btn')!.onclick = () => {
             const act = parseInt(actSelect.value);
             this.game.startDebugBattleFromPool(act, 'weak');
             this.toggleOverlay();
         };
-        document.getElementById('debug-pool-strong-btn').onclick = () => {
+        document.getElementById('debug-pool-strong-btn')!.onclick = () => {
             const act = parseInt(actSelect.value);
             this.game.startDebugBattleFromPool(act, 'strong');
             this.toggleOverlay();
         };
-        document.getElementById('debug-pool-elite-btn').onclick = () => {
+        document.getElementById('debug-pool-elite-btn')!.onclick = () => {
             const act = parseInt(actSelect.value);
             this.game.startDebugBattleFromPool(act, 'elite');
             this.toggleOverlay();
         };
 
         // Win Battle Action
-        document.getElementById('debug-win-battle-btn').onclick = () => {
+        document.getElementById('debug-win-battle-btn')!.onclick = () => {
             this.game.debugWinBattle();
             this.toggleOverlay();
         };
     }
 
-    updateSelectedEnemies(list, container) {
-        container.innerHTML = 'Selected: ' + list.map(e => e.name).join(', ');
+    updateSelectedEnemies(list: any, container: any) {
+        container.innerHTML = 'Selected: ' + list.map((e: any) => e.name).join(', ');
     }
 
     // --- Event Tab ---
@@ -281,7 +281,7 @@ export class DebugManager {
                 this.game.startDebugEvent(event);
                 this.toggleOverlay();
             };
-            listContainer.appendChild(btn);
+            if (listContainer) listContainer.appendChild(btn);
         });
     }
 
@@ -302,7 +302,7 @@ export class DebugManager {
                 scene.action();
                 this.toggleOverlay();
             };
-            listContainer.appendChild(btn);
+            if (listContainer) listContainer.appendChild(btn);
         });
     }
 
@@ -325,9 +325,9 @@ export class DebugManager {
             if (typeCards.length === 0) return;
 
             const header = document.createElement('h4');
-            header.textContent = typeLabels[type] || type;
+            header.textContent = (typeLabels as any)[type] || type;
             header.className = 'debug-section-header';
-            listContainer.appendChild(header);
+            if (listContainer) listContainer.appendChild(header);
 
             const groupContainer = document.createElement('div');
             groupContainer.className = 'debug-group-container';
@@ -345,7 +345,7 @@ export class DebugManager {
                 };
                 groupContainer.appendChild(btn);
             });
-            listContainer.appendChild(groupContainer);
+            if (listContainer) listContainer.appendChild(groupContainer);
         });
     }
 
@@ -370,9 +370,9 @@ export class DebugManager {
             if (rarityRelics.length === 0) return;
 
             const header = document.createElement('h4');
-            header.textContent = rarityLabels[rarity] || rarity;
+            header.textContent = (rarityLabels as any)[rarity] || rarity;
             header.className = 'debug-section-header';
-            listContainer.appendChild(header);
+            if (listContainer) listContainer.appendChild(header);
 
             const groupContainer = document.createElement('div');
             groupContainer.className = 'debug-group-container';
@@ -389,7 +389,7 @@ export class DebugManager {
                 };
                 groupContainer.appendChild(btn);
             });
-            listContainer.appendChild(groupContainer);
+            if (listContainer) listContainer.appendChild(groupContainer);
         });
     }
 
@@ -412,7 +412,7 @@ export class DebugManager {
                     alert('No empty potion slots!');
                 }
             };
-            listContainer.appendChild(btn);
+            if (listContainer) listContainer.appendChild(btn);
         });
     }
 }

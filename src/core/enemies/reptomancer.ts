@@ -11,7 +11,7 @@ export class Reptomancer extends Enemy {
         this.turnCount++;
         let daggersCount = 0;
         if (engine && engine.enemies) {
-            daggersCount = engine.enemies.filter(e => e.name === 'ダガー' && !e.isDead()).length;
+            daggersCount = engine.enemies.filter((e: any) => e.name === 'ダガー' && !e.isDead()).length;
         }
 
         let chooseSummon = false;

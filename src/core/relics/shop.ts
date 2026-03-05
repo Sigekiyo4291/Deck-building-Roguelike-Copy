@@ -1,11 +1,12 @@
 import { Relic } from '../relic-class';
 import { RoomType } from '../map-data';
 import { CardLibrary } from '../card';
+import { IEntity, IBattleEngine, IPlayer } from '../types';
 
 export const ShopRelics = {
     THE_ABACUS: new class extends Relic {
         constructor() { super('the_abacus', 'そろばん', 'デッキをシャッフルするたび、6ブロックを得る。', 'shop'); }
-        onShuffle(owner) {
+        onShuffle(owner: IEntity, engine: IBattleEngine) {
             owner.addBlock(6);
             console.log('そろばん発動！ 6ブロック獲得。');
         }
@@ -13,7 +14,7 @@ export const ShopRelics = {
     ORANGE_PELLETS: new class extends Relic {
         constructor() { super('orange_pellets', 'オレンジ色の丸薬', '同じターン内で「パワー」「アタック」「スキル」を1枚ずつプレイした時、自分にかかっているすべてのデバフを取り除く。', 'shop'); }
         // 判定はBattleEngine側で行う
-        clearDebuffs(owner) {
+        clearDebuffs(owner: any) {
             if (owner.clearDebuffs) {
                 owner.clearDebuffs();
             }
@@ -25,9 +26,9 @@ export const ShopRelics = {
     },
     DOLLYS_MIRROR: new class extends Relic {
         constructor() { super('dollys_mirror', 'ドリーの鏡', '獲得時、あなたのデッキのカード1枚を複製する。', 'shop'); }
-        onObtain(owner, game) {
+        onObtain(owner: any, game?: any) {
             if (game && game.showCardSelectionFromPile) {
-                game.showCardSelectionFromPile('ドリーの鏡: 複製するカードを選択', owner.masterDeck, (selectedCard) => {
+                game.showCardSelectionFromPile('ドリーの鏡: 複製するカードを選択', owner.masterDeck, (selectedCard: any) => {
                     if (selectedCard) {
                         owner.addCard(selectedCard.clone());
                         console.log(`ドリーの鏡により ${selectedCard.name} を複製しました。`);
@@ -38,7 +39,7 @@ export const ShopRelics = {
     },
     HAND_DRILL: new class extends Relic {
         constructor() { super('hand_drill', 'ハンドドリル', '敵のブロックを破るたび、弱体化2を与える。', 'shop'); }
-        onBlockBroken(owner, target, engine) {
+        onBlockBroken(owner: IEntity, target: IEntity, engine: IBattleEngine) {
             if (target && !target.isDead()) {
                 target.addStatus('vulnerable', 2);
                 console.log(`ハンドドリル発動！ ${target.name} に脆弱2を付与。`);
@@ -47,9 +48,9 @@ export const ShopRelics = {
     },
     BRIMSTONE: new class extends Relic {
         constructor() { super('brimstone', 'ブリムストーン', 'ターン開始時、自分は筋力2を得て、すべての敵は筋力1を得る。アイアンクラッド専用', 'shop', 'ironclad'); }
-        onPlayerTurnStart(owner, engine) {
+        onPlayerTurnStart(owner: IEntity, engine: IBattleEngine) {
             owner.addStatus('strength', 2);
-            engine.enemies.forEach(e => { if (!e.isDead()) e.addStatus('strength', 1); });
+            engine.enemies.forEach((e: any) => { if (!e.isDead()) e.addStatus('strength', 1); });
             console.log('ブリムストーン発動！');
         }
     },
@@ -59,7 +60,7 @@ export const ShopRelics = {
     },
     LEES_WAFFLE: new class extends Relic {
         constructor() { super('lees_waffle', 'リーのワッフル', '最大HP+7。HP全回復。', 'shop'); }
-        onObtain(owner) {
+        onObtain(owner: any) {
             owner.increaseMaxHp ? owner.increaseMaxHp(7) : (owner.maxHp += 7);
             owner.heal(owner.maxHp);
             console.log('リーのワッフル発動！ 最大HPが上昇し、全快しました。');
@@ -75,7 +76,7 @@ export const ShopRelics = {
     },
     SLING_OF_COURAGE: new class extends Relic {
         constructor() { super('sling_of_courage', '勇気のスリング', 'エリートとの戦闘開始時、筋力2を得る。', 'shop'); }
-        onBattleStart(owner, engine) {
+        onBattleStart(owner: IEntity, engine: IBattleEngine) {
             if (engine.isEliteBattle) {
                 owner.addStatus('strength', 2);
                 console.log('勇気のスリング発動！ 筋力2獲得。');
@@ -88,7 +89,7 @@ export const ShopRelics = {
     },
     CAULDRON: new class extends Relic {
         constructor() { super('cauldron', '大釜', '獲得時にポーションx5を調合する。', 'shop'); }
-        onObtain(owner, game) {
+        onObtain(owner: any, game?: any) {
             if (game && game.gainRandomPotion) {
                 for (let i = 0; i < 5; i++) {
                     game.gainRandomPotion();
@@ -99,7 +100,7 @@ export const ShopRelics = {
     },
     ORRERY: new class extends Relic {
         constructor() { super('orrery', '太陽系儀', 'カードを5枚選んでデッキに追加する。', 'shop'); }
-        onObtain(owner, game) {
+        onObtain(owner: any, game?: any) {
             if (game && game.showCardSelection) {
                 game.pendingOrreryCards = 4; // 最初の一枚を含めて合計5枚
                 game.showCardSelection({ isRare: false, taken: false }, null);
@@ -113,24 +114,24 @@ export const ShopRelics = {
     },
     CLOCKWORK_SOUVENIR: new class extends Relic {
         constructor() { super('clockwork_souvenir', '時計仕掛けの記念品', '戦闘開始時、アーティファクト1を得る。', 'shop'); }
-        onBattleStart(owner) {
+        onBattleStart(owner: IEntity, engine: IBattleEngine) {
             owner.addStatus('artifact', 1);
             console.log('時計仕掛けの記念品発動！ アーティファクト1獲得。');
         }
     },
     TOOLBOX: new class extends Relic {
         constructor() { super('toolbox', '道具箱', '戦闘開始時、3枚のランダムなランダムな無色のカードから1枚選び、手札に加える。', 'shop'); }
-        onBattleStart(owner, engine) {
+        onBattleStart(owner: IEntity, engine: IBattleEngine) {
             if (engine && engine.onCardSelectionRequest) {
-                const colorlessCards = Object.values(CardLibrary).filter(c => c.cardClass === 'colorless');
+                const colorlessCards = Object.values(CardLibrary).filter((c: any) => (c as any).cardClass === 'colorless');
                 const candidates = [];
                 for (let i = 0; i < 3; i++) {
                     if (colorlessCards.length > 0) {
-                        candidates.push(colorlessCards[Math.floor(Math.random() * colorlessCards.length)].clone());
+                        candidates.push((colorlessCards[Math.floor(Math.random() * colorlessCards.length)] as any).clone());
                     }
                 }
                 if (candidates.length > 0) {
-                    engine.onCardSelectionRequest('道具箱: 手札に加えるカードを選択', candidates, (card) => {
+                    engine.onCardSelectionRequest('道具箱: 手札に加えるカードを選択', candidates, (card: any) => {
                         if (card) {
                             card.cost = 0; // StSでは戦闘中のみ0コストで手札に加わる
                             engine.addCardToHand(card);

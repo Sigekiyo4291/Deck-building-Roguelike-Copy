@@ -12,12 +12,12 @@ export class FungiBeast extends Enemy {
         this.history = [];
     }
 
-    onBattleStart(player, engine) {
+    onBattleStart(player: any, engine: any) {
         super.onBattleStart(player, engine);
         this.addStatus('spore_cloud', 2);
     }
 
-    onDeath(player, engine) {
+    onDeath(player: any, engine: any) {
         player.addStatus('vulnerable', 2);
         console.log(`${this.name} released a Spore Cloud! Player is Vulnerable!`);
     }
@@ -32,12 +32,12 @@ export class FungiBeast extends Enemy {
                 id: 'grow',
                 type: IntentType.Buff,
                 name: '成長',
-                effect: (self) => self.addStatus('strength', 3)
+                effect: (self: any) => self.addStatus('strength', 3)
             });
         } else {
             // 攻撃 (60%): 6ダメージ
             this.setNextMove({ id: 'attack', type: IntentType.Attack, value: 6, name: '咬みつき' });
         }
-        this.history.push(this.nextMove.id);
+        if (this.nextMove) this.history.push((this.nextMove as any).id);
     }
 }

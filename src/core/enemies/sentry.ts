@@ -8,7 +8,7 @@ export class Sentry extends Enemy {
     position: number;
     turnCount: number;
 
-    constructor(position) {
+    constructor(position: any) {
         super('センチネル', 38 + Math.floor(Math.random() * 5), 'assets/images/enemies/Sentry.png');
         this.addStatus('artifact', 1);
         this.position = position; // 0: left, 1: middle, 2: right
@@ -23,7 +23,7 @@ export class Sentry extends Enemy {
             this.setNextMove({ id: 'beam', type: IntentType.Attack, value: 9, name: 'ビーム' });
         } else {
             this.setNextMove({
-                id: 'dazed', type: IntentType.Debuff, name: 'めまい', effect: (self, player, engine) => {
+                id: 'dazed', type: IntentType.Debuff, name: 'めまい', effect: (self, player: any, engine: any) => {
                     if (engine && engine.addCardsToDiscard) {
                         engine.addCardsToDiscard('DAZED', 3);
                     }

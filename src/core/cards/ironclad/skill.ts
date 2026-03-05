@@ -1,5 +1,6 @@
 import { Card } from '../../card-class';
 import { CardLibrary } from '../../card';
+import { IEntity, IPlayer, IBattleEngine } from '../../types';
 
 export const ironcladSkillCards = {
     SHRUG_IT_OFF: new Card({
@@ -9,17 +10,17 @@ export const ironcladSkillCards = {
         type: 'skill',
         rarity: 'common',
         description: '8ブロックを得て、カードを1枚引く',
-        effect: (s, t, e) => {
+        effect: (s: IEntity, t: IEntity | null, e: IBattleEngine) => {
             s.addBlock(8);
-            if (e) e.drawCards(1);
+            e.drawCards(1);
         },
         targetType: 'self',
         upgradeData: {
             description: '11ブロックを得て、カードを1枚引く',
             baseBlock: 11,
-            effect: (s, t, e) => {
+            effect: (s: IEntity, t: IEntity | null, e: IBattleEngine) => {
                 s.addBlock(11);
-                if (e) e.drawCards(1);
+                e.drawCards(1);
             }
         },
         baseBlock: 8
@@ -31,14 +32,14 @@ export const ironcladSkillCards = {
         type: 'skill',
         rarity: 'common',
         description: '筋力を2得る。ターン終了時、筋力を2失う。',
-        effect: (s, t) => {
+        effect: (s: any, t: any, e?: any) => {
             s.addStatus('strength', 2);
             s.addStatus('strength_down', 2);
         },
         targetType: 'self',
         upgradeData: {
             description: '筋力を4得る。ターン終了時、筋力を4失う。',
-            effect: (s, t) => {
+            effect: (s: IEntity, t: IEntity | null) => {
                 s.addStatus('strength', 4);
                 s.addStatus('strength_down', 4);
             }
@@ -51,27 +52,29 @@ export const ironcladSkillCards = {
         type: 'skill',
         rarity: 'common',
         description: '7ブロックを得る。手札からランダムに1枚廃棄する。',
-        effect: (s, t, e) => {
+        effect: (s: IEntity, t: IEntity | null, e: IBattleEngine) => {
             s.addBlock(7);
-            if (e && s.hand.length > 0) {
-                const randomIndex = Math.floor(Math.random() * s.hand.length);
-                const exhausted = s.hand.splice(randomIndex, 1)[0];
-                s.exhaustCard(exhausted, e);
-                if (e.uiUpdateCallback) e.uiUpdateCallback();
+            const player = s as IPlayer;
+            if (player.hand.length > 0) {
+                const randomIndex = Math.floor(Math.random() * player.hand.length);
+                const exhausted = player.hand.splice(randomIndex, 1)[0];
+                player.exhaustCard(exhausted, e);
+                e.uiUpdateCallback?.();
             }
         },
         targetType: 'self',
         upgradeData: {
             description: '9ブロックを得る。手札から1枚選んで廃棄する。',
             baseBlock: 9,
-            effect: (s, t, e) => {
+            effect: (s: IEntity, t: IEntity | null, e: IBattleEngine) => {
                 s.addBlock(9);
-                if (e && e.onCardSelectionRequest && s.hand.length > 0) {
-                    e.onCardSelectionRequest('廃棄するカードを選択', s.hand, (card, index) => {
+                const player = s as IPlayer;
+                if (e.onCardSelectionRequest && player.hand.length > 0) {
+                    e.onCardSelectionRequest('廃棄するカードを選択', player.hand, (card: any, index: number) => {
                         if (card) {
-                            s.hand.splice(index, 1);
-                            s.exhaustCard(card, e);
-                            if (e.uiUpdateCallback) e.uiUpdateCallback();
+                            player.hand.splice(index, 1);
+                            player.exhaustCard(card, e);
+                            e.uiUpdateCallback?.();
                         }
                     });
                 }
@@ -86,13 +89,14 @@ export const ironcladSkillCards = {
         type: 'skill',
         rarity: 'common',
         description: '5ブロックを得る。手札のカード1枚を戦闘中のみ強化する。',
-        effect: (s, t, e) => {
+        effect: (s: IEntity, t: IEntity | null, e: IBattleEngine) => {
             s.addBlock(5);
-            if (e && e.onCardSelectionRequest && s.hand.length > 0) {
-                e.onCardSelectionRequest('強化するカードを選択', s.hand, (card, index) => {
+            const player = s as IPlayer;
+            if (e.onCardSelectionRequest && player.hand.length > 0) {
+                e.onCardSelectionRequest('強化するカードを選択', player.hand, (card: any, index: number) => {
                     if (card && !card.isUpgraded) {
                         card.upgrade();
-                        if (e.uiUpdateCallback) e.uiUpdateCallback();
+                        e.uiUpdateCallback?.();
                     }
                 });
             }
@@ -101,12 +105,13 @@ export const ironcladSkillCards = {
         upgradeData: {
             description: '5ブロックを得る。手札の全てのカードを戦闘中のみ強化する。',
             baseBlock: 5,
-            effect: (s, t, e) => {
+            effect: (s: IEntity, t: IEntity | null, e: IBattleEngine) => {
                 s.addBlock(5);
-                s.hand.forEach(card => {
+                const player = s as IPlayer;
+                player.hand.forEach(card => {
                     if (!card.isUpgraded) card.upgrade();
                 });
-                if (e && e.uiUpdateCallback) e.uiUpdateCallback();
+                e.uiUpdateCallback?.();
             }
         },
         baseBlock: 5
@@ -118,12 +123,11 @@ export const ironcladSkillCards = {
         type: 'skill',
         rarity: 'uncommon',
         description: '山札の一番上のカードをプレイして廃棄する。',
-        effect: async (s, t, e) => {
-            if (e && e.player.deck.length > 0) {
-                const card = e.player.deck.pop();
+        effect: async (s: IEntity, t: IEntity | null, e: IBattleEngine) => {
+            const player = s as IPlayer;
+            if (player.deck.length > 0) {
+                const card = player.deck.pop();
                 if (card) {
-                    // StSのHavocは山札の一番上のカードをプレイする。
-                    // ターゲットが必要な場合はランダムに選択。
                     let target = t;
                     if (card.targetType === 'single') {
                         const randomTarget = e.getRandomAliveEnemy();
@@ -132,16 +136,13 @@ export const ironcladSkillCards = {
                         }
                     }
 
-                    // 強制的に廃棄フラグを立てる
                     card.isExhaust = true;
 
-                    // プレイ（コスト無料）
-                    await card.play(e.player, target, e, true);
+                    await card.play(player, target, e, true);
 
-                    // プレイ後に廃棄パイルへ
-                    e.player.exhaustCard(card, e);
+                    player.exhaustCard(card, e);
 
-                    if (e.uiUpdateCallback) e.uiUpdateCallback();
+                    e.uiUpdateCallback?.();
                 }
             }
         },
@@ -158,35 +159,33 @@ export const ironcladSkillCards = {
         type: 'skill',
         rarity: 'common',
         description: 'カードを1枚引く。手札のカード1枚を山札の一番上に置く。廃棄。',
-        effect: (s, t, e) => {
-            if (e) {
-                e.drawCards(1);
-                if (e.onCardSelectionRequest && s.hand.length > 0) {
-                    e.onCardSelectionRequest('山札の一番上に置くカードを選択', s.hand, (card, index) => {
-                        if (card) {
-                            s.hand.splice(index, 1);
-                            e.player.deck.push(card);
-                            if (e.uiUpdateCallback) e.uiUpdateCallback();
-                        }
-                    });
-                }
+        effect: (s: IEntity, t: IEntity | null, e: IBattleEngine) => {
+            e.drawCards(1);
+            const player = s as IPlayer;
+            if (e.onCardSelectionRequest && player.hand.length > 0) {
+                e.onCardSelectionRequest('山札の一番上に置くカードを選択', player.hand, (card: any, index: number) => {
+                    if (card) {
+                        player.hand.splice(index, 1);
+                        player.deck.push(card);
+                        e.uiUpdateCallback?.();
+                    }
+                });
             }
         },
         targetType: 'self',
         upgradeData: {
             description: 'カードを2枚引く。手札のカード1枚を山札の一番上に置く。廃棄。',
-            effect: (s, t, e) => {
-                if (e) {
-                    e.drawCards(2);
-                    if (e.onCardSelectionRequest && s.hand.length > 0) {
-                        e.onCardSelectionRequest('山札の一番上に置くカードを選択', s.hand, (card, index) => {
-                            if (card) {
-                                s.hand.splice(index, 1);
-                                e.player.deck.push(card);
-                                if (e.uiUpdateCallback) e.uiUpdateCallback();
-                            }
-                        });
-                    }
+            effect: (s: IEntity, t: IEntity | null, e: IBattleEngine) => {
+                e.drawCards(2);
+                const player = s as IPlayer;
+                if (e.onCardSelectionRequest && player.hand.length > 0) {
+                    e.onCardSelectionRequest('山札の一番上に置くカードを選択', player.hand, (card: any, index: number) => {
+                        if (card) {
+                            player.hand.splice(index, 1);
+                            player.deck.push(card);
+                            e.uiUpdateCallback?.();
+                        }
+                    });
                 }
             }
         },
@@ -199,25 +198,23 @@ export const ironcladSkillCards = {
         type: 'skill',
         rarity: 'uncommon',
         description: '15ブロックを得る。手札に負傷を2枚加える。',
-        effect: (s, t, e) => {
+        effect: (s: IEntity, t: IEntity | null, e: IBattleEngine) => {
             s.addBlock(15);
-            if (e) {
-                s.hand.push(CardLibrary.WOUND.clone());
-                s.hand.push(CardLibrary.WOUND.clone());
-                if (e.uiUpdateCallback) e.uiUpdateCallback();
-            }
+            const player = s as IPlayer;
+            player.hand.push(CardLibrary.WOUND.clone());
+            player.hand.push(CardLibrary.WOUND.clone());
+            e.uiUpdateCallback?.();
         },
         targetType: 'self',
         upgradeData: {
             description: '20ブロックを得る。手札に負傷を2枚加える。',
             baseBlock: 20,
-            effect: (s, t, e) => {
+            effect: (s: IEntity, t: IEntity | null, e: IBattleEngine) => {
                 s.addBlock(20);
-                if (e) {
-                    s.hand.push(CardLibrary.WOUND.clone());
-                    s.hand.push(CardLibrary.WOUND.clone());
-                    if (e.uiUpdateCallback) e.uiUpdateCallback();
-                }
+                const player = s as IPlayer;
+                player.hand.push(CardLibrary.WOUND.clone());
+                player.hand.push(CardLibrary.WOUND.clone());
+                e.uiUpdateCallback?.();
             }
         },
         baseBlock: 15
@@ -229,14 +226,14 @@ export const ironcladSkillCards = {
         type: 'skill',
         rarity: 'uncommon',
         description: 'エセリアル。10ブロックを得る。',
-        effect: (s, t) => {
+        effect: (s: any, t: any, e?: any) => {
             s.addBlock(10);
         },
         targetType: 'self',
         upgradeData: {
             description: 'エセリアル。13ブロックを得る。',
             baseBlock: 13,
-            effect: (s, t) => { s.addBlock(13); }
+            effect: (s: any, t: any, e?: any) => { s.addBlock(13); }
         },
         baseBlock: 10,
         isEthereal: true
@@ -248,24 +245,26 @@ export const ironcladSkillCards = {
         type: 'skill',
         rarity: 'uncommon',
         description: '手札の非アタックカードを全て廃棄し、1枚につき5ブロックを得る。',
-        effect: (s, t, e) => {
-            const nonAttacks = s.hand.filter(c => c.type !== 'attack');
+        effect: (s: any, t: any, e: any) => {
+            const player = s as IPlayer;
+            const nonAttacks = player.hand.filter(c => c.type !== 'attack');
             const count = nonAttacks.length;
-            nonAttacks.forEach(c => s.exhaustCard(c, e));
-            s.hand = s.hand.filter(c => c.type === 'attack');
+            nonAttacks.forEach(c => player.exhaustCard(c, e));
+            player.hand = player.hand.filter(c => c.type === 'attack');
             s.addBlock(5 * count);
-            if (e && e.uiUpdateCallback) e.uiUpdateCallback();
+            if (e && e.uiUpdateCallback) e.uiUpdateCallback?.();
         },
         targetType: 'self',
         upgradeData: {
             description: '手札の非アタックカードを全て廃棄し、1枚につき7ブロックを得る。',
-            effect: (s, t, e) => {
-                const nonAttacks = s.hand.filter(c => c.type !== 'attack');
+            effect: (s: IEntity, t: IEntity | null, e: IBattleEngine) => {
+                const player = s as IPlayer;
+                const nonAttacks = player.hand.filter(c => c.type !== 'attack');
                 const count = nonAttacks.length;
-                nonAttacks.forEach(c => s.exhaustCard(c, e));
-                s.hand = s.hand.filter(c => c.type === 'attack');
-                s.addBlock(7 * count);
-                if (e && e.uiUpdateCallback) e.uiUpdateCallback();
+                nonAttacks.forEach(c => player.exhaustCard(c, e));
+                player.hand = player.hand.filter(c => c.type === 'attack');
+                player.addBlock(7 * count);
+                e.uiUpdateCallback?.();
             }
         }
     }),
@@ -276,7 +275,7 @@ export const ironcladSkillCards = {
         type: 'skill',
         rarity: 'uncommon',
         description: 'カードを3枚引く。このターン、カードを引けなくなる。',
-        effect: (s, t, e) => {
+        effect: (s: any, t: any, e: any) => {
             if (e) {
                 e.drawCards(3);
                 s.addStatus('no_draw', 1);
@@ -285,7 +284,7 @@ export const ironcladSkillCards = {
         targetType: 'self',
         upgradeData: {
             description: 'カードを4枚引く。このターン、カードを引けなくなる。',
-            effect: (s, t, e) => {
+            effect: (s: any, t: any, e: any) => {
                 if (e) {
                     e.drawCards(4);
                     s.addStatus('no_draw', 1);
@@ -300,14 +299,15 @@ export const ironcladSkillCards = {
         type: 'skill',
         rarity: 'uncommon',
         description: '手札のアタックかパワーカード1枚の複製を手札に加える。',
-        effect: (s, t, e) => {
-            if (e && e.onCardSelectionRequest) {
-                const targets = s.hand.filter(c => c.type === 'attack' || c.type === 'power');
+        effect: (s: IEntity, t: IEntity | null, e: IBattleEngine) => {
+            const player = s as IPlayer;
+            if (e.onCardSelectionRequest) {
+                const targets = player.hand.filter(c => c.type === 'attack' || c.type === 'power');
                 if (targets.length > 0) {
-                    e.onCardSelectionRequest('複製するカードを選択', targets, (card, index) => {
+                    e.onCardSelectionRequest('複製するカードを選択', targets, (card: any, index: number) => {
                         if (card) {
-                            s.hand.push(card.clone());
-                            if (e.uiUpdateCallback) e.uiUpdateCallback();
+                            player.hand.push(card.clone());
+                            e.uiUpdateCallback?.();
                         }
                     });
                 }
@@ -316,15 +316,16 @@ export const ironcladSkillCards = {
         targetType: 'self',
         upgradeData: {
             description: '手札のアタックかパワーカード1枚の複製を2枚手札に加える。',
-            effect: (s, t, e) => {
-                if (e && e.onCardSelectionRequest) {
-                    const targets = s.hand.filter(c => c.type === 'attack' || c.type === 'power');
+            effect: (s: IEntity, t: IEntity | null, e: IBattleEngine) => {
+                const player = s as IPlayer;
+                if (e.onCardSelectionRequest) {
+                    const targets = player.hand.filter(c => c.type === 'attack' || c.type === 'power');
                     if (targets.length > 0) {
-                        e.onCardSelectionRequest('複製するカードを選択', targets, (card, index) => {
+                        e.onCardSelectionRequest('複製するカードを選択', targets, (card: any, index: number) => {
                             if (card) {
-                                s.hand.push(card.clone());
-                                s.hand.push(card.clone());
-                                if (e.uiUpdateCallback) e.uiUpdateCallback();
+                                player.hand.push(card.clone());
+                                player.hand.push(card.clone());
+                                e.uiUpdateCallback?.();
                             }
                         });
                     }
@@ -339,7 +340,7 @@ export const ironcladSkillCards = {
         type: 'skill',
         rarity: 'uncommon',
         description: '現在のブロック値を2倍にする。',
-        effect: (s, t) => {
+        effect: (s: any, t: any, e?: any) => {
             s.block *= 2;
         },
         targetType: 'self',
@@ -355,9 +356,9 @@ export const ironcladSkillCards = {
         type: 'skill',
         rarity: 'uncommon',
         description: '全ての敵に脱力(1)を付与する。廃棄。',
-        effect: (s, t, e) => {
+        effect: (s: any, t: any, e: any) => {
             if (e) {
-                e.enemies.forEach(enemy => {
+                e.enemies.forEach((enemy: any) => {
                     if (!enemy.isDead()) enemy.addStatus('weak', 1);
                 });
             }
@@ -365,9 +366,9 @@ export const ironcladSkillCards = {
         targetType: 'all',
         upgradeData: {
             description: '全ての敵に脱力(2)を付与する。廃棄。',
-            effect: (s, t, e) => {
+            effect: (s: any, t: any, e: any) => {
                 if (e) {
-                    e.enemies.forEach(enemy => {
+                    e.enemies.forEach((enemy: any) => {
                         if (!enemy.isDead()) enemy.addStatus('weak', 2);
                     });
                 }
@@ -382,16 +383,18 @@ export const ironcladSkillCards = {
         type: 'skill',
         rarity: 'uncommon',
         description: '敵が攻撃予定なら筋力を3得る。',
-        effect: (s, t, e) => {
-            if (t && t.nextMove && t.nextMove.type === 'attack') {
+        effect: (s: IEntity, t: IEntity | null, e: IBattleEngine) => {
+            const enemy = t as any;
+            if (enemy && enemy.nextMove && enemy.nextMove.type === 'attack') {
                 s.addStatus('strength', 3);
             }
         },
         targetType: 'single',
         upgradeData: {
             description: '敵が攻撃予定なら筋力を4得る。',
-            effect: (s, t, e) => {
-                if (t && t.nextMove && t.nextMove.type === 'attack') {
+            effect: (s: IEntity, t: IEntity | null, e: IBattleEngine) => {
+                const enemy = t as any;
+                if (enemy && enemy.nextMove && enemy.nextMove.type === 'attack') {
                     s.addStatus('strength', 4);
                 }
             }
@@ -404,13 +407,13 @@ export const ironcladSkillCards = {
         type: 'skill',
         rarity: 'uncommon',
         description: 'このターン、アタックカードをプレイする度に3ブロックを得る。',
-        effect: (s, t, e) => {
+        effect: (s: any, t: any, e: any) => {
             s.addStatus('rage', 3);
         },
         targetType: 'self',
         upgradeData: {
             description: 'このターン、アタックカードをプレイする度に5ブロックを得る。',
-            effect: (s, t, e) => { s.addStatus('rage', 5); }
+            effect: (s: any, t: any, e: any) => { s.addStatus('rage', 5); }
         }
     }),
     DISARM: new Card({
@@ -420,13 +423,13 @@ export const ironcladSkillCards = {
         type: 'skill',
         rarity: 'uncommon',
         description: '敵の筋力を2減らす。廃棄。',
-        effect: (s, t) => {
-            t.addStatus('strength', -2);
+        effect: (s: any, t: any, e?: any) => {
+            t?.addStatus('strength', -2);
         },
         targetType: 'single',
         upgradeData: {
             description: '敵の筋力を3減らす。廃棄。',
-            effect: (s, t) => { t.addStatus('strength', -3); }
+            effect: (s: any, t: any, e?: any) => { t?.addStatus('strength', -3); }
         },
         isExhaust: true
     }),
@@ -437,8 +440,8 @@ export const ironcladSkillCards = {
         type: 'skill',
         rarity: 'uncommon',
         description: '2エナジーを得る。廃棄。',
-        effect: (s, t, e) => {
-            if (e) s.energy += 2;
+        effect: (s: any, t: any, e: any) => {
+            if (e) (s as IPlayer).energy += 2;
         },
         targetType: 'self',
         upgradeData: {
@@ -454,22 +457,20 @@ export const ironcladSkillCards = {
         type: 'skill',
         rarity: 'uncommon',
         description: 'HPを3失い、2エナジーを得る。',
-        effect: (s, t, e) => {
+        effect: (s: IEntity, t: IEntity | null, e: IBattleEngine) => {
             s.loseHP(3);
-            if (e) {
-                s.energy += 2;
-                if (e.uiUpdateCallback) e.uiUpdateCallback();
-            }
+            const player = s as IPlayer;
+            player.energy += 2;
+            e.uiUpdateCallback?.();
         },
         targetType: 'self',
         upgradeData: {
             description: 'HPを3失い、3エナジーを得る。',
-            effect: (s, t, e) => {
+            effect: (s: IEntity, t: IEntity | null, e: IBattleEngine) => {
                 s.loseHP(3);
-                if (e) {
-                    s.energy += 3;
-                    if (e.uiUpdateCallback) e.uiUpdateCallback();
-                }
+                const player = s as IPlayer;
+                player.energy += 3;
+                e.uiUpdateCallback?.();
             }
         }
     }),
@@ -480,7 +481,7 @@ export const ironcladSkillCards = {
         type: 'skill',
         rarity: 'uncommon',
         description: '12ブロックを得る。攻撃を受けると攻撃者に4ダメージを与える。',
-        effect: (s, t) => {
+        effect: (s: IEntity, t: IEntity | null) => {
             s.addBlock(12);
             s.addStatus('flame_barrier', 4);
         },
@@ -488,7 +489,7 @@ export const ironcladSkillCards = {
         upgradeData: {
             description: '16ブロックを得る。攻撃を受けると攻撃者に6ダメージを与える。',
             baseBlock: 16,
-            effect: (s, t) => {
+            effect: (s: any, t: any, e?: any) => {
                 s.addBlock(16);
                 s.addStatus('flame_barrier', 6);
             }
@@ -502,14 +503,15 @@ export const ironcladSkillCards = {
         type: 'skill',
         rarity: 'uncommon',
         description: '手札のカード1枚を廃棄し、カードを2枚引く。',
-        effect: (s, t, e) => {
-            if (e && e.onCardSelectionRequest && s.hand.length > 0) {
-                e.onCardSelectionRequest('廃棄するカードを選択', s.hand, (card, index) => {
+        effect: (s: IEntity, t: IEntity | null, e: IBattleEngine) => {
+            const player = s as IPlayer;
+            if (e.onCardSelectionRequest && player.hand.length > 0) {
+                e.onCardSelectionRequest('廃棄するカードを選択', player.hand, (card: any, index: number) => {
                     if (card) {
-                        s.hand.splice(index, 1);
-                        s.exhaustCard(card, e);
+                        player.hand.splice(index, 1);
+                        player.exhaustCard(card, e);
                         e.drawCards(2);
-                        if (e.uiUpdateCallback) e.uiUpdateCallback();
+                        e.uiUpdateCallback?.();
                     }
                 });
             }
@@ -517,14 +519,15 @@ export const ironcladSkillCards = {
         targetType: 'self',
         upgradeData: {
             description: '手札のカード1枚を廃棄し、カードを3枚引く。',
-            effect: (s, t, e) => {
-                if (e && e.onCardSelectionRequest && s.hand.length > 0) {
-                    e.onCardSelectionRequest('廃棄するカードを選択', s.hand, (card, index) => {
+            effect: (s: IEntity, t: IEntity | null, e: IBattleEngine) => {
+                const player = s as IPlayer;
+                if (e.onCardSelectionRequest && player.hand.length > 0) {
+                    e.onCardSelectionRequest('廃棄するカードを選択', player.hand, (card: any, index: number) => {
                         if (card) {
-                            s.hand.splice(index, 1);
-                            s.exhaustCard(card, e);
+                            player.hand.splice(index, 1);
+                            player.exhaustCard(card, e);
                             e.drawCards(3);
-                            if (e.uiUpdateCallback) e.uiUpdateCallback();
+                            e.uiUpdateCallback?.();
                         }
                     });
                 }
@@ -538,19 +541,19 @@ export const ironcladSkillCards = {
         type: 'skill',
         rarity: 'uncommon',
         description: '全ての敵に脱力(3)と脆弱(3)を付与する。廃棄。',
-        effect: (s, t, e) => {
+        effect: (s: IEntity, t: IEntity | null, e: IBattleEngine) => {
             if (t && !t.isDead()) {
-                t.addStatus('weak', 3);
-                t.addStatus('vulnerable', 3);
+                t?.addStatus('weak', 3);
+                t?.addStatus('vulnerable', 3);
             }
         },
         targetType: 'all',
         upgradeData: {
             description: '全ての敵に脱力(5)と脆弱(5)を付与する。廃棄。',
-            effect: (s, t, e) => {
+            effect: (s: IEntity, t: IEntity | null, e: IBattleEngine) => {
                 if (t && !t.isDead()) {
-                    t.addStatus('weak', 5);
-                    t.addStatus('vulnerable', 5);
+                    t?.addStatus('weak', 5);
+                    t?.addStatus('vulnerable', 5);
                 }
             }
         },
@@ -563,26 +566,28 @@ export const ironcladSkillCards = {
         type: 'skill',
         rarity: 'uncommon',
         description: '5ブロックを得る。このカードが廃棄された時、2エナジーを得る。',
-        effect: (s, t, e) => {
+        effect: (s: IEntity, t: IEntity | null, e: IBattleEngine) => {
             s.addBlock(5);
         },
         targetType: 'self',
         upgradeData: {
             description: '8ブロックを得る。このカードが廃棄された時、3エナジーを得る。',
             baseBlock: 8,
-            effect: (s, t, e) => { s.addBlock(8); },
-            onExhaust: (s, e) => {
+            effect: (s: IEntity, t: IEntity | null, e: IBattleEngine) => { s.addBlock(8); },
+            onExhaust: (s: IEntity, e: IBattleEngine | undefined) => {
                 if (e) {
-                    s.energy += 3;
-                    if (e.uiUpdateCallback) e.uiUpdateCallback();
+                    const player = s as IPlayer;
+                    player.energy += 3;
+                    e.uiUpdateCallback?.();
                 }
             }
         },
         baseBlock: 5,
-        onExhaust: (s, e) => {
+        onExhaust: (s: IEntity, e: IBattleEngine | undefined) => {
             if (e) {
-                s.energy += 2;
-                if (e.uiUpdateCallback) e.uiUpdateCallback();
+                const player = s as IPlayer;
+                player.energy += 2;
+                e.uiUpdateCallback?.();
             }
         }
     }),
@@ -593,14 +598,13 @@ export const ironcladSkillCards = {
         type: 'skill',
         rarity: 'rare',
         description: 'ランダムなアタックカード1枚を生成し、そのコストを0にする。廃棄。',
-        effect: (s, t, e) => {
-            if (e) {
-                const attackCards = Object.values(CardLibrary).filter((c: any) => c.type === 'attack');
-                const randomCard = attackCards[Math.floor(Math.random() * attackCards.length)].clone();
-                randomCard.temporaryCost = 0; // ターン終了時にリセットされる一時的なコスト変更
-                s.hand.push(randomCard);
-                if (e.uiUpdateCallback) e.uiUpdateCallback();
-            }
+        effect: (s: IEntity, t: IEntity | null, e: IBattleEngine) => {
+            const player = s as IPlayer;
+            const attackCards = Object.values(CardLibrary).filter((c: any) => c.type === 'attack');
+            const randomCard = attackCards[Math.floor(Math.random() * attackCards.length)].clone();
+            (randomCard as any).temporaryCost = 0; // ターン終了時にリセットされる一時的なコスト変更
+            player.hand.push(randomCard);
+            e.uiUpdateCallback?.();
         },
         targetType: 'self',
         upgradeData: {
@@ -616,13 +620,13 @@ export const ironcladSkillCards = {
         type: 'skill',
         rarity: 'rare',
         description: '次にプレイするアタックカードを2回プレイする。',
-        effect: (s, t) => {
+        effect: (s: IEntity, t: IEntity | null) => {
             s.addStatus('double_tap', 1);
         },
         targetType: 'self',
         upgradeData: {
             description: '次にプレイする2枚のアタックカードをそれぞれ2回プレイする。',
-            effect: (s, t) => { s.addStatus('double_tap', 2); }
+            effect: (s: IEntity, t: IEntity | null) => { s.addStatus('double_tap', 2); }
         }
     }),
     LIMIT_BREAK: new Card({
@@ -632,14 +636,14 @@ export const ironcladSkillCards = {
         type: 'skill',
         rarity: 'rare',
         description: '筋力を2倍にする。廃棄。',
-        effect: (s, t) => {
+        effect: (s: IEntity, t: IEntity | null) => {
             const currentStr = s.getStatusValue('strength');
             s.addStatus('strength', currentStr);
         },
         targetType: 'self',
         upgradeData: {
             description: '筋力を2倍にする。',
-            effect: (s, t) => {
+            effect: (s: IEntity, t: IEntity | null) => {
                 const currentStr = s.getStatusValue('strength');
                 s.addStatus('strength', currentStr);
             },
@@ -654,24 +658,22 @@ export const ironcladSkillCards = {
         type: 'skill',
         rarity: 'rare',
         description: 'HPを6失い、2エナジーを得て、カードを3枚引く。廃棄。',
-        effect: (s, t, e) => {
+        effect: (s: IEntity, t: IEntity | null, e: IBattleEngine) => {
             s.loseHP(6);
-            if (e) {
-                s.energy += 2;
-                e.drawCards(3);
-                if (e.uiUpdateCallback) e.uiUpdateCallback();
-            }
+            const player = s as IPlayer;
+            player.energy += 2;
+            e.drawCards(3);
+            e.uiUpdateCallback?.();
         },
         targetType: 'self',
         upgradeData: {
             description: 'HPを6失い、2エナジーを得て、カードを5枚引く。廃棄。',
-            effect: (s, t, e) => {
+            effect: (s: IEntity, t: IEntity | null, e: IBattleEngine) => {
                 s.loseHP(6);
-                if (e) {
-                    s.energy += 2;
-                    e.drawCards(5);
-                    if (e.uiUpdateCallback) e.uiUpdateCallback();
-                }
+                const player = s as IPlayer;
+                player.energy += 2;
+                e.drawCards(5);
+                e.uiUpdateCallback?.();
             }
         },
         isExhaust: true
@@ -683,13 +685,14 @@ export const ironcladSkillCards = {
         type: 'skill',
         rarity: 'rare',
         description: '廃棄置き場からカード1枚を手札に加える。廃棄。',
-        effect: (s, t, e) => {
-            if (e && e.onCardSelectionRequest && s.exhaust.length > 0) {
-                e.onCardSelectionRequest('回収するカードを選択', s.exhaust, (card, index) => {
+        effect: (s: IEntity, t: IEntity | null, e: IBattleEngine) => {
+            const player = s as IPlayer;
+            if (e.onCardSelectionRequest && player.exhaust.length > 0) {
+                e.onCardSelectionRequest('回収するカードを選択', player.exhaust, (card: any, index: number) => {
                     if (card) {
-                        s.exhaust.splice(index, 1);
-                        s.hand.push(card);
-                        if (e.uiUpdateCallback) e.uiUpdateCallback();
+                        player.exhaust.splice(index, 1);
+                        player.hand.push(card);
+                        e.uiUpdateCallback?.();
                     }
                 });
             }
@@ -708,14 +711,14 @@ export const ironcladSkillCards = {
         type: 'skill',
         rarity: 'rare',
         description: '30ブロックを得る',
-        effect: (s, t) => {
+        effect: (s: IEntity, t: IEntity | null) => {
             s.addBlock(30);
         },
         targetType: 'self',
         upgradeData: {
             description: '40ブロックを得る',
             baseBlock: 40,
-            effect: (s, t) => { s.addBlock(40); }
+            effect: (s: IEntity, t: IEntity | null) => { s.addBlock(40); }
         },
         baseBlock: 30
     }),
@@ -727,17 +730,17 @@ export const ironcladSkillCards = {
         cardClass: 'colorless',
         rarity: 'uncommon',
         description: '2ブロックを得る。カードを1枚引く。',
-        effect: (s, t, e) => {
+        effect: (s: IEntity, t: IEntity | null, e: IBattleEngine) => {
             s.addBlock(2);
-            if (e) e.drawCards(1);
+            e.drawCards(1);
         },
         targetType: 'self',
         upgradeData: {
             description: '4ブロックを得る。カードを1枚引く。',
             baseBlock: 4,
-            effect: (s, t, e) => {
+            effect: (s: IEntity, t: IEntity | null, e: IBattleEngine) => {
                 s.addBlock(4);
-                if (e) e.drawCards(1);
+                e.drawCards(1);
             }
         },
         baseBlock: 2

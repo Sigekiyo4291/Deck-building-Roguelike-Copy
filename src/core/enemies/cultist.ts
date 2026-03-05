@@ -17,7 +17,7 @@ export class Cultist extends Enemy {
             this.setNextMove({
                 type: IntentType.Buff,
                 name: '儀式',
-                effect: (self) => {
+                effect: (self: any) => {
                     self.addStatus('ritual', 3);
                     console.log('Cultist uses Incantation! Thine end is near!');
                 }

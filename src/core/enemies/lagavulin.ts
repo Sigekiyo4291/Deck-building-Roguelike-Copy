@@ -17,7 +17,7 @@ export class Lagavulin extends Enemy {
         this.attackCycle = 0;
     }
 
-    takeDamage(amount, source) {
+    takeDamage(amount: any, source: any) {
         const prevHp = this.hp;
         const damage = super.takeDamage(amount, source);
         if (this.isSleeping && this.hp < prevHp) {
@@ -26,7 +26,7 @@ export class Lagavulin extends Enemy {
         return damage;
     }
 
-    wakeUp(byDamage) {
+    wakeUp(byDamage: any) {
         this.isSleeping = false;
         this.removeStatus('metallicize');
         if (byDamage) {

@@ -1,4 +1,5 @@
 import { Entity } from './entity';
+import { IEntity, IPlayer, IBattleEngine } from './types';
 
 export abstract class StatusEffect {
     abstract id: string;
@@ -47,26 +48,26 @@ export abstract class StatusEffect {
     /**
      * ダメージ計算時の補正（攻撃側：筋力など）
      */
-    modifyAttackDamage(entity: Entity, value: number, damage: number): number {
+    modifyAttackDamage(entity: IEntity, value: number, damage: number): number {
         return damage;
     }
 
     /**
      * ダメージ計算時の補正（防御側：脆弱、無形など）
      */
-    modifyIncomingDamage(entity: Entity, value: number, damage: number): number {
+    modifyIncomingDamage(entity: IEntity, value: number, damage: number): number {
         return damage;
     }
 
     /**
      * ブロック獲得時の補正（敏捷性、崩壊など）
      */
-    modifyBlockAmount(entity: Entity, value: number, block: number): number {
+    modifyBlockAmount(entity: IEntity, value: number, block: number): number {
         return block;
     }
 
-    onCardPlay(entity: Entity, value: number, card: any, engine: any): void { }
-    onReceiveDamage(entity: Entity, value: number, damage: number, source: any, engine?: any): void { }
+    onCardPlay(entity: IEntity, value: number, card: any, engine: IBattleEngine): void { }
+    onReceiveDamage(entity: IEntity, value: number, damage: number, source: IEntity | null, engine?: IBattleEngine): void { }
 }
 
 // --- 具体的なステータスの実装 ---
@@ -277,7 +278,7 @@ export class BrutalityStatus extends StatusEffect {
     description = 'ターン開始時、HPを1失いカードを1枚引く。';
     icon = '🩸';
     isBuff(value: number): boolean { return value > 0; }
-    onTurnStartUpdate(entity: Entity, value: number, engine?: any): number {
+    onTurnStartUpdate(entity: IEntity, value: number, engine?: IBattleEngine): number {
         entity.loseHP(1);
         if (engine) engine.drawCards(value);
         return value;
@@ -290,12 +291,12 @@ export class CombustStatus extends StatusEffect {
     description = 'ターン終了時、HPを1失い敵全体にダメージを与える。';
     icon = '🧨';
     isBuff(value: number): boolean { return value > 0; }
-    onTurnEndUpdate(entity: Entity, value: number, engine?: any): number {
+    onTurnEndUpdate(entity: IEntity, value: number, engine?: IBattleEngine): number {
         entity.loseHP(1);
         if (engine) {
             for (const enemy of engine.enemies) {
                 if (!enemy.isDead()) {
-                    engine.attackWithEffect(entity, enemy, value); // 本来はvalueダメージだが、StSでは固定ダメージの場合が多い。現在の実装に合わせる。
+                    engine.attackWithEffect(entity, enemy, value);
                 }
             }
         }
@@ -309,9 +310,10 @@ export class BerserkStatus extends StatusEffect {
     description = 'ターン開始時、エナジーを1得る。';
     icon = '💢';
     isBuff(value: number): boolean { return value > 0; }
-    onTurnStartUpdate(entity: Entity, value: number, engine?: any): number {
-        if (entity.hasOwnProperty('energy')) {
-            (entity as any).energy += value;
+    onTurnStartUpdate(entity: IEntity, value: number, engine?: IBattleEngine): number {
+        const player = entity as IPlayer;
+        if (player.energy !== undefined) {
+            player.energy += value;
         }
         return value;
     }
@@ -419,13 +421,13 @@ export class AngryStatus extends StatusEffect {
 export class FlightStatus extends StatusEffect {
     id = 'flight'; name = '飛行'; description = '受けるダメージ半減。アタックを受けると減少し0で解除とスタン。'; icon = '🦅';
     isBuff(v: number) { return v > 0; }
-    modifyIncomingDamage(entity, value, damage) { return Math.floor(damage / 2); }
-    onReceiveDamage(entity, value, damage, source, engine) { if (source) entity.addStatus('flight', -1); }
+    modifyIncomingDamage(entity: IEntity, value: number, damage: number) { return Math.floor(damage / 2); }
+    onReceiveDamage(entity: IEntity, value: number, damage: number, source: IEntity | null, engine: IBattleEngine) { if (source) entity.addStatus('flight', -1); }
 }
 export class HexStatus extends StatusEffect {
     id = 'hex'; name = '呪詛'; description = 'アタック以外のカードを使用するたび、めまいを山札に加える。'; icon = '🔮';
     isDebuff(v: number) { return v > 0; }
-    onCardPlay(entity, value, card, engine) { if (card.type !== 'attack') engine.addCardsToDrawPile({ id: 'dazed', name: 'めまい', type: 'status' } /* Mock */); /* Requires proper card gen */ }
+    onCardPlay(entity: IEntity, value: number, card: any, engine: IBattleEngine) { if (card.type !== 'attack') engine.addCardsToDrawPile({ id: 'dazed', name: 'めまい', type: 'status' } /* Mock */); }
 }
 export class TimeWarpStatus extends StatusEffect {
     id = 'time_warp'; name = 'タイムワープ'; description = 'カードをX枚プレイするたび、ターン強制終了。'; icon = '⏱️';
@@ -434,28 +436,28 @@ export class TimeWarpStatus extends StatusEffect {
 export class SlowStatus extends StatusEffect {
     id = 'slow'; name = 'スロー'; description = 'カードをプレイするたび、被ダメ+10%。'; icon = '🐌';
     isDebuff(v: number) { return v > 0; }
-    modifyIncomingDamage(e, v, d) { return Math.floor(d * (1 + 0.1 * v)); }
-    onTurnEndUpdate(e, v) { return 0; }
+    modifyIncomingDamage(e: IEntity, v: number, d: number) { return Math.floor(d * (1 + 0.1 * v)); }
+    onTurnEndUpdate(e: IEntity, v: number) { return 0; }
 }
 export class FadingStatus extends StatusEffect {
     id = 'fading'; name = '消失'; description = 'ターン終了時に減少し、0で死亡。'; icon = '⏳';
     isBuff(v: number) { return v > 0; }
-    onTurnEndUpdate(e, v, engine) { if (v <= 1) e.hp = 0; return Math.max(0, v - 1); }
+    onTurnEndUpdate(e: IEntity, v: number, engine: IBattleEngine) { if (v <= 1) e.hp = 0; return Math.max(0, v - 1); }
 }
 export class ConstrictedStatus extends StatusEffect {
     id = 'constricted'; name = '締め付け'; description = 'ターン終了時、ダメージ。'; icon = '🐍';
     isDebuff(v: number) { return v > 0; }
-    onTurnEndUpdate(e, v, engine) { if (engine) e.takeDamage(v, null, engine); return v; }
+    onTurnEndUpdate(e: IEntity, v: number, engine: IBattleEngine) { if (engine) e.takeDamage(v, null, engine); return v; }
 }
 export class PainfulStabsStatus extends StatusEffect {
     id = 'painful_stabs'; name = '苦痛の一刺し'; description = '被弾時、相手に負傷。'; icon = '🩸';
     isBuff(v: number) { return v > 0; }
-    onReceiveDamage(e, v, d, s, engine) { if (s && s.uuid === engine.player.uuid) engine.addCardsToDiscard('wound', 1); }
+    onReceiveDamage(e: IEntity, v: number, d: number, s: IEntity | null, engine: IBattleEngine) { if (s && s.uuid === engine.player.uuid) engine.addCardsToDiscard('wound', 1); }
 }
 export class ShackledStatus extends StatusEffect {
     id = 'shackled'; name = '足枷'; description = 'ターン終了時、筋力回復。'; icon = '⛓️';
     isDebuff(v: number) { return v > 0; }
-    onTurnEndUpdate(e, v, engine) { e.addStatus('strength', v); return 0; }
+    onTurnEndUpdate(e: any, v: any, engine: any) { e.addStatus('strength', v); return 0; }
 }
 export class CuriosityStatus extends StatusEffect {
     id = 'curiosity'; name = '好奇心'; description = 'パワーカードを使用するたび、相手に筋力を与える。'; icon = '👁️';

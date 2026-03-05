@@ -1,11 +1,12 @@
 import { Relic } from '../relic-class';
 import { RoomType } from '../map-data';
 import { CardLibrary } from '../card';
+import { IEntity, IPlayer, IBattleEngine } from '../types';
 
 export const UncommonRelics = {
     INK_BOTTLE: new class extends Relic {
         constructor() { super('ink_bottle', 'インク瓶', 'カードを10枚プレイするごとに、カードを1枚引く。', 'uncommon'); }
-        onCardPlay(owner, engine, card) {
+        onCardPlay(owner: IEntity, engine: IBattleEngine, card: any) {
             owner.relicCounters['ink_bottle'] = (owner.relicCounters['ink_bottle'] || 0) + 1;
             if (owner.relicCounters['ink_bottle'] >= 10) {
                 owner.relicCounters['ink_bottle'] = 0;
@@ -15,8 +16,8 @@ export const UncommonRelics = {
     },
     KUNAI: new class extends Relic {
         constructor() { super('kunai', 'クナイ', '1ターンに「アタック」を3枚プレイするたび、敏捷性1を得る。', 'uncommon'); }
-        onPlayerTurnStart(owner, engine) { owner.relicCounters['kunai'] = 0; }
-        onCardPlay(owner, engine, card) {
+        onPlayerTurnStart(owner: IEntity, engine: IBattleEngine) { owner.relicCounters['kunai'] = 0; }
+        onCardPlay(owner: IEntity, engine: IBattleEngine, card: any) {
             if (card.type === 'attack') {
                 owner.relicCounters['kunai'] = (owner.relicCounters['kunai'] || 0) + 1;
                 if (owner.relicCounters['kunai'] === 3) {
@@ -28,8 +29,8 @@ export const UncommonRelics = {
     },
     SHURIKEN: new class extends Relic {
         constructor() { super('shuriken', '手裏剣', '1ターンに「アタック」を3枚プレイするたび、筋力1を得る。', 'uncommon'); }
-        onPlayerTurnStart(owner, engine) { owner.relicCounters['shuriken'] = 0; }
-        onCardPlay(owner, engine, card) {
+        onPlayerTurnStart(owner: any, engine: any) { owner.relicCounters['shuriken'] = 0; }
+        onCardPlay(owner: any, engine: any, card: any) {
             if (card.type === 'attack') {
                 owner.relicCounters['shuriken'] = (owner.relicCounters['shuriken'] || 0) + 1;
                 if (owner.relicCounters['shuriken'] === 3) {
@@ -41,8 +42,8 @@ export const UncommonRelics = {
     },
     ORNAMENTAL_FAN: new class extends Relic {
         constructor() { super('ornamental_fan', '扇子', '1ターンに「アタック」を3枚プレイするたび、4ブロックを得る。', 'uncommon'); }
-        onPlayerTurnStart(owner, engine) { owner.relicCounters['ornamental_fan'] = 0; }
-        onCardPlay(owner, engine, card) {
+        onPlayerTurnStart(owner: IEntity, engine: IBattleEngine) { owner.relicCounters['ornamental_fan'] = 0; }
+        onCardPlay(owner: IEntity, engine: IBattleEngine, card: any) {
             if (card.type === 'attack') {
                 owner.relicCounters['ornamental_fan'] = (owner.relicCounters['ornamental_fan'] || 0) + 1;
                 if (owner.relicCounters['ornamental_fan'] === 3) {
@@ -54,13 +55,13 @@ export const UncommonRelics = {
     },
     LETTER_OPENER: new class extends Relic {
         constructor() { super('letter_opener', 'レターオープナー', '1ターンに「スキル」を3枚プレイするたび、敵全体に5ダメージ与える。', 'uncommon'); }
-        onPlayerTurnStart(owner, engine) { owner.relicCounters['letter_opener'] = 0; }
-        onCardPlay(owner, engine, card) {
+        onPlayerTurnStart(owner: IEntity, engine: IBattleEngine) { owner.relicCounters['letter_opener'] = 0; }
+        onCardPlay(owner: IEntity, engine: IBattleEngine, card: any) {
             if (card.type === 'skill') {
                 owner.relicCounters['letter_opener'] = (owner.relicCounters['letter_opener'] || 0) + 1;
                 if (owner.relicCounters['letter_opener'] === 3) {
                     owner.relicCounters['letter_opener'] = 0;
-                    engine.enemies.forEach(enemy => {
+                    engine.enemies.forEach((enemy: any) => {
                         if (!enemy.isDead()) {
                             enemy.takeDamage(5, owner);
                         }
@@ -71,17 +72,17 @@ export const UncommonRelics = {
     },
     SUNDIAL: new class extends Relic {
         constructor() { super('sundial', '日時計', 'デッキを3回シャッフルするたび、エナジーを2得る。', 'uncommon'); }
-        onShuffle(owner, engine) {
+        onShuffle(owner: IEntity, engine: IBattleEngine) {
             owner.relicCounters['sundial'] = (owner.relicCounters['sundial'] || 0) + 1;
             if (owner.relicCounters['sundial'] >= 3) {
                 owner.relicCounters['sundial'] = 0;
-                owner.energy += 2;
+                (owner as IPlayer).energy += 2;
             }
         }
     },
     ETERNAL_FEATHER: new class extends Relic {
         constructor() { super('eternal_feather', 'エターナルフェザー', '休憩場所に入るたび、デッキのカード5枚につきHPを3回復する。', 'uncommon'); }
-        onRoomEnter(owner, roomType) {
+        onRoomEnter(owner: any, roomType: any) {
             if (roomType === RoomType.REST) {
                 const healAmount = Math.floor(owner.masterDeck.length / 5) * 3;
                 owner.heal(healAmount);
@@ -90,7 +91,7 @@ export const UncommonRelics = {
     },
     PANTAGRAPH: new class extends Relic {
         constructor() { super('pantagraph', 'パンタグラフ', 'ボスの戦闘開始時、HP25回復する。', 'uncommon'); }
-        onBattleStart(owner, engine) {
+        onBattleStart(owner: any, engine: any) {
             if (engine.isBossBattle) {
                 owner.heal(25);
             }
@@ -98,7 +99,7 @@ export const UncommonRelics = {
     },
     MEAT_ON_THE_BONE: new class extends Relic {
         constructor() { super('meat_on_the_bone', '骨付き肉', '戦闘終了時、HPが50%以下ならHP12回復。', 'uncommon'); }
-        onVictory(owner, engine) {
+        onVictory(owner: IEntity, engine: IBattleEngine) {
             if (owner.hp <= owner.maxHp / 2) {
                 owner.heal(12);
             }
@@ -106,13 +107,13 @@ export const UncommonRelics = {
     },
     PEAR: new class extends Relic {
         constructor() { super('pear', '洋ナシ', '拾った時、最大HP+10。', 'uncommon'); }
-        onObtain(owner) {
+        onObtain(owner: any) {
             owner.increaseMaxHp(10);
         }
     },
     DARKSTONE_PERIAPT: new class extends Relic {
         constructor() { super('darkstone_periapt', 'ダークストーンの護符', '「呪い」を得るたび、最大HP+6。', 'uncommon'); }
-        onCardAdd(owner, card) {
+        onCardAdd(owner: any, card: any) {
             if (card.type === 'curse') {
                 owner.increaseMaxHp(6);
             }
@@ -120,7 +121,7 @@ export const UncommonRelics = {
     },
     STRIKE_DUMMY: new class extends Relic {
         constructor() { super('strike_dummy', 'ストライクダミー', '名前に「ストライク」が含まれるカードのダメージ+3。', 'uncommon'); }
-        modifyDamageDealt(owner, target, damage, card) {
+        modifyDamageDealt(owner: any, target: any, damage: any, card?: any) {
             if (card && card.name.includes('ストライク')) {
                 return damage + 3;
             }
@@ -129,9 +130,9 @@ export const UncommonRelics = {
     },
     MUMMIFIED_HAND: new class extends Relic {
         constructor() { super('mummified_hand', 'ミイラの手', '「パワー」をプレイするたび、このターンの間ランダムなカードのコストが0になる。', 'uncommon'); }
-        onCardPlay(owner, engine, card) {
+        onCardPlay(owner: any, engine: any, card: any) {
             if (card.type === 'power') {
-                const validCards = owner.hand.filter(c => c.cost > 0 && !c.isCostOverriddenForTurn);
+                const validCards = owner.hand.filter((c: any) => c.cost > 0 && !c.isCostOverriddenForTurn);
                 if (validCards.length > 0) {
                     const randomCard = validCards[Math.floor(Math.random() * validCards.length)];
                     randomCard.originalCostBeforeOverride = randomCard.cost;
@@ -142,9 +143,9 @@ export const UncommonRelics = {
                 }
             }
         }
-        onTurnEnd(owner, engine) {
+        onTurnEnd(owner: any, engine: any) {
             if (owner.turnEndCostResets) {
-                owner.turnEndCostResets.forEach(c => {
+                owner.turnEndCostResets.forEach((c: any) => {
                     if (c.isCostOverriddenForTurn) {
                         c.cost = c.originalCostBeforeOverride;
                         c.isCostOverriddenForTurn = false;
@@ -156,13 +157,13 @@ export const UncommonRelics = {
     },
     MATRYOSHKA: new class extends Relic {
         constructor() { super('matryoshka', 'マトリョーシカ', '次に開ける2つの宝箱から、レリックが2つ出現する。', 'uncommon'); }
-        onObtain(owner) {
+        onObtain(owner: any) {
             owner.relicCounters['matryoshka'] = 2; // 残り回数
         }
     },
     FROZEN_EGG: new class extends Relic {
         constructor() { super('frozen_egg', '凍った卵', '今後カードの報酬で得られる「パワー」がアップグレードされる。', 'uncommon'); }
-        onCardAdd(owner, card) {
+        onCardAdd(owner: any, card: any) {
             if (card.type === 'power' && !card.isUpgraded && card.upgradeData) {
                 card.upgrade();
             }
@@ -170,7 +171,7 @@ export const UncommonRelics = {
     },
     TOXIC_EGG: new class extends Relic {
         constructor() { super('toxic_egg', '毒の卵', '今後カードの報酬で得られる「スキル」がアップグレードされる。', 'uncommon'); }
-        onCardAdd(owner, card) {
+        onCardAdd(owner: any, card: any) {
             if (card.type === 'skill' && !card.isUpgraded && card.upgradeData) {
                 card.upgrade();
             }
@@ -178,7 +179,7 @@ export const UncommonRelics = {
     },
     MOLTEN_EGG: new class extends Relic {
         constructor() { super('molten_egg', '溶融した卵', '今後カードの報酬で得られる「アタック」がアップグレードされる。', 'uncommon'); }
-        onCardAdd(owner, card) {
+        onCardAdd(owner: any, card: any) {
             if (card.type === 'attack' && !card.isUpgraded && card.upgradeData) {
                 card.upgrade();
             }
@@ -186,8 +187,8 @@ export const UncommonRelics = {
     },
     MERCURY_HOURGLASS: new class extends Relic {
         constructor() { super('mercury_hourglass', '水銀の砂時計', 'ターン開始時、敵全体に3ダメージを与える。', 'uncommon'); }
-        onPlayerTurnStart(owner, engine) {
-            engine.enemies.forEach(enemy => {
+        onPlayerTurnStart(owner: any, engine: any) {
+            engine.enemies.forEach((enemy: any) => {
                 if (!enemy.isDead()) {
                     enemy.takeDamage(3, owner);
                 }
@@ -196,12 +197,12 @@ export const UncommonRelics = {
     },
     SELF_FORMING_CLAY: new class extends Relic {
         constructor() { super('self_forming_clay', '自己形成粘土', '戦闘中HPを失うたび、次のターンに3ブロックを得る。', 'uncommon'); }
-        onTakeDamage(owner, engine, amount) {
+        onTakeDamage(owner: any, engine: any, amount: any) {
             if (amount > 0) {
                 owner.relicCounters['self_forming_clay'] = (owner.relicCounters['self_forming_clay'] || 0) + 3;
             }
         }
-        onPlayerTurnStart(owner, engine) {
+        onPlayerTurnStart(owner: any, engine: any) {
             const blockToGain = owner.relicCounters['self_forming_clay'] || 0;
             if (blockToGain > 0) {
                 owner.addBlock(blockToGain);
@@ -211,8 +212,8 @@ export const UncommonRelics = {
     },
     GREMLIN_HORN: new class extends Relic {
         constructor() { super('gremlin_horn', 'グレムリンの角笛', '敵が死ぬたび、エナジーを1得て、カードを1枚引く。', 'uncommon'); }
-        onEnemyDeath(owner, enemy, engine) {
-            owner.energy += 1;
+        onEnemyDeath(owner: IEntity, enemy: IEntity, engine: IBattleEngine) {
+            (owner as IPlayer).energy += 1;
             engine.drawCards(1);
         }
     },
@@ -227,11 +228,11 @@ export const UncommonRelics = {
     },
     BOTTLED_FLAME: new class extends Relic {
         constructor() { super('bottled_flame', '瓶詰の炎', '獲得時、アタックを1枚選ぶ。そのカードは各戦闘の開始時に手札にある状態になる。', 'uncommon'); }
-        onObtain(owner, game) {
+        onObtain(owner: any, game?: any) {
             if (game) {
-                const attacks = owner.masterDeck.filter(c => c.type === 'attack' && !c.isInnate);
+                const attacks = owner.masterDeck.filter((c: any) => c.type === 'attack' && !c.isInnate);
                 if (attacks.length > 0) {
-                    game.showCardSelectionFromPile('瓶詰の炎: アタックを選択', attacks, (card) => {
+                    game.showCardSelectionFromPile('瓶詰の炎: アタックを選択', attacks, (card: any) => {
                         card.isInnate = true;
                         card.bottledId = 'bottled_flame';
                     });
@@ -241,11 +242,11 @@ export const UncommonRelics = {
     },
     BOTTLED_TORNADO: new class extends Relic {
         constructor() { super('bottled_tornado', '瓶詰の竜巻', '獲得時、パワーを1枚選ぶ。そのカードは各戦闘の開始時に手札にある状態になる。', 'uncommon'); }
-        onObtain(owner, game) {
+        onObtain(owner: any, game?: any) {
             if (game) {
-                const powers = owner.masterDeck.filter(c => c.type === 'power' && !c.isInnate);
+                const powers = owner.masterDeck.filter((c: any) => c.type === 'power' && !c.isInnate);
                 if (powers.length > 0) {
-                    game.showCardSelectionFromPile('瓶詰の竜巻: パワーを選択', powers, (card) => {
+                    game.showCardSelectionFromPile('瓶詰の竜巻: パワーを選択', powers, (card: any) => {
                         card.isInnate = true;
                         card.bottledId = 'bottled_tornado';
                     });
@@ -255,11 +256,11 @@ export const UncommonRelics = {
     },
     BOTTLED_LIGHTNING: new class extends Relic {
         constructor() { super('bottled_lightning', '瓶詰の雷', '獲得時、スキルを1枚選ぶ。そのカードは各戦闘の開始時に手札にある状態になる。', 'uncommon'); }
-        onObtain(owner, game) {
+        onObtain(owner: any, game?: any) {
             if (game) {
-                const skills = owner.masterDeck.filter(c => c.type === 'skill' && !c.isInnate);
+                const skills = owner.masterDeck.filter((c: any) => c.type === 'skill' && !c.isInnate);
                 if (skills.length > 0) {
-                    game.showCardSelectionFromPile('瓶詰の雷: スキルを選択', skills, (card) => {
+                    game.showCardSelectionFromPile('瓶詰の雷: スキルを選択', skills, (card: any) => {
                         card.isInnate = true;
                         card.bottledId = 'bottled_lightning';
                     });
@@ -275,7 +276,7 @@ export const UncommonRelics = {
     },
     HORN_CLEAT: new class extends Relic {
         constructor() { super('horn_cleat', 'ホーンクリート', '2ターン目の開始時に14ブロックを得る。', 'uncommon'); }
-        onPlayerTurnStart(owner, engine) {
+        onPlayerTurnStart(owner: any, engine: any) {
             if (engine.turn === 2) {
                 owner.addBlock(14);
                 if (engine.showEffectForPlayer) engine.showEffectForPlayer('block');

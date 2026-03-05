@@ -1,3 +1,5 @@
+import { IEntity, IPlayer, IBattleEngine } from './types';
+
 export enum IntentType {
     Attack = 'attack',
     Defend = 'defend',
@@ -23,6 +25,6 @@ export interface EnemyMove {
     name: string;
     value?: number;
     times?: number;
-    effect?: (self: any, player: any, engine: any) => void;
+    effect?: (self: IEntity, player: IPlayer, engine: IBattleEngine) => void;
     statusEffects?: { type: string; value: number }[];
 }

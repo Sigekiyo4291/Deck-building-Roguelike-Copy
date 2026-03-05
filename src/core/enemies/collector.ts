@@ -13,7 +13,7 @@ export class Collector extends Enemy {
         this.turnCount++;
         let torchHeadsCount = 0;
         if (engine && engine.enemies) {
-            torchHeadsCount = engine.enemies.filter(e => e.name === 'トーチヘッド' && !e.isDead()).length;
+            torchHeadsCount = engine.enemies.filter((e: any) => e.name === 'トーチヘッド' && !e.isDead()).length;
         }
 
         if (this.turnCount === 1 || (torchHeadsCount <= 1 && Math.random() < 0.25)) {

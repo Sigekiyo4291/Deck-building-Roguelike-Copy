@@ -1,8 +1,6 @@
 import { IntentType, EnemyMove } from './intent';
-import { CardLibrary } from './card';
-import { RelicLibrary } from './relic';
-
 import { StatusLibrary } from './status-effect';
+import { IEntity, IBattleEngine } from './types';
 
 // DEBUFF_TYPES, BUFF_TYPES は削除され、StatusLibrary で管理されます。
 
@@ -14,7 +12,7 @@ export function isBuff(type: string, value: number): boolean {
   return StatusLibrary.isBuff(type, value);
 }
 
-export class Entity {
+export class Entity implements IEntity {
   name: string;
   maxHp: number;
   hp: number;
@@ -26,7 +24,7 @@ export class Entity {
   relicCounters: { [key: string]: number } = {}; // レリックの状態保持用
   onGainBlock?: () => void;
 
-  constructor(name, maxHp, sprite) {
+  constructor(name: string, maxHp: number, sprite: string) {
     this.name = name;
     this.maxHp = maxHp;
     this.hp = maxHp;
@@ -37,7 +35,7 @@ export class Entity {
     this.uuid = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2) + Date.now().toString(36);
   }
 
-  heal(amount) {
+  heal(amount: number) {
     if (this.relics && this.relics.some(r => r.id === 'mark_of_the_bloom')) {
       console.log('花の印により回復が無効化されました。');
       return;
@@ -52,13 +50,13 @@ export class Entity {
   }
 
   // 最大HPを増やし、現在HPも同量回復させる（捕食など）
-  increaseMaxHp(amount) {
+  increaseMaxHp(amount: number) {
     this.maxHp += amount;
     this.hp += amount;
   }
 
   // ブロック無視のHP減少（自傷や毒など）
-  loseHP(amount) {
+  loseHP(amount: number) {
     const prevHp = this.hp;
     this.hp = Math.max(0, this.hp - amount);
     // hpLossCount を持つエンティティ（Player）のみ処理
@@ -75,7 +73,7 @@ export class Entity {
     return amount;
   }
 
-  takeDamage(amount, source, engine?) {
+  takeDamage(amount: number, source: IEntity | null, engine?: IBattleEngine) {
     // ターゲット側の補正（脆弱など）を適用
     let totalDamage = this.applyTargetModifiers(amount, source);
     let remainingDamage = totalDamage;
@@ -93,7 +91,7 @@ export class Entity {
 
       // ブロックが破られた判定 (Hand Drill用)
       if (oldBlock > 0 && this.block === 0 && source && source.relics) {
-        source.relics.forEach(relic => {
+        source.relics.forEach((relic: any) => {
           if (relic.onBlockBroken) relic.onBlockBroken(source, this, null);
         });
       }
@@ -128,7 +126,7 @@ export class Entity {
     this.hp = Math.max(0, this.hp - remainingDamage);
 
     // トリガー: onReceiveDamage
-    if (remainingDamage > 0 || (source && source !== this)) {
+    if (remainingDamage > 0 || (source && (source as any) !== this)) {
       this.statusEffects.forEach(s => {
         const effect = StatusLibrary.get(s.type);
         if (effect && effect.onReceiveDamage) {
@@ -184,7 +182,7 @@ export class Entity {
     const flameBarrier = this.getStatusValue('flame_barrier');
     const totalReflect = thorns + flameBarrier;
 
-    if (totalReflect > 0 && source && source !== this) {
+    if (totalReflect > 0 && source && (source as any) !== this) {
       // 攻撃者に反射ダメージを与える
       source.takeDamage(totalReflect, null);
     }
@@ -200,7 +198,7 @@ export class Entity {
     return remainingDamage;
   }
 
-  calculateBlock(amount) {
+  calculateBlock(amount: number) {
     const dexterity = this.getStatusValue('dexterity');
     let totalBlock = Math.max(0, amount + dexterity);
 
@@ -211,7 +209,7 @@ export class Entity {
     return totalBlock;
   }
 
-  addBlock(amount) {
+  addBlock(amount: number) {
     const blockGained = this.calculateBlock(amount);
     if (blockGained > 0) {
       this.block += blockGained;
@@ -226,7 +224,7 @@ export class Entity {
   }
 
   // ダメージ計算（筋力補正 + 脱力）
-  calculateDamage(baseDamage) {
+  calculateDamage(baseDamage: number) {
     let damage = baseDamage;
     const strength = this.getStatusValue('strength');
     damage += strength;
@@ -240,7 +238,7 @@ export class Entity {
   }
 
   // ターゲット側の補正（脆弱など）を適用
-  applyTargetModifiers(damage, source?) {
+  applyTargetModifiers(damage: number, source?: IEntity | null) {
     let finalDamage = damage;
 
     // StatusLibraryのmodifyIncomingDamageを適用
@@ -261,7 +259,7 @@ export class Entity {
       if (this.relics && this.relics.some(r => r.id === 'odd_mushroom')) {
         multiplier = 1.25;
       } else if (source && source.relics) {
-        const hasPhrog = source.relics.find(r => r.id === 'paper_phrog');
+        const hasPhrog = source.relics.find((r: any) => r.id === 'paper_phrog');
         if (hasPhrog) multiplier = 1.75;
       }
       finalDamage = Math.floor(finalDamage * multiplier);
@@ -270,12 +268,12 @@ export class Entity {
   }
 
   // 特定のステータスの種類を削除（例：デバフ解除）
-  removeStatus(type) {
+  removeStatus(type: string) {
     this.statusEffects = this.statusEffects.filter(s => s.type !== type);
   }
 
   // ステータス操作
-  addStatus(type: string, value: number, source?: Entity) {
+  addStatus(type: string, value: number, source?: IEntity) {
     // レリックによるデバフ無効化
     if (this.relics && this.relics.length > 0) {
       if (type === 'vulnerable' && value > 0 && this.relics.some(r => r.id === 'turnip')) {
@@ -313,22 +311,22 @@ export class Entity {
     }
 
     if (source && source.relics && source.relics.length > 0) {
-      source.relics.forEach(r => {
+      source.relics.forEach((r: any) => {
         if (r.onApplyStatus) r.onApplyStatus(source, this, type, value, null);
       });
     }
   }
 
-  hasStatus(type) {
+  hasStatus(type: string) {
     return this.statusEffects.some(s => s.type === type && s.value !== 0);
   }
 
-  getStatusValue(type) {
+  getStatusValue(type: string) {
     const status = this.statusEffects.find(s => s.type === type);
     return status ? status.value : 0;
   }
 
-  onPlayerPlayCard(card, player, engine) {
+  onPlayerPlayCard(card: any, player: IEntity, engine: IBattleEngine) {
     // プレイヤーがカードを使った時のフック
     if (this.hasStatus('slow')) {
       this.addStatus('slow', 1);
@@ -338,7 +336,7 @@ export class Entity {
       if (this.getStatusValue('time_warp') <= 0) {
         this.addStatus('time_warp', 12);
         this.addStatus('strength', 2);
-        engine.endTurn();
+        (engine as any).endTurn();
       }
     }
   }
@@ -347,7 +345,7 @@ export class Entity {
     // ターン終了時の処理
   }
 
-  updateStatusAtTurnStart(engine?: any) {
+  updateStatusAtTurnStart(engine?: IBattleEngine) {
     // ターン開始時の更新（無形、一部のデバフなど）
     this.statusEffects.forEach(s => {
       const effect = StatusLibrary.get(s.type);
@@ -357,7 +355,7 @@ export class Entity {
     });
   }
 
-  updateStatus(engine?: any) {
+  updateStatus(engine?: IBattleEngine) {
     this.onTurnEnd();
     // ターン終了時の更新
     this.statusEffects.forEach(s => {
@@ -395,11 +393,11 @@ export class Entity {
     return this.hp <= 0;
   }
 
-  onDeath(killer, engine) {
+  onDeath(killer: IEntity | null, engine: IBattleEngine) {
     // 死亡時に呼び出されるフック
   }
 
-  onBattleStart(player, engine) {
+  onBattleStart(player: IEntity, engine: IBattleEngine) {
     // 戦闘開始時に呼び出されるフック
   }
 }
@@ -407,7 +405,7 @@ export class Entity {
 export class Enemy extends Entity {
   nextMove: EnemyMove | null;
 
-  constructor(name, hp, sprite) {
+  constructor(name: string, hp: number, sprite: string) {
     super(name, hp, sprite);
     this.nextMove = null;
   }
@@ -416,7 +414,7 @@ export class Enemy extends Entity {
     this.nextMove = move;
   }
 
-  decideNextMove(player?: any, engine?: any) {
+  decideNextMove(player?: IEntity, engine?: IBattleEngine) {
     // デフォルト行動
     const damage = 5 + Math.floor(Math.random() * 5);
     this.setNextMove({ type: IntentType.Attack, value: damage, name: '攻撃' });

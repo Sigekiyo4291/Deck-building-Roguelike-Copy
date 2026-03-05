@@ -7,7 +7,7 @@ export class Centurion extends Enemy {
         super('センチュリオン', 76 + Math.floor(Math.random() * 5), 'assets/images/enemies/slime.png');
     }
     decideNextMove(player?: any, engine?: any) {
-        const mystic = engine?.enemies?.find(e => e.name === 'ミスティック' && !e.isDead());
+        const mystic = engine?.enemies?.find((e: any) => e.name === 'ミスティック' && !e.isDead());
         if (mystic) {
             if (Math.random() < 0.65) {
                 this.setNextMove({ type: IntentType.Defend, name: '防御', effect: (e) => mystic.addBlock(15) });

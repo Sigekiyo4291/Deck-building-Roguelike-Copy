@@ -2,6 +2,7 @@ import { IntentType } from '../intent';
 import { Enemy, Entity } from '../entity';
 import { AcidSlimeL } from './acid-slime-l';
 import { SpikeSlimeL } from './spike-slime-l';
+import { IBattleEngine, IEntity } from '../types';
 
 /**
  * スライムボス
@@ -15,20 +16,20 @@ export class SlimeBoss extends Enemy {
         this.history = [];
     }
 
-    onBattleStart(player, engine) {
+    onBattleStart(player: any, engine: any) {
         super.onBattleStart(player, engine);
         this.addStatus('split', 1);
     }
 
-    takeDamage(amount: number, source?: Entity, engine?: any) {
+    takeDamage(amount: number, source: IEntity | null = null, engine?: IBattleEngine): number {
         const remainingDamage = super.takeDamage(amount, source, engine);
         // HPが50%以下になった時に即座に分裂をセット
-        if (this.hp > 0 && this.hp <= this.maxHp / 2 && (!this.nextMove || this.nextMove.id !== 'split')) {
+        if (this.hp > 0 && this.hp <= this.maxHp / 2 && (!this.nextMove || (this.nextMove as any).id !== 'split')) {
             this.setNextMove({
                 id: 'split',
                 type: IntentType.Special,
                 name: '分裂',
-                effect: (self, player, engine) => engine.splitEnemy(self, AcidSlimeL, SpikeSlimeL)
+                effect: (self: any, player: any, engine: any) => (engine as any).splitEnemy(self, AcidSlimeL, SpikeSlimeL)
             });
         }
         return remainingDamage;
@@ -40,7 +41,7 @@ export class SlimeBoss extends Enemy {
                 id: 'split',
                 type: IntentType.Special,
                 name: '分裂',
-                effect: (self, player, engine) => engine.splitEnemy(self, AcidSlimeL, SpikeSlimeL)
+                effect: (self: any, player: any, engine: any) => (engine as any).splitEnemy(self, AcidSlimeL, SpikeSlimeL)
             });
             return;
         }
@@ -52,7 +53,7 @@ export class SlimeBoss extends Enemy {
                 id: 'spray',
                 type: IntentType.Debuff,
                 name: '汚物スプレー',
-                effect: (self, player, engine) => {
+                effect: (self: any, player: any, engine: any) => {
                     if (engine && engine.addCardsToDiscard) {
                         engine.addCardsToDiscard('SLIMED', 3);
                     }
@@ -63,6 +64,8 @@ export class SlimeBoss extends Enemy {
         } else {
             this.setNextMove({ id: 'crush', type: IntentType.Attack, value: 35, name: 'スライムクラッシュ' });
         }
-        this.history.push(this.nextMove.id);
+        if (this.nextMove) {
+            this.history.push((this.nextMove as any).id);
+        }
     }
 }

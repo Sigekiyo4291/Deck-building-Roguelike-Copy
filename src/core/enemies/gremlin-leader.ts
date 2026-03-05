@@ -14,7 +14,7 @@ export class GremlinLeader extends Enemy {
     decideNextMove(player?: any, engine?: any) {
         let minionsCount = 0;
         if (engine && engine.enemies) {
-            minionsCount = engine.enemies.filter(e => e !== this && !e.isDead()).length;
+            minionsCount = engine.enemies.filter((e: any) => e !== this && !e.isDead()).length;
         }
 
         // ミニオンが1体以下のとき高確率（ここでは70%）で召喚

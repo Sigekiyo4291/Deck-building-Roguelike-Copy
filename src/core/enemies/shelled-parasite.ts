@@ -25,7 +25,7 @@ export class ShelledParasite extends Enemy {
         } else if (rand < 0.8) {
             this.setNextMove({
                 type: IntentType.AttackHeal, value: 10, name: '吸血',
-                effect: (enemy, player, engine) => {
+                effect: (enemy, player: any, engine: any) => {
                     const dealt = (enemy as any).lastDamageDealt || 0;
                     if (dealt > 0) enemy.heal(dealt);
                 }

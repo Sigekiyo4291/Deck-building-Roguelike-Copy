@@ -7,15 +7,15 @@ export class SceneManager {
     elUiLayer: HTMLElement | null;
     elMapScene: HTMLElement | null;
     elRewardScene: HTMLElement | null;
-    elTreasureScene: HTMLElement | null;
-    elShopScene: HTMLElement | null;
-    elRestScene: HTMLElement | null;
-    elEventScene: HTMLElement | null;
-    elTitleScene: HTMLElement | null; // タイトルシーン
-    elGlobalHeader: HTMLElement | null; // トップバー
-    elRelicContainer: HTMLElement | null; // レリックコンテナ
+    elTreasureScene: HTMLElement | null = null;
+    elShopScene: HTMLElement | null = null;
+    elRestScene: HTMLElement | null = null;
+    elEventScene: HTMLElement | null = null;
+    elTitleScene: HTMLElement | null = null; // タイトルシーン
+    elGlobalHeader: HTMLElement | null = null; // トップバー
+    elRelicContainer: HTMLElement | null = null; // レリックコンテナ
 
-    constructor(game) {
+    constructor(game: any) {
         this.game = game;
         this.elApp = document.getElementById('app');
         this.elBattleScene = document.querySelector('.battle-scene');
@@ -28,7 +28,7 @@ export class SceneManager {
             this.elMapScene.id = 'map-scene';
             this.elMapScene.className = 'scene';
             this.elMapScene.style.display = 'none';
-            this.elApp.appendChild(this.elMapScene);
+            if (this.elApp) this.elApp.appendChild(this.elMapScene);
         }
 
         // タイトルシーン
@@ -212,7 +212,7 @@ export class SceneManager {
         this.elMapScene.appendChild(legendEl);
     }
 
-    renderMap(map, onNodeSelect) {
+    renderMap(map: any, onNodeSelect: any) {
         if (!this.elMapScene) return;
 
         this.renderMapLegend(); // 凡例を表示
@@ -250,7 +250,7 @@ export class SceneManager {
             layerEl.style.position = 'relative';
             layerEl.style.zIndex = '3'; // ノードをSVGより前に
 
-            layer.forEach(node => {
+            layer.forEach((node: any) => {
                 const nodeEl = document.createElement('div');
                 nodeEl.className = 'map-node ' + node.type;
                 nodeEl.setAttribute('data-id', node.id); // デバッグ用
@@ -301,8 +301,8 @@ export class SceneManager {
             svg.setAttribute('width', String(mapWrapper.scrollWidth));
             svg.setAttribute('height', String(mapWrapper.scrollHeight));
 
-            map.layers.forEach(layer => {
-                layer.forEach(node => {
+            map.layers.forEach((layer: any) => {
+                layer.forEach((node: any) => {
                     const startEl = nodeElements.get(node.id);
                     if (!startEl) return;
                     const startRect = startEl.getBoundingClientRect();
@@ -311,7 +311,7 @@ export class SceneManager {
                     const startX = startRect.left - wrapperRect.left + startRect.width / 2;
                     const startY = startRect.top - wrapperRect.top + startRect.height / 2;
 
-                    node.nextNodes.forEach(nextId => {
+                    node.nextNodes.forEach((nextId: any) => {
                         const endEl = nodeElements.get(nextId);
                         if (!endEl) return;
                         const endRect = endEl.getBoundingClientRect();

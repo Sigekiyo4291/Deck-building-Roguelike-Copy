@@ -5,6 +5,7 @@ import { SceneManager } from './core/scene-manager';
 import { BOSS_DATA } from './core/boss-data';
 import { Player } from './core/player';
 import { Enemy, isDebuff, isBuff } from './core/entity';
+import { IEntity, IBattleEngine } from './core/types';
 import { Louse, Cultist, JawWorm, AcidSlimeM, SpikeSlimeM, AcidSlimeS, SpikeSlimeS, FungiBeast, AcidSlimeL, SpikeSlimeL, BlueSlaver, RedSlaver, Looter, GremlinNob, Lagavulin, Sentry, SlimeBoss, Guardian, Hexaghost, SneakyGremlin, MadGremlin, GremlinWizard, ShieldGremlin, FatGremlin, SphericGuardian, ShelledParasite, Byrd, Chosen, Mugger, Snecko, SnakePlant, Centurion, Mystic, GremlinLeader, BookOfStabbing, Taskmaster, BronzeOrb, BronzeAutomaton, Champ, TorchHead, Collector, Darkling, Repulsor, Exploder, Spiker, OrbWalker, Maw, Transient, SpireGrowth, WrithingMass, Dagger, Reptomancer, GiantHead, Nemesis, AwakenedOne, Deca, Donu, TimeEater } from './core/enemies';
 import { IntentType } from './core/intent';
 
@@ -156,8 +157,8 @@ class Game {
     const headerSettingsBtn = document.getElementById('header-settings-btn');
     if (headerSettingsBtn) {
       headerSettingsBtn.onclick = () => {
-        const overlay = document.getElementById('settings-overlay');
-        if (overlay) overlay.style.display = 'flex';
+        const mapOverlay = document.getElementById('map-overlay')!;
+        mapOverlay.style.display = 'flex';
         this.updateSettingsUI();
       };
     }
@@ -188,6 +189,23 @@ class Game {
       this.map.updateAvailableNodes();
     }
 
+    // TODO: プレイアブルキャラが増えた場合はそのキャラクターに応じた初期化が必要
+
+    // スターターデッキの初期化（初回のみ）
+    if (this.player.masterDeck.length === 0) {
+      // アイアンクラッドのスターターデッキ: ストライク×5, ディフェンド×4, 強打×1
+      for (let i = 0; i < 5; i++) {
+        this.player.masterDeck.push((CardLibrary as any).STRIKE.clone());
+      }
+      for (let i = 0; i < 4; i++) {
+        this.player.masterDeck.push((CardLibrary as any).DEFEND.clone());
+      }
+      this.player.masterDeck.push((CardLibrary as any).BASH.clone());
+    }
+
+    // 初期レリックを装備
+    this.player.relics.push(RelicLibrary.BURNING_BLOOD);
+
     // マップシーン表示（クロスフェード開始）
     const transition = this.sceneManager.showMap();
     this.renderMap(); // フェード中にレンダリングを済ませる
@@ -210,7 +228,7 @@ class Game {
     container.innerHTML = '';
 
     const sortedDeck = [...this.player.masterDeck].sort((a, b) => {
-      const typeOrder = { 'attack': 1, 'skill': 2, 'power': 3, 'curse': 4 };
+      const typeOrder: any = { 'attack': 1, 'skill': 2, 'power': 3, 'curse': 4 };
       if (typeOrder[a.type] !== typeOrder[b.type]) {
         return (typeOrder[a.type] || 99) - (typeOrder[b.type] || 99);
       }
@@ -247,18 +265,18 @@ class Game {
         }
       }
 
-      this.sceneManager.renderMap(this.map, (node) => this.onNodeSelect(node));
+      this.sceneManager.renderMap(this.map!, (node: any) => this.onNodeSelect(node));
       this.updateGlobalStatusUI(); // グローバルステータスを更新（金貨等）
       this.audioManager.playBgm('map'); // マップBGM再生
     }
   }
 
-  onNodeSelect(node) {
+  onNodeSelect(node: any) {
     if (this.sceneManager.isTransitioning) return;
 
     // 空飛ぶ靴 (Wing Boots) の判定: 本来繋がっていないノードを選んだ場合
     // currentNode があり、且つその nextNodes に選択したノードの ID が含まれていない場合、パス外移動とみなす
-    if (this.map.currentNode && !this.map.currentNode.nextNodes.includes(node.id)) {
+    if (this.map!.currentNode && !this.map!.currentNode.nextNodes.includes(node.id)) {
       const wingBootsIndex = this.player.relics.findIndex(r => r.id === 'wing_boots');
       if (wingBootsIndex !== -1 && (this.player.relicCounters['wing_boots'] || 0) > 0) {
         this.player.relicCounters['wing_boots']--;
@@ -276,7 +294,7 @@ class Game {
     this.currentFloor++; // 階層を進める
 
     this.updateGlobalStatusUI(); // UI更新
-    this.map.currentNode = node;
+    this.map!.currentNode = node;
     node.isClear = true;
 
     // レリック: onRoomEnter
@@ -297,7 +315,7 @@ class Game {
       this.showEventScene();
     } else {
       alert(`${node.type} ノードに到達しました（未実装）`);
-      this.map.updateAvailableNodes();
+      this.map!.updateAvailableNodes();
       this.renderMap();
     }
   }
@@ -354,7 +372,7 @@ class Game {
       };
     }
 
-    const optionsContainer = document.querySelector('.rest-options');
+    const optionsContainer = document.querySelector('.rest-options') as HTMLElement;
     if (optionsContainer) {
       // 既存の動的ボタンをクリア（念のため）
       const dynamicBtns = optionsContainer.querySelectorAll('.dynamic-rest-btn');
@@ -385,7 +403,7 @@ class Game {
   }
 
   // 休息所オプションの動的追加ヘルパー
-  addRestOption(container: Element, icon: string, label: string, desc: string, callback: () => void) {
+  addRestOption(container: HTMLElement, icon: string, label: string, desc: string, callback: () => void) {
     const btn = document.createElement('button');
     btn.className = 'end-turn-btn rest-option-btn dynamic-rest-btn';
     btn.innerHTML = `
@@ -473,7 +491,7 @@ class Game {
 
 
   async finishRest() {
-    this.map.updateAvailableNodes();
+    this.map!.updateAvailableNodes();
     const transition = this.sceneManager.showMap();
     this.renderMap();
     await transition;
@@ -527,25 +545,25 @@ class Game {
     this.sceneManager.showEvent();
 
     // イベント情報のUI更新
-    document.getElementById('event-image').textContent = event.image;
-    document.getElementById('event-name').textContent = event.name;
-    document.getElementById('event-description').textContent = '';
+    document.getElementById('event-image')!.textContent = event.image;
+    document.getElementById('event-name')!.textContent = event.name;
+    document.getElementById('event-description')!.textContent = '';
 
     this.updateEventChoices(event, this.currentEventState);
   }
 
-  updateEventChoices(event, state) {
-    const optionsContainer = document.getElementById('event-options');
+  updateEventChoices(event: any, state: any) {
+    const optionsContainer = document.getElementById('event-options')!;
     optionsContainer.innerHTML = '';
 
     // 選択肢がサブ選択肢（phase: 'trap'など）の場合
     if (state.choices) {
-      state.choices.forEach((choice) => {
+      state.choices.forEach((choice: any) => {
         const button = document.createElement('button');
         button.className = 'end-turn-btn';
         button.textContent = choice.text;
         button.onclick = () => {
-          choice.action(this, (newState) => {
+          choice.action(this, (newState: any) => {
             this.currentEventState = { ...this.currentEventState, ...newState };
             this.updateEventChoices(event, this.currentEventState);
           });
@@ -554,13 +572,12 @@ class Game {
       });
     } else {
       // 通常の選択肢
-      const choices = event.getChoices(this, state);
-      choices.forEach((choice) => {
+      event.choices.filter((choice: any) => !choice.phase || choice.phase === state.phase).forEach((choice: any) => {
         const button = document.createElement('button');
         button.className = 'end-turn-btn';
         button.textContent = choice.text;
         button.onclick = () => {
-          choice.action(this, (newState) => {
+          choice.action(this, (newState: any) => {
             this.currentEventState = { ...this.currentEventState, ...newState };
             this.updateEventChoices(event, this.currentEventState);
           });
@@ -573,7 +590,7 @@ class Game {
   async finishEvent() {
     this.currentEvent = null;
     this.currentEventState = null;
-    this.map.updateAvailableNodes();
+    this.map!.updateAvailableNodes();
     const transition = this.sceneManager.showMap();
     this.renderMap();
     await transition;
@@ -581,7 +598,7 @@ class Game {
 
 
   // カード変化選択UI
-  showCardTransformSelection(onComplete, upgrade = false) {
+  showCardTransformSelection(onComplete: () => void, upgrade: boolean = false) {
     const overlay = document.getElementById('deck-selection-overlay');
     const listEl = document.getElementById('deck-selection-list');
     const titleEl = document.getElementById('deck-selection-title');
@@ -616,14 +633,17 @@ class Game {
         }
 
         // ランダムなカードに変化 (呪い以外)
-        const keys = Object.keys(CardLibrary).filter(k => CardLibrary[k].type !== 'curse' && CardLibrary[k].rarity !== 'basic' && CardLibrary[k].rarity !== 'special');
-        const randomKey = keys[Math.floor(Math.random() * keys.length)];
-
-        const newCard = CardLibrary[randomKey].clone();
-        if (upgrade) newCard.upgrade();
-
-        this.player.masterDeck[index] = newCard;
-        alert(`${card.name} が ${newCard.name} に変化しました！`);
+        const keys = Object.keys(CardLibrary).filter(k => (CardLibrary as any)[k].type !== 'curse' && (CardLibrary as any)[k].rarity !== 'basic' && (CardLibrary as any)[k].rarity !== 'special');
+        const randomId = keys[Math.floor(Math.random() * keys.length)];
+        const newCard = (CardLibrary as any)[randomId]?.clone(); // Add null check and clone
+        if (newCard) {
+          if (upgrade) newCard.upgrade();
+          this.player.masterDeck[index] = newCard;
+          alert(`${card.name} が ${newCard.name} に変化しました！`);
+        } else {
+          console.warn(`Failed to transform card: Could not find a suitable replacement for ${card.name}`);
+          alert(`カードの変換に失敗しました。`);
+        }
         overlay.style.display = 'none';
         if (onComplete) onComplete();
         this.updateGlobalStatusUI();
@@ -675,17 +695,17 @@ class Game {
     let count = 0;
     this.player.masterDeck = this.player.masterDeck.map(card => {
       if (card.id === 'strike' || card.id === 'defend' || card.name.includes('ストライク') || card.name.includes('防御')) {
-        const keys = Object.keys(CardLibrary).filter(k => CardLibrary[k].type !== 'curse' && CardLibrary[k].type !== 'status' && CardLibrary[k].rarity !== 'basic');
+        const keys = Object.keys(CardLibrary).filter(k => (CardLibrary as any)[k].type !== 'curse' && (CardLibrary as any)[k].rarity !== 'basic' && (CardLibrary as any)[k].rarity !== 'special');
         const randomKey = keys[Math.floor(Math.random() * keys.length)];
         count++;
-        return CardLibrary[randomKey].clone();
+        return (CardLibrary as any)[randomKey].clone();
       }
       return card;
     });
     alert(`${count} 枚の基本カードが変化しました！`);
   }
 
-  showCardRemovalSelection(onComplete) {
+  showCardRemovalSelection(onComplete: (card: any) => void) {
     const overlay = document.getElementById('deck-selection-overlay');
     const listEl = document.getElementById('deck-selection-list');
     const titleEl = document.getElementById('deck-selection-title');
@@ -722,7 +742,7 @@ class Game {
         this.player.masterDeck.splice(index, 1);
         alert(`${card.name} をデッキから削除しました。`);
         overlay.style.display = 'none';
-        if (onComplete) onComplete();
+        if (onComplete) onComplete(card);
         this.updateGlobalStatusUI();
       };
       listEl.appendChild(cardEl);
@@ -730,13 +750,13 @@ class Game {
 
     closeBtn.onclick = () => {
       overlay.style.display = 'none';
-      if (onComplete) onComplete();
+      if (onComplete) onComplete(null);
     };
   }
 
   // 新しいレリック抽選ヘルパー
   getRelicFromPool(allowedRarities: string[], excludeIds: string[] = []): any {
-    const ownedIds = this.player.relics.map(r => r.id);
+    const ownedIds = this.player.relics!.map(r => r.id);
     const candidates = Object.values(RelicLibrary).filter(r =>
       (!r.character || r.character === 'ironclad') &&
       !ownedIds.includes(r.id) &&
@@ -749,7 +769,7 @@ class Game {
     return null;
   }
 
-  gainRandomRelicByRarity(rarity) {
+  gainRandomRelicByRarity(rarity: string) {
     const relic = this.getRelicFromPool([rarity]);
     if (relic) {
       this.player.relics.push(relic);
@@ -801,14 +821,14 @@ class Game {
     const uncommonCards = allCards.filter(c => c.rarity === 'uncommon');
     const rareCards = allCards.filter(c => c.rarity === 'rare');
 
-    const getCardPrice = (card) => {
+    const getCardPrice = (card: any) => {
       if (card.rarity === 'common') return getPrice(50);
       if (card.rarity === 'uncommon') return getPrice(75);
       if (card.rarity === 'rare') return getPrice(150);
       return getPrice(50);
     };
 
-    const getRandomItem = (list) => {
+    const getRandomItem = (list: any[]) => {
       if (!list || list.length === 0) return null;
       return list[Math.floor(Math.random() * list.length)];
     };
@@ -865,7 +885,7 @@ class Game {
     topSlotSpecs.forEach((list, i) => {
       const slot = document.createElement('div');
       slot.className = 'shop-slot';
-      cardsTopContainer.appendChild(slot);
+      cardsTopContainer!.appendChild(slot);
       renderCardSlot(slot, list, i === saleIdx);
     });
 
@@ -874,12 +894,12 @@ class Game {
     bottomSlotSpecs.forEach(list => {
       const slot = document.createElement('div');
       slot.className = 'shop-slot';
-      cardsBottomLeftContainer.appendChild(slot);
+      cardsBottomLeftContainer!.appendChild(slot);
       renderCardSlot(slot, list);
     });
 
     // 3. レリック
-    const getRelicPrice = (rarity) => {
+    const getRelicPrice = (rarity: any) => {
       if (rarity === 'common') return getPrice(150);
       if (rarity === 'uncommon') return getPrice(250);
       if (rarity === 'rare') return getPrice(300);
@@ -932,7 +952,7 @@ class Game {
     for (let i = 0; i < 3; i++) {
       const slot = document.createElement('div');
       slot.className = 'shop-slot';
-      relicsCenterContainer.appendChild(slot);
+      relicsCenterContainer!.appendChild(slot);
       renderRelicSlot(slot, i === 0); // 最初のスロットはショップ専用
     }
 
@@ -940,7 +960,7 @@ class Game {
     const potionLibrary = (window as any).PotionLibrary || PotionLibrary;
     const allPotions = Object.values(potionLibrary) as any[];
 
-    const getPotionPrice = (rarity) => {
+    const getPotionPrice = (rarity: any) => {
       if (rarity === 'common') return getPrice(50);
       if (rarity === 'uncommon') return getPrice(75);
       if (rarity === 'rare') return getPrice(100);
@@ -1014,7 +1034,7 @@ class Game {
     for (let i = 0; i < 3; i++) {
       const slot = document.createElement('div');
       slot.className = 'shop-slot';
-      potionsCenterContainer.appendChild(slot);
+      potionsCenterContainer!.appendChild(slot);
       renderPotionSlot(slot);
     }
 
@@ -1027,8 +1047,8 @@ class Game {
       shopContainer.style.position = 'relative';
     }
 
-    document.getElementById('shop-leave-btn').onclick = async () => {
-      this.map.updateAvailableNodes();
+    document.getElementById('shop-leave-btn')!.onclick = async () => {
+      this.map!.updateAvailableNodes();
       const transition = this.sceneManager.showMap();
       this.renderMap();
       await transition;
@@ -1171,8 +1191,8 @@ class Game {
   showTreasureScene() {
     this.sceneManager.showTreasure();
     this.audioManager.playBgm('map'); // 宝箱画面もマップBGM
-    const openBtn = document.getElementById('open-treasure-btn');
-    const icon = document.getElementById('treasure-icon');
+    const openBtn = document.getElementById('open-treasure-btn')!;
+    const icon = document.getElementById('treasure-icon')!;
 
     icon.textContent = '🎁';
     openBtn.style.display = 'block';
@@ -1185,7 +1205,7 @@ class Game {
       alert('ヌロスの飢えた顔により、宝箱は空っぽでした...');
 
       openBtn.onclick = async () => {
-        this.map.updateAvailableNodes();
+        this.map!.updateAvailableNodes();
         const transition = this.sceneManager.showMap();
         this.renderMap();
         await transition;
@@ -1223,7 +1243,7 @@ class Game {
     icon.onclick = handleOpen;
   }
 
-  startDebugBattle(enemies) {
+  startDebugBattle(enemies: any[]) {
     if (this.battleEngine) {
       this.battleEngine = null;
     }
@@ -1241,7 +1261,7 @@ class Game {
           location.reload();
         }
       },
-      (title, pile, callback, options) => this.showCardSelectionFromPile(title, pile, callback, options),
+      (title: string, pile: any[], callback: any, options: any) => this.showCardSelectionFromPile(title, pile, callback, options),
       false, // isEliteBattle
       false, // isBossBattle
       this.effectManager, // エフェクトマネージャーを渡す
@@ -1254,17 +1274,17 @@ class Game {
     this.audioManager.playBgm('battle'); // デバッグバトルBGM
   }
 
-  startDebugEvent(event) {
+  startDebugEvent(event: any) {
     this.currentEvent = event;
     this.currentEventState = {};
     this.sceneManager.showEvent();
-    document.getElementById('event-image').textContent = event.image;
-    document.getElementById('event-name').textContent = event.name;
-    document.getElementById('event-description').textContent = '';
+    document.getElementById('event-image')!.textContent = event.image;
+    document.getElementById('event-name')!.textContent = event.name;
+    document.getElementById('event-description')!.textContent = '';
     this.updateEventChoices(event, this.currentEventState);
   }
 
-  startBattle(type) {
+  async startBattle(type: any) {
     console.log(`Game.startBattle: type=${type}`);
     // 敵データ生成
     let enemies = this.getEncounterEnemies(this.currentAct, type as any);
@@ -1278,7 +1298,7 @@ class Game {
     const neowLamentCount = this.player.relicCounters['neow_lament'] || 0;
     if (this.player.relics.some(r => r.id === 'neow_lament') && neowLamentCount > 0) {
       this.player.relicCounters['neow_lament']--;
-      enemies.forEach(e => {
+      enemies.forEach((e: any) => {
         e.maxHp = 1;
         e.hp = 1;
       });
@@ -1303,7 +1323,7 @@ class Game {
           location.reload();
         }
       },
-      (title, pile, callback, options) => this.showCardSelectionFromPile(title, pile, callback, options),
+      (title: string, pile: any[], callback: any, options: any) => this.showCardSelectionFromPile(title, pile, callback, options),
       this.isEliteBattle,
       this.isBossBattle,
       this.effectManager, // エフェクトマネージャーを渡す
@@ -1351,7 +1371,7 @@ class Game {
           location.reload();
         }
       },
-      (title, pile, callback, options) => this.showCardSelectionFromPile(title, pile, callback, options),
+      (title: string, pile: any[], callback: any, options: any) => this.showCardSelectionFromPile(title, pile, callback, options),
       false,
       false,
       this.effectManager,
@@ -1428,7 +1448,7 @@ class Game {
   async onBattleEscape() {
     alert('戦闘から逃走しました！');
     // 通常戦闘の場合、カウントアップ
-    if (!this.isEliteBattle && this.map.currentNode && this.map.currentNode.type === 'enemy') {
+    if (!this.isEliteBattle && this.map!.currentNode && this.map!.currentNode.type === 'enemy') {
       this.battleCount++;
     }
     if (this.map) {
@@ -1439,7 +1459,7 @@ class Game {
     await transition;
   }
 
-  onBattleWin() {
+  onBattleWin(isElite: boolean = false) {
     console.log('Game: onBattleWin triggered');
     try {
       this.deselectCard();
@@ -1452,7 +1472,7 @@ class Game {
       }
 
       // 通常戦闘の場合、カウントアップ
-      if (!this.isEliteBattle && this.map.currentNode && this.map.currentNode.type === 'enemy') {
+      if (!this.isEliteBattle && this.map!.currentNode && this.map!.currentNode.type === 'enemy') {
         this.battleCount++;
       }
 
@@ -1465,12 +1485,12 @@ class Game {
       console.log('Game: Calling showRewardScene, isElite: ' + this.isEliteBattle + ', isBoss: ' + this.isBossBattle);
       // リワード画面表示
       this.showRewardScene(this.isEliteBattle, this.isBossBattle);
-    } catch (e) {
-      console.error('onBattleWin Error:', e);
+    } catch (e: any) {
+      console.error('Error in onBattleWin:', e);
     }
   }
 
-  showRewardScene(isElite, isBoss = false, isTreasure = false, extraRewards: any[] = [], onDone?: () => void, includeNormalRewards: boolean = true) {
+  showRewardScene(isElite: boolean, isBoss = false, isTreasure = false, extraRewards: any[] = [], onDone?: () => void, includeNormalRewards: boolean = true) {
     console.log('Game: showRewardScene called, isElite:', isElite, 'isBoss:', isBoss, 'includeNormal:', includeNormalRewards);
     this.audioManager.playBgm('map'); // リワード画面でマップBGMに戻す（勝利ファンファーレ実装まではこれで）
     try {
@@ -1589,14 +1609,14 @@ class Game {
           }
         };
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error('showRewardScene Error:', e);
       alert('Reward Scene Error: ' + e.message);
     }
   }
 
   // onRewardClickの修正: itemElを受け取ってクリック後に無効化スタイル適用
-  onRewardClick(reward, index, itemEl) {
+  onRewardClick(reward: any, index: number, itemEl: HTMLElement) {
     if (reward.type === 'gold') {
       this.player.gainGold(reward.value);
       reward.taken = true;
@@ -1663,7 +1683,7 @@ class Game {
     });
   }
 
-  showPotionPopup(index, x, y) {
+  showPotionPopup(index: number, x: number, y: number) {
     this.closePotionPopup();
 
     const potion = this.player.potions[index];
@@ -1732,7 +1752,7 @@ class Game {
     }
   }
 
-  async handlePotionUse(index) {
+  async handlePotionUse(index: number) {
     const potion = this.player.potions[index];
     if (!potion) return;
 
@@ -1786,7 +1806,7 @@ class Game {
     this.showCardSelectionFromPile(title, pile, callback);
   }
 
-  showCardSelectionFromPile(title, pile, callback, options: any = {}) {
+  showCardSelectionFromPile(title: string, pile: any[], callback: any, options: any = {}) {
     const overlay = document.getElementById('deck-selection-overlay');
     const container = document.getElementById('deck-selection-list');
     const titleEl = document.getElementById('deck-selection-title');
@@ -1856,17 +1876,19 @@ class Game {
     });
   }
 
-  showCardSelection(rewardItem, itemEl) {
+  showCardSelection(rewardItem: any, itemEl: HTMLElement | null) {
     const overlay = document.getElementById('card-reward-overlay');
     const container = document.getElementById('card-choices');
     const skipBtn = document.getElementById('skip-card-btn');
 
+    if (!overlay || !container || !skipBtn) return;
+
     container.innerHTML = '';
 
     // ランダムなカード候補を3枚生成
-    let keys = Object.keys(CardLibrary).filter(k => CardLibrary[k].type !== 'curse');
+    let keys = Object.keys(CardLibrary).filter(k => (CardLibrary as any)[k].type !== 'curse');
     if (rewardItem.isRare) {
-      keys = keys.filter(k => CardLibrary[k].rarity === 'rare');
+      keys = keys.filter(k => (CardLibrary as any)[k].rarity === 'rare');
     }
 
     // レリック: 質問カード / 壊れた王冠
@@ -1900,15 +1922,15 @@ class Game {
 
       let card;
       if (isColorless) {
-        const colorlessPool = Object.values(CardLibrary).filter(c => c.cardClass === 'colorless');
-        const randomKey = Object.keys(CardLibrary).find(k => CardLibrary[k] === colorlessPool[Math.floor(Math.random() * colorlessPool.length)]);
-        card = CardLibrary[randomKey || 'FINESSE'].clone();
+        const colorlessPool = Object.values(CardLibrary).filter((c: any) => c.cardClass === 'colorless');
+        const randomKey = Object.keys(CardLibrary).find(k => (CardLibrary as any)[k] === colorlessPool[Math.floor(Math.random() * colorlessPool.length)]);
+        card = (CardLibrary as any)[randomKey || 'FINESSE'].clone();
       } else {
         const possibleKeys = Object.keys(CardLibrary).filter(k =>
-          CardLibrary[k].type !== 'curse' && CardLibrary[k].type !== 'status' && CardLibrary[k].cardClass !== 'colorless' && CardLibrary[k].rarity === rarity
+          (CardLibrary as any)[k].type !== 'curse' && (CardLibrary as any)[k].type !== 'status' && (CardLibrary as any)[k].cardClass !== 'colorless' && (CardLibrary as any)[k].rarity === rarity
         );
         const randomKey = possibleKeys[Math.floor(Math.random() * possibleKeys.length)] || keys[Math.floor(Math.random() * keys.length)];
-        card = CardLibrary[randomKey].clone();
+        card = (CardLibrary as any)[randomKey].clone();
       }
 
       const cardEl = this.createRewardCardElement(card);
@@ -1920,8 +1942,10 @@ class Game {
             this.player.relicCounters['omamori']--;
             alert(`お守りが発動！ 呪い ${card.name} を無効化しました。`);
             rewardItem.taken = true;
-            itemEl.style.opacity = '0.5';
-            itemEl.style.textDecoration = 'line-through';
+            if (itemEl) {
+              itemEl.style.opacity = '0.5';
+              itemEl.style.textDecoration = 'line-through';
+            }
             overlay.style.display = 'none';
             return;
           }
@@ -1950,8 +1974,6 @@ class Game {
       };
       container.appendChild(cardEl);
     }
-
-    if (!overlay || !container || !skipBtn) return;
 
     overlay.style.display = 'flex';
 
@@ -2052,14 +2074,14 @@ class Game {
     alert(`Act ${this.currentAct} に到達しました。HPが全快しました。`);
   }
 
-  createRewardCardElement(card) {
+  createRewardCardElement(card: any): HTMLElement {
     const cardEl = document.createElement('div');
     const charClass = (card.type === 'curse' || card.isStatus) ? 'curse' : 'ironclad';
     const upgradedClass = card.isUpgraded ? 'upgraded' : '';
     cardEl.className = `card ${card.rarity} card-${card.type} ${charClass} ${upgradedClass}`;
     const imagePath = card.image || 'assets/images/cards/NoImage.png';
     const typeNames = { attack: 'アタック', skill: 'スキル', power: 'パワー', curse: '呪い', status: '状態異常' };
-    const typeName = typeNames[card.type] || card.type;
+    const typeName = (typeNames as any)[card.type] || card.type;
 
     cardEl.innerHTML = `
       <div class="card-frame"></div>
@@ -2122,6 +2144,8 @@ class Game {
       // グローバルステータス（トップバーのHP含む）を更新
       this.updateGlobalStatusUI();
 
+      if (!this.battleEngine) return;
+
       // --- Player UI Update ---
       const playerBlock = document.getElementById('player-block');
       const playerBlockText = document.getElementById('player-block-text');
@@ -2141,7 +2165,7 @@ class Game {
       this.updateStatusUI(player, 'player-status-container');
 
       // --- Enemy UI Update ---
-      const enemiesContainer = document.getElementById('enemies-container');
+      const enemiesContainer = document.getElementById('enemies-container')!;
       enemiesContainer.innerHTML = '';
 
       // 自動ターゲット変更: 現在のターゲットが死んでいるか無効な場合、生きている最初の敵を選択
@@ -2202,14 +2226,14 @@ class Game {
 
             // バフ判定: 元のタイプがbuff系、またはステータス効果にバフを含む
             if (move.type === IntentType.Buff || move.type === IntentType.AttackBuff || move.type === IntentType.DefendBuff ||
-              nextMoveStatusEffects.some(s => isBuff(s.type, s.value))) {
+              nextMoveStatusEffects.some((s: any) => isBuff(s.type, s.value))) {
               icons.push('💪');
               hasBuff = true;
             }
 
             // デバフ判定: 元のタイプがdebuff系、またはステータス効果にデバフを含む（burn カード追加も含む）
             if (move.type === IntentType.Debuff || move.type === IntentType.AttackDebuff || move.type === IntentType.DefendDebuff ||
-              nextMoveStatusEffects.some(s => isDebuff(s.type, s.value) || s.type === 'burn')) {
+              nextMoveStatusEffects.some((s: any) => isDebuff(s.type, s.value) || s.type === 'burn')) {
               icons.push('📉');
               hasDebuff = true;
             }
@@ -2334,37 +2358,37 @@ class Game {
       });
 
       // --- Deck / Energy ---
-      document.getElementById('energy-value').textContent = String(player.energy);
-      document.getElementById('energy-max-value').textContent = String(player.maxEnergy);
-      document.getElementById('deck-count').textContent = String(player.deck.length);
-      document.getElementById('discard-count').textContent = String(player.discard.length);
+      document.getElementById('energy-value')!.textContent = String(player.energy);
+      document.getElementById('energy-max-value')!.textContent = String(player.maxEnergy);
+      document.getElementById('deck-count')!.textContent = String(player.deck.length);
+      document.getElementById('discard-count')!.textContent = String(player.discard.length);
       if (this.elExhaustCount) {
         this.elExhaustCount.textContent = String(player.exhaust.length);
       }
 
       // --- Hand ---
-      this.elHand.innerHTML = '';
+      if (this.elHand) this.elHand.innerHTML = '';
       player.hand.forEach((card, index) => {
         const cardEl = this.createCardElement(card, index);
-        this.elHand.appendChild(cardEl);
+        if (this.elHand) this.elHand.appendChild(cardEl);
       });
 
       // ターン終了ボタン
       if (this.elEndTurnBtn) {
         (this.elEndTurnBtn as HTMLButtonElement).disabled = (this.battleEngine.phase !== 'player');
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error('UpdateBattleUI Error:', e);
       alert('UI Error: ' + e.message);
     }
   }
 
-  updateStatusUI(entity, containerId) {
+  updateStatusUI(entity: IEntity, containerId: string) {
     const container = document.getElementById(containerId);
     if (!container) return;
     container.innerHTML = '';
 
-    entity.statusEffects.forEach(status => {
+    entity.statusEffects.forEach((status: any) => {
       const effect = StatusLibrary.get(status.type);
       if (!effect) return;
 
@@ -2377,14 +2401,14 @@ class Game {
 
       const valueEl = document.createElement('div');
       valueEl.className = 'status-value';
-      valueEl.textContent = status.value;
+      valueEl.textContent = status.value.toString();
 
       iconEl.appendChild(valueEl);
       container.appendChild(iconEl);
     });
   }
 
-  createCardElement(card, index) {
+  createCardElement(card: any, index: number): HTMLElement {
     const cardEl = document.createElement('div');
     const upgradedClass = card.isUpgraded ? 'upgraded' : '';
     cardEl.className = `card ${card.rarity} card-${card.type} ${card.cardClass} ${upgradedClass}`;
@@ -2434,7 +2458,7 @@ class Game {
 
     // タイプ名表示用
     const typeNames = { attack: 'アタック', skill: 'スキル', power: 'パワー', curse: '呪い', status: '状態異常' };
-    const typeName = typeNames[card.type] || card.type;
+    const typeName = (typeNames as any)[card.type] || card.type;
 
     cardEl.innerHTML = `
       <div class="card-frame"></div>
@@ -2486,7 +2510,7 @@ class Game {
     let startY = 0;
 
     cardEl.onpointerdown = (e) => {
-      if (this.battleEngine.phase !== 'player') return;
+      if (!this.battleEngine || this.battleEngine.phase !== 'player') return;
 
       isDragging = true;
       startX = e.clientX;
@@ -2534,12 +2558,14 @@ class Game {
   }
 
   // ドラッグ完了時のカード使用処理
-  tryPlayCard(index) {
+  tryPlayCard(index: number) {
+    if (!this.battleEngine) return;
     const card = this.player.hand[index];
     if (!card) return;
 
     console.log('Game: tryPlayCard for', card.name, 'at index', index);
 
+    // 1. 呪いカードチェック（ブルーキャンドルを所持している場合は許可）
     // 1. 呪いカードチェック（ブルーキャンドルを所持している場合は許可）
     if (card.type === 'curse') {
       const hasBlueCandle = this.player.relics.some(r => r.id === 'blue_candle');
@@ -2571,7 +2597,7 @@ class Game {
     }
 
     // 3. 使用条件チェック (クラッシュなど)
-    if (!card.canPlay(this.player, this.battleEngine)) {
+    if (!card.canPlay(this.player, this.battleEngine as IBattleEngine)) {
       alert('このカードの使用条件を満たしていません！');
       this.updateBattleUI();
       return;
@@ -2605,7 +2631,7 @@ class Game {
   }
 
   // onHandCardClickは不要になるので削除またはコメントアウト
-  onHandCardClick(index) {
+  onHandCardClick(index: number) {
     // no-op
   }
 
@@ -2631,9 +2657,9 @@ class Game {
     this.updateRelicUI();
   }
 
-  onEnemyClick(enemyIndex) {
+  onEnemyClick(enemyIndex: number) {
     // 敵を選択状態にするだけ（攻撃はしない）
-    if (this.battleEngine.phase !== 'player' || this.battleEngine.isProcessing) return;
+    if (!this.battleEngine || this.battleEngine.phase !== 'player' || this.battleEngine.isProcessing) return;
 
     const enemy = this.battleEngine.enemies[enemyIndex];
     if (enemy && !enemy.isDead()) {

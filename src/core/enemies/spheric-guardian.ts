@@ -26,7 +26,7 @@ export class SphericGuardian extends Enemy {
         } else if (this.turnCount % 2 === 1) {
             this.setNextMove({ type: IntentType.Attack, value: 10, times: 2, name: '攻撃' });
         } else {
-            this.setNextMove({ type: IntentType.AttackDefend, value: 10, name: '攻撃+防御', effect: (self) => self.addBlock(15) });
+            this.setNextMove({ type: IntentType.AttackDefend, value: 10, name: '攻撃+防御', effect: (self: any) => self.addBlock(15) });
         }
     }
 }

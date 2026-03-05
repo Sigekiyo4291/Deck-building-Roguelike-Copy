@@ -19,6 +19,7 @@ import { EffectManager } from './core/effect-manager';
 import { AudioManager } from './core/audio-manager';
 import { getRandomPotion, PotionLibrary } from './core/potion-data';
 import { ENCOUNTER_POOLS, selectWeightedEncounter } from './core/encounter-data';
+import { AssetManager } from './core/asset-manager';
 
 // STATUS_INFO は削除され、StatusLibrary で管理されます。
 
@@ -177,7 +178,26 @@ class Game {
 
 
 
-  start() {
+  async start() {
+    const progressBar = document.getElementById('loading-progress-bar');
+    const progressText = document.getElementById('loading-progress-text');
+    const loadingScene = document.getElementById('loading-scene');
+
+    await AssetManager.preloadAll((percent) => {
+      if (progressBar) progressBar.style.width = `${percent}%`;
+      if (progressText) progressText.innerText = `${percent}%`;
+    });
+
+    // 読み込み完了後に少し待機してからタイトルへ
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    if (loadingScene) {
+      loadingScene.classList.remove('active');
+      setTimeout(() => {
+        loadingScene.style.display = 'none';
+      }, 500);
+    }
+
     this.audioManager.playBgm('title'); // タイトルBGMがあれば再生（なければマップなど）
     this.sceneManager.showTitle();
   }

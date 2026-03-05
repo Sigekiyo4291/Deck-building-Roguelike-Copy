@@ -1,14 +1,15 @@
 import { Potion } from './potion';
 import { CardLibrary } from './card';
+import { IPlayer, IEntity, IBattleEngine, ICard, IPotion } from './types';
 
-function getRandomCardsForPotion(type: string, count: number): any[] {
+function getRandomCardsForPotion(type: string, count: number): ICard[] {
     let keys = Object.keys(CardLibrary).filter(k => (CardLibrary as any)[k].type === type && (CardLibrary as any)[k].rarity !== 'basic' && (CardLibrary as any)[k].rarity !== 'special');
 
     if (type === 'colorless') {
         keys = Object.keys(CardLibrary).filter(k => (CardLibrary as any)[k].cardClass === 'colorless');
     }
 
-    const result = [];
+    const result: ICard[] = [];
     const temp = [...keys];
     for (let i = 0; i < count; i++) {
         if (temp.length === 0) break;
@@ -454,8 +455,8 @@ export const PotionLibrary = {
         constructor() {
             super('entropic_brew', 'エントロピー醸造', 'すべての空きポーションスロットをランダムなポーションで満たす。', 'rare', 'none', false);
         }
-        onUse(player: any, target: any, engine: any) {
-            player.potions.forEach((potion: any, index: any) => {
+        onUse(player: IPlayer, target: IEntity | null, engine: IBattleEngine | null) {
+            player.potions.forEach((potion, index) => {
                 if (!potion) {
                     player.potions[index] = getRandomPotion();
                 }
@@ -466,7 +467,7 @@ export const PotionLibrary = {
 };
 
 // ユーティリティ: ランダムなポーションを取得
-export function getRandomPotion(rarityRoll?: number): Potion {
+export function getRandomPotion(rarityRoll?: number): IPotion {
     const roll = rarityRoll ?? Math.random() * 100;
     let rarity: 'common' | 'uncommon' | 'rare' = 'common';
 
@@ -475,10 +476,10 @@ export function getRandomPotion(rarityRoll?: number): Potion {
     else rarity = 'common';
 
     const allPotions = Object.values(PotionLibrary);
-    const eligible = allPotions.filter(p => p.rarity === rarity);
+    const eligible = allPotions.filter(p => (p as IPotion).rarity === rarity);
 
     // まだ全種類実装していないので、なければコモンから探す
-    const targetList = eligible.length > 0 ? eligible : allPotions.filter(p => p.rarity === 'common');
+    const targetList = eligible.length > 0 ? eligible : allPotions.filter(p => (p as IPotion).rarity === 'common');
     const template = targetList[Math.floor(Math.random() * targetList.length)];
-    return template.clone();
+    return (template as IPotion).clone();
 }

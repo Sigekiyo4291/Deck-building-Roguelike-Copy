@@ -70,8 +70,8 @@ export const ironcladSkillCards = {
                 s.addBlock(9);
                 const player = s as IPlayer;
                 if (e.onCardSelectionRequest && player.hand.length > 0) {
-                    e.onCardSelectionRequest('廃棄するカードを選択', player.hand, (card: any, index: number) => {
-                        if (card) {
+                    e.onCardSelectionRequest('廃棄するカードを選択', player.hand, (card: any, index?: number) => {
+                        if (card && index !== undefined) {
                             player.hand.splice(index, 1);
                             player.exhaustCard(card, e);
                             e.uiUpdateCallback?.();
@@ -93,7 +93,7 @@ export const ironcladSkillCards = {
             s.addBlock(5);
             const player = s as IPlayer;
             if (e.onCardSelectionRequest && player.hand.length > 0) {
-                e.onCardSelectionRequest('強化するカードを選択', player.hand, (card: any, index: number) => {
+                e.onCardSelectionRequest('強化するカードを選択', player.hand, (card: any, index?: number) => {
                     if (card && !card.isUpgraded) {
                         card.upgrade();
                         e.uiUpdateCallback?.();
@@ -163,8 +163,8 @@ export const ironcladSkillCards = {
             e.drawCards(1);
             const player = s as IPlayer;
             if (e.onCardSelectionRequest && player.hand.length > 0) {
-                e.onCardSelectionRequest('山札の一番上に置くカードを選択', player.hand, (card: any, index: number) => {
-                    if (card) {
+                e.onCardSelectionRequest('山札の一番上に置くカードを選択', player.hand, (card: any, index?: number) => {
+                    if (card && index !== undefined) {
                         player.hand.splice(index, 1);
                         player.deck.push(card);
                         e.uiUpdateCallback?.();
@@ -179,8 +179,8 @@ export const ironcladSkillCards = {
                 e.drawCards(2);
                 const player = s as IPlayer;
                 if (e.onCardSelectionRequest && player.hand.length > 0) {
-                    e.onCardSelectionRequest('山札の一番上に置くカードを選択', player.hand, (card: any, index: number) => {
-                        if (card) {
+                    e.onCardSelectionRequest('山札の一番上に置くカードを選択', player.hand, (card: any, index?: number) => {
+                        if (card && index !== undefined) {
                             player.hand.splice(index, 1);
                             player.deck.push(card);
                             e.uiUpdateCallback?.();
@@ -304,7 +304,7 @@ export const ironcladSkillCards = {
             if (e.onCardSelectionRequest) {
                 const targets = player.hand.filter(c => c.type === 'attack' || c.type === 'power');
                 if (targets.length > 0) {
-                    e.onCardSelectionRequest('複製するカードを選択', targets, (card: any, index: number) => {
+                    e.onCardSelectionRequest('複製するカードを選択', targets, (card: any, index?: number) => {
                         if (card) {
                             player.hand.push(card.clone());
                             e.uiUpdateCallback?.();
@@ -321,7 +321,7 @@ export const ironcladSkillCards = {
                 if (e.onCardSelectionRequest) {
                     const targets = player.hand.filter(c => c.type === 'attack' || c.type === 'power');
                     if (targets.length > 0) {
-                        e.onCardSelectionRequest('複製するカードを選択', targets, (card: any, index: number) => {
+                        e.onCardSelectionRequest('複製するカードを選択', targets, (card: any, index?: number) => {
                             if (card) {
                                 player.hand.push(card.clone());
                                 player.hand.push(card.clone());
@@ -506,8 +506,8 @@ export const ironcladSkillCards = {
         effect: (s: IEntity, t: IEntity | null, e: IBattleEngine) => {
             const player = s as IPlayer;
             if (e.onCardSelectionRequest && player.hand.length > 0) {
-                e.onCardSelectionRequest('廃棄するカードを選択', player.hand, (card: any, index: number) => {
-                    if (card) {
+                e.onCardSelectionRequest('廃棄するカードを選択', player.hand, (card: any, index?: number) => {
+                    if (card && index !== undefined) {
                         player.hand.splice(index, 1);
                         player.exhaustCard(card, e);
                         e.drawCards(2);
@@ -522,8 +522,8 @@ export const ironcladSkillCards = {
             effect: (s: IEntity, t: IEntity | null, e: IBattleEngine) => {
                 const player = s as IPlayer;
                 if (e.onCardSelectionRequest && player.hand.length > 0) {
-                    e.onCardSelectionRequest('廃棄するカードを選択', player.hand, (card: any, index: number) => {
-                        if (card) {
+                    e.onCardSelectionRequest('廃棄するカードを選択', player.hand, (card: any, index?: number) => {
+                        if (card && index !== undefined) {
                             player.hand.splice(index, 1);
                             player.exhaustCard(card, e);
                             e.drawCards(3);
@@ -688,8 +688,8 @@ export const ironcladSkillCards = {
         effect: (s: IEntity, t: IEntity | null, e: IBattleEngine) => {
             const player = s as IPlayer;
             if (e.onCardSelectionRequest && player.exhaust.length > 0) {
-                e.onCardSelectionRequest('回収するカードを選択', player.exhaust, (card: any, index: number) => {
-                    if (card) {
+                e.onCardSelectionRequest('回収するカードを選択', player.exhaust, (card: any, index?: number) => {
+                    if (card && index !== undefined) {
                         player.exhaust.splice(index, 1);
                         player.hand.push(card);
                         e.uiUpdateCallback?.();

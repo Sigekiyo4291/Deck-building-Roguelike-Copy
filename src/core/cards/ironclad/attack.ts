@@ -411,7 +411,7 @@ export const ironcladAttackCards = {
                     t?.takeDamage(s.calculateDamage(10), s);
                 }
                 if (t.isDead()) {
-                    s.increaseMaxHp(3);
+                    (s as IPlayer).increaseMaxHp(3);
                     if (e && e.uiUpdateCallback) e.uiUpdateCallback?.();
                 }
             }
@@ -425,7 +425,7 @@ export const ironcladAttackCards = {
                 if (t) {
                     await e.dealDamageWithEffect(s, t, s.calculateDamage(12));
                     if (t.isDead()) {
-                        s.increaseMaxHp(4);
+                        (s as IPlayer).increaseMaxHp(4);
                         e.uiUpdateCallback?.();
                     }
                 }
@@ -447,7 +447,7 @@ export const ironcladAttackCards = {
             let totalActualDamage = 0;
             for (const enemy of e.enemies) {
                 if (!enemy.isDead()) {
-                    const targetElement = document.querySelectorAll('.entity.enemy')[e.enemies.indexOf(enemy)];
+                    const targetElement = document.querySelectorAll('.entity.enemy')[e.enemies.indexOf(enemy as any)];
                     if (e.effectManager && targetElement) {
                         await e.effectManager.showAttackEffectAsync(targetElement, 'slash');
                     }
@@ -463,7 +463,7 @@ export const ironcladAttackCards = {
             baseDamage: 5,
             effect: async (s: IEntity, t: IEntity | null, e: IBattleEngine) => {
                 let actualDamage = 0;
-                const targetElement = document.querySelectorAll('.entity.enemy')[t ? e.enemies.indexOf(t) : -1];
+                const targetElement = document.querySelectorAll('.entity.enemy')[t ? e.enemies.indexOf(t as any) : -1];
                 if (e.effectManager && targetElement) {
                     await e.effectManager.showAttackEffectAsync(targetElement, 'slash');
                 }
@@ -519,7 +519,7 @@ export const ironcladAttackCards = {
             player.hand.forEach(c => player.exhaustCard(c, e));
             player.hand.length = 0; // 手札を空にする
             if (t) {
-                const targetIndex = t ? e.enemies.indexOf(t) : -1;
+                const targetIndex = t ? e.enemies.indexOf(t as any) : -1;
                 for (let i = 0; i < count; i++) {
                     await e.attackWithEffect(s, t, s.calculateDamage(7), targetIndex);
                 }
@@ -536,7 +536,7 @@ export const ironcladAttackCards = {
                 player.hand.forEach(c => player.exhaustCard(c, e));
                 player.hand.length = 0; // 手札を空にする
                 if (t) {
-                    const targetIndex = t ? e.enemies.indexOf(t) : -1;
+                    const targetIndex = t ? e.enemies.indexOf(t as any) : -1;
                     for (let i = 0; i < count; i++) {
                         await e.attackWithEffect(s, t, s.calculateDamage(10), targetIndex);
                     }
@@ -609,7 +609,7 @@ export const ironcladAttackCards = {
         description: '2ダメージを4回与える。廃棄。',
         effect: async (s: IEntity, t: IEntity | null, e: IBattleEngine) => {
             if (!t) return; // Added null guard for t
-            const targetIndex = t ? e.enemies.indexOf(t) : -1;
+            const targetIndex = t ? e.enemies.indexOf(t as any) : -1;
             for (let i = 0; i < 4; i++) {
                 await e.attackWithEffect(s, t, s.calculateDamage(2), targetIndex);
             }
@@ -618,7 +618,7 @@ export const ironcladAttackCards = {
         upgradeData: {
             description: '2ダメージを5回与える。廃棄。',
             effect: async (s: IEntity, t: IEntity | null, e: IBattleEngine) => {
-                const targetIndex = t ? e.enemies.indexOf(t) : -1;
+                const targetIndex = t ? e.enemies.indexOf(t as any) : -1;
                 for (let i = 0; i < 5; i++) {
                     await e.attackWithEffect(s, t!, s.calculateDamage(2), targetIndex);
                 }
@@ -637,7 +637,7 @@ export const ironcladAttackCards = {
         effect: async (s: IEntity, t: IEntity | null, e: IBattleEngine, c: any, x: number) => {
             if (!t) return; // Added null guard for t
             if (e && e.attackWithEffect) {
-                const targetIndex = t ? e.enemies.indexOf(t) : -1;
+                const targetIndex = t ? e.enemies.indexOf(t as any) : -1;
                 for (let i = 0; i < x; i++) {
                     await e.attackWithEffect(s, t, s.calculateDamage(5), targetIndex);
                 }
@@ -652,7 +652,7 @@ export const ironcladAttackCards = {
             description: 'コストX。敵全体に8ダメージをX回与える。',
             baseDamage: 8,
             effect: async (s: IEntity, t: IEntity, e: IBattleEngine, c: any, x: number) => {
-                const targetIndex = t ? e.enemies.indexOf(t) : -1;
+                const targetIndex = t ? e.enemies.indexOf(t as any) : -1;
                 for (let i = 0; i < x; i++) {
                     await e.attackWithEffect(s, t!, s.calculateDamage(8), targetIndex);
                 }
@@ -706,8 +706,8 @@ export const ironcladAttackCards = {
             await e.dealDamageWithEffect(s, t, s.calculateDamage(9));
             const player = s as IPlayer;
             if (e.onCardSelectionRequest && player.discard.length > 0) {
-                e.onCardSelectionRequest('捨て札からカードを選択 (山札の一番上に置く)', player.discard, (card: any, index: number) => {
-                    if (card) {
+                e.onCardSelectionRequest('捨て札からカードを選択 (山札の一番上に置く)', player.discard, (card: any, index?: number) => {
+                    if (card && index !== undefined) {
                         player.discard.splice(index, 1);
                         player.deck.push(card);
                         e.uiUpdateCallback?.();
@@ -724,8 +724,8 @@ export const ironcladAttackCards = {
                 await e.dealDamageWithEffect(s, t, s.calculateDamage(12));
                 const player = s as IPlayer;
                 if (e.onCardSelectionRequest && player.discard.length > 0) {
-                    e.onCardSelectionRequest('捨て札からカードを選択 (山札の一番上に置く)', player.discard, (card: any, index: number) => {
-                        if (card) {
+                    e.onCardSelectionRequest('捨て札からカードを選択 (山札の一番上に置く)', player.discard, (card: any, index?: number) => {
+                        if (card && index !== undefined) {
                             player.discard.splice(index, 1);
                             player.deck.push(card);
                             e.uiUpdateCallback?.();
@@ -745,7 +745,7 @@ export const ironcladAttackCards = {
         description: '5ダメージを2回与える',
         effect: async (s: IEntity, t: IEntity | null, e: IBattleEngine) => {
             if (!t) return; // Added null guard for t
-            const targetIndex = e ? t ? e.enemies.indexOf(t) : -1 : 0;
+            const targetIndex = e ? t ? e.enemies.indexOf(t as any) : -1 : 0;
             if (e && e.attackWithEffect) {
                 await e.attackWithEffect(s, t, s.calculateDamage(5), targetIndex);
                 await e.attackWithEffect(s, t, s.calculateDamage(5), targetIndex);
@@ -760,7 +760,7 @@ export const ironcladAttackCards = {
             baseDamage: 7,
             effect: async (s: IEntity, t: IEntity | null, e: IBattleEngine) => {
                 if (!t) return; // Added null guard for t
-                const targetIndex = e ? t ? e.enemies.indexOf(t) : -1 : 0;
+                const targetIndex = e ? t ? e.enemies.indexOf(t as any) : -1 : 0;
                 if (e && e.attackWithEffect) {
                     await e.attackWithEffect(s, t, s.calculateDamage(7), targetIndex);
                     await e.attackWithEffect(s, t, s.calculateDamage(7), targetIndex);
@@ -875,13 +875,13 @@ export const ironcladAttackCards = {
         upgradeData: {
             description: '14ダメージ。筋力の効果を5倍受ける。',
             baseDamage: 14,
-            damageCalculator: (s: any, e: any) => {
-                const str = s.getStatusValue ? s.getStatusValue('strength') : (s.statusEffects.find((st: any) => st.name === 'strength')?.value || 0);
+            damageCalculator: (s: IEntity, e: IBattleEngine | undefined) => {
+                const str = s.getStatusValue ? s.getStatusValue('strength') : (s.statusEffects['strength'] || 0);
                 return 14 + str * 4;
             },
             effect: async (s: IEntity, t: IEntity | null, e: IBattleEngine) => {
                 if (!t) return;
-                const str = s.getStatusValue ? s.getStatusValue('strength') : (s.statusEffects.find((st: any) => st.name === 'strength')?.value || 0);
+                const str = s.getStatusValue ? s.getStatusValue('strength') : (s.statusEffects['strength'] || 0);
                 await e.dealDamageWithEffect(s, t, s.calculateDamage(14 + str * 4));
                 e.uiUpdateCallback?.();
             }

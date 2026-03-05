@@ -23,7 +23,7 @@ export class Darkling extends Enemy {
                 const aliveDarklings = engine.enemies.filter((e: any) => e.name === 'ダークリング' && e !== this && e.hp > 0);
                 if (aliveDarklings.length > 0) {
                     this.reviveTimer = 0; // 1ターン後に復活
-                    this.statusEffects = [];
+                    this.statusEffects = {};
                     this.setNextMove({ type: IntentType.Unknown, value: 0, name: '復活待機' });
                     if (engine.uiUpdateCallback) engine.uiUpdateCallback();
                 } else {

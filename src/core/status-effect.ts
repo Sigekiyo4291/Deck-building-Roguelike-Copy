@@ -30,18 +30,11 @@ export abstract class StatusEffect {
      * @param engine バトルエンジン（オプション）
      * @returns 更新後のスタック値
      */
-    onTurnStartUpdate(entity: Entity, value: number, engine?: any): number {
+    onTurnStartUpdate(entity: IEntity, value: number, engine?: any): number {
         return value;
     }
 
-    /**
-     * ターン終了時の処理
-     * @param entity 付与されているエンティティ
-     * @param value 現在のスタック値
-     * @param engine バトルエンジン（オプション）
-     * @returns 更新後のスタック値
-     */
-    onTurnEndUpdate(entity: Entity, value: number, engine?: any): number {
+    onTurnEndUpdate(entity: IEntity, value: number, engine?: any): number {
         return value;
     }
 
@@ -153,7 +146,7 @@ export class RitualStatus extends StatusEffect {
     description = 'ターン終了時、筋力を得る。';
     icon = '🐦';
     isBuff(value: number): boolean { return value > 0; }
-    onTurnEndUpdate(entity: Entity, value: number): number {
+    onTurnEndUpdate(entity: IEntity, value: number): number {
         entity.addStatus('strength', value);
         return value;
     }
@@ -165,7 +158,7 @@ export class RegenerationStatus extends StatusEffect {
     description = 'ターン終了時、この数値分のHPを回復する。ターン経過で数値が1減少する。';
     icon = '💖';
     isBuff(value: number): boolean { return value > 0; }
-    onTurnEndUpdate(entity: Entity, value: number): number {
+    onTurnEndUpdate(entity: IEntity, value: number): number {
         entity.heal(value);
         return Math.max(0, value - 1);
     }
@@ -177,7 +170,7 @@ export class IntangibleStatus extends StatusEffect {
     description = '受けるダメージが1になる。';
     icon = '👻';
     isBuff(value: number): boolean { return value > 0; }
-    onTurnStartUpdate(entity: Entity, value: number): number {
+    onTurnStartUpdate(entity: IEntity, value: number): number {
         return Math.max(0, value - 1);
     }
 }
@@ -230,7 +223,7 @@ export class StrengthDownStatus extends StatusEffect {
     description = 'ターン終了時、筋力を失う。';
     icon = '🥱';
     isDebuff(value: number): boolean { return value > 0; }
-    onTurnEndUpdate(entity: Entity, value: number): number {
+    onTurnEndUpdate(entity: IEntity, value: number): number {
         entity.addStatus('strength', -value);
         return 0;
     }
@@ -242,7 +235,7 @@ export class DexterityDownStatus extends StatusEffect {
     description = 'ターン終了時、俊敏性を失う。';
     icon = '🐢';
     isDebuff(value: number): boolean { return value > 0; }
-    onTurnEndUpdate(entity: Entity, value: number): number {
+    onTurnEndUpdate(entity: IEntity, value: number): number {
         entity.addStatus('dexterity', -value);
         return 0;
     }
@@ -254,7 +247,7 @@ export class DemonFormStatus extends StatusEffect {
     description = 'ターン開始時、筋力2を得る。';
     icon = '😈';
     isBuff(value: number): boolean { return value > 0; }
-    onTurnStartUpdate(entity: Entity, value: number): number {
+    onTurnStartUpdate(entity: IEntity, value: number): number {
         entity.addStatus('strength', value * 2);
         return value;
     }
@@ -266,7 +259,7 @@ export class DemonFormPlusStatus extends StatusEffect {
     description = 'ターン開始時、筋力3を得る。';
     icon = '👹';
     isBuff(value: number): boolean { return value > 0; }
-    onTurnStartUpdate(entity: Entity, value: number): number {
+    onTurnStartUpdate(entity: IEntity, value: number): number {
         entity.addStatus('strength', value * 3);
         return value;
     }

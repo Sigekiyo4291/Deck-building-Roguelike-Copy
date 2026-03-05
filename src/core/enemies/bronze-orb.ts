@@ -29,7 +29,7 @@ export class BronzeOrb extends Enemy {
             this.setNextMove({
                 type: IntentType.Defend, name: '防御', effect: (e, p, eng) => {
                     if (eng && eng.enemies) {
-                        const boss = eng.enemies.find(x => x.name === 'ブロンズ・オートマトン');
+                        const boss = (eng.enemies as any[]).find(x => x.name === 'ブロンズ・オートマトン');
                         if (boss && !boss.isDead()) boss.addBlock(12);
                         else e.addBlock(12);
                     } else {

@@ -1,13 +1,15 @@
 import { RoomType } from './map-data';
+import { IEntity, IBattleEngine, ICard, IPotion, IRelic } from './types';
 
-export class Relic {
+export class Relic implements IRelic {
     id: string;
     name: string;
     description: string;
     rarity: string;
     character?: string; // 特定キャラ専用レリック用（例：'ironclad'）
+    counter?: number;
 
-    constructor(id: any, name: any, description: any, rarity: any, character?: any) {
+    constructor(id: string, name: string, description: string, rarity: string, character?: string) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -16,30 +18,30 @@ export class Relic {
     }
 
     // フックメソッド（デフォルトは何もしない）
-    onObtain(owner: any, game?: any) { }
-    onBattleStart(owner: any, engine: any) { }
-    onTurnStart(owner: any, engine: any) { }
-    onPlayerTurnStart(owner: any, engine: any) { }
-    onTurnEnd(owner: any, engine: any) { }
-    onVictory(owner: any, engine: any) { }
-    onCardPlay(owner: any, engine: any, card: any) { }
-    afterCardPlay(owner: any, engine: any, card: any) { }
-    onTakeDamage(owner: any, engine: any, amount: any) { }
-    onHPRecovery(owner: any, engine: any, amount: any) { }
-    onShuffle(owner: any, engine: any) { }
-    onCardDraw(owner: any, engine: any, card: any) { }
-    onCardExhaust(owner: any, engine: any, card: any) { }
-    onCardAdd(owner: any, card: any) { }
-    onPotionUse(owner: any, potion: any) { }
-    onRoomEnter(owner: any, roomType: RoomType) { }
-    onRoomRest(owner: any) { }
-    modifyDamageDealt(owner: any, target: any, damage: any, card?: any) { return damage; }
-    modifyBlockGained(owner: any, block: any, card?: any) { return block; }
-    modifyHealAmount(owner: any, amount: any) { return amount; } // 回復量補正用
-    onGoldSpend(owner: any, amount: any) { }
-    onApplyStatus(owner: any, target: any, type: any, value: any, engine: any) { } // ステータス付与時のフック
-    onBlockBroken(owner: any, target: any, engine: any) { } // 敵のブロックを破った時のフック
+    onObtain(owner: IEntity, game?: any) { }
+    onBattleStart(owner: IEntity, engine: IBattleEngine) { }
+    onTurnStart(owner: IEntity, engine: IBattleEngine) { }
+    onPlayerTurnStart(owner: IEntity, engine: IBattleEngine) { }
+    onTurnEnd(owner: IEntity, engine: IBattleEngine) { }
+    onVictory(owner: IEntity, engine: IBattleEngine) { }
+    onCardPlay(owner: IEntity, engine: IBattleEngine, card: ICard) { }
+    afterCardPlay(owner: IEntity, engine: IBattleEngine, card: ICard) { }
+    onTakeDamage(owner: IEntity, engine: IBattleEngine, amount: number) { }
+    onHPRecovery(owner: IEntity, engine: IBattleEngine, amount: number) { }
+    onShuffle(owner: IEntity, engine: IBattleEngine) { }
+    onCardDraw(owner: IEntity, engine: IBattleEngine, card: ICard) { }
+    onCardExhaust(owner: IEntity, engine: IBattleEngine, card: ICard) { }
+    onCardAdd(owner: IEntity, card: ICard) { }
+    onPotionUse(owner: IEntity, potion: IPotion) { }
+    onRoomEnter(owner: IEntity, roomType: RoomType | string) { }
+    onRoomRest(owner: IEntity) { }
+    modifyDamageDealt(owner: IEntity, target: IEntity, damage: number, card?: ICard) { return damage; }
+    modifyBlockGained(owner: IEntity, block: number, card?: ICard) { return block; }
+    modifyHealAmount(owner: IEntity, amount: number) { return amount; } // 回復量補正用
+    onGoldSpend(owner: IEntity, amount: number) { }
+    onApplyStatus(owner: IEntity, target: IEntity, type: string, value: number, engine: IBattleEngine) { } // ステータス付与時のフック
+    onBlockBroken(owner: IEntity, target: IEntity, engine: IBattleEngine) { } // 敵のブロックを破った時のフック
 
     // UI描写用：レリックが使用済み（効果を失った状態）かどうかを判定する
-    isUsedUp(owner: any) { return false; }
+    isUsedUp(owner: IEntity) { return false; }
 }

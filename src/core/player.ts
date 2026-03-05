@@ -1,6 +1,6 @@
-import { Card } from './card-class';
+import { Card } from './card';
 import { Entity } from './entity';
-import { IEntity, IBattleEngine, IPlayer } from './types';
+import { IEntity, IBattleEngine, IPlayer, ICard, IPotion, IRelic } from './types';
 
 /**
  * プレイヤークラス
@@ -9,17 +9,18 @@ import { IEntity, IBattleEngine, IPlayer } from './types';
 export class Player extends Entity implements IPlayer {
     energy: number;
     maxEnergy: number;
-    hpLossCount: number;
-    deck: Card[];
-    hand: Card[];
-    discard: Card[];
-    exhaust: Card[];
     gold: number;
-    potionSlots: number;
-    potions: (any | null)[];
-    masterDeck: Card[];
-    cardRemovalCount: number;
-    isRemovalUsedThisShop: boolean;
+    deck: ICard[];
+    hand: ICard[];
+    discard: ICard[];
+    exhaust: ICard[];
+    masterDeck: ICard[];
+    potions: (IPotion | null)[];
+    character: string = 'ironclad';
+    isPlayer: boolean = true;
+    cardRemovalCount: number = 0;
+    isRemovalUsedThisShop: boolean = false;
+    potionSlots: number = 3;
 
     constructor() {
         super('Vanguard', 80, 'assets/player.png');
@@ -32,7 +33,7 @@ export class Player extends Entity implements IPlayer {
         this.exhaust = [];
         this.gold = 100;
         this.potionSlots = 3;
-        this.potions = new Array(3).fill(null); // 所持枠をnullで初期化
+        this.potions = new Array(this.potionSlots).fill(null); // 所持枠をnullで初期化
         this.relics = []; // レリック所持リスト
         this.relicCounters = {}; // レリックの汎用カウンター保管用
         this.cardRemovalCount = 0;
@@ -50,18 +51,18 @@ export class Player extends Entity implements IPlayer {
         const actualHeal = this.hp - prevHp;
         if (actualHeal > 0 && this.relics) {
             this.relics.forEach(relic => {
-                if (relic.onHPRecovery) relic.onHPRecovery(this, null, actualHeal);
+                if (relic.onHPRecovery) relic.onHPRecovery(this, null as any, actualHeal);
             });
         }
     }
 
-    takeDamage(amount: number, source: IEntity | null, engine?: IBattleEngine) {
+    takeDamage(amount: number, source?: IEntity | null, engine?: IBattleEngine): number {
         const prevHp = this.hp;
-        const remainingDamage = super.takeDamage(amount, source, engine);
+        const remainingDamage = super.takeDamage(amount, source || null, engine);
         if (this.hp < prevHp && this.relics) {
             const lostHp = prevHp - this.hp;
             this.relics.forEach(relic => {
-                if (relic.onTakeDamage) relic.onTakeDamage(this, engine, lostHp);
+                if (relic.onTakeDamage) relic.onTakeDamage(this, engine ?? null as any, lostHp);
             });
         }
         return remainingDamage;
@@ -73,18 +74,34 @@ export class Player extends Entity implements IPlayer {
         if (this.hp < prevHp && this.relics) {
             const lostHp = prevHp - this.hp;
             this.relics.forEach(relic => {
-                if (relic.onTakeDamage) relic.onTakeDamage(this, null, lostHp); // ダメージフックとして処理
+                if (relic.onTakeDamage) relic.onTakeDamage(this, null as any, lostHp); // ダメージフックとして処理
             });
         }
         return lostAmount;
     }
 
+    isDead(): boolean {
+        return this.hp <= 0;
+    }
+
+    onDeath(killer: IEntity | null, engine: IBattleEngine) {
+        // プレイヤーの死亡時処理（ゲームオーバーなど）
+    }
+
+    onTurnEnd() {
+        // プレイヤーのターン終了時処理
+    }
+
+    onBattleStart(player: IEntity, engine: IBattleEngine) {
+        // 戦闘開始時に呼び出されるフック
+    }
+
     // Helper to add card to discard pile (needed for Strange Spoon)
-    addCardToDiscard(card: Card) {
+    addCardToDiscard(card: ICard) {
         this.discard.push(card);
     }
 
-    exhaustCard(card: Card, engine: IBattleEngine) {
+    exhaustCard(card: ICard, engine: IBattleEngine) {
         // 奇妙なスプーン (Strange Spoon) の処理
         if (this.relics.some(r => r.id === 'strange_spoon') && Math.random() < 0.5) {
             console.log('奇妙なスプーン発動！ 廃棄せずに捨て札にします。');
@@ -139,7 +156,7 @@ export class Player extends Entity implements IPlayer {
         // 実際にはこのPlayerクラス単体ではドローできないが、循環参照回避のため
     }
 
-    addCard(card: Card) {
+    addCard(card: ICard): boolean {
         // お守り (Omamori) の処理
         if (card.type === 'curse' && this.relics.some(r => r.id === 'omamori')) {
             const count = this.relicCounters['omamori'] || 0;

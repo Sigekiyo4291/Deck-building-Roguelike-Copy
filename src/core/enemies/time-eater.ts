@@ -12,7 +12,12 @@ export class TimeEater extends Enemy {
             this.setNextMove({
                 type: IntentType.Heal, value: 0, name: '回復', effect: e => {
                     e.heal(e.maxHp / 2 - e.hp);
-                    e.statusEffects = e.statusEffects.filter(s => s.type === 'time_warp' || s.type === 'strength'); // Clear debuffs
+                    // Clear debuffs: Keep only time_warp or strength
+                    for (const type in e.statusEffects) {
+                        if (type !== 'time_warp' && type !== 'strength') {
+                            delete e.statusEffects[type];
+                        }
+                    }
                 }
             });
             return;

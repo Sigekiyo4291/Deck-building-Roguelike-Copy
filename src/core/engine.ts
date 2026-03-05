@@ -1,11 +1,12 @@
 import { IntentType } from './intent';
-import { CardLibrary, Card } from './card';
+import { Card, CardLibrary } from './card';
+import { Entity, Enemy } from './entity';
 import { StatusLibrary } from './status-effect';
-import { IPlayer, IEntity, IBattleEngine, IEnemy } from './types';
+import { ICard, IEntity, IPlayer, IBattleEngine, IEnemy, IPotion } from './types';
 
 export class BattleEngine implements IBattleEngine {
     player: IPlayer;
-    enemies: IEntity[];
+    enemies: IEnemy[];
     uiUpdateCallback: () => void;
     onBattleEnd: (result: string) => void;
     onCardSelectionRequest: any;
@@ -19,13 +20,13 @@ export class BattleEngine implements IBattleEngine {
     isEnded: boolean = false;
     isEliteBattle: boolean = false;
     isBossBattle: boolean = false;
-    currentPlayingCard: Card | null = null;
+    currentPlayingCard: ICard | null = null;
     playedTypesThisTurn: Set<string> = new Set(); // オレンジ色の丸薬用
     cardsPlayedThisTurn: number = 0;
 
     constructor(
         player: IPlayer,
-        enemies: IEntity[],
+        enemies: IEnemy[],
         uiUpdateCallback: () => void,
         onBattleEnd: (result: string) => void,
         onCardSelectionRequest: any,
@@ -52,14 +53,14 @@ export class BattleEngine implements IBattleEngine {
         }
     }
 
-    startBattle(player: any, enemies: IEntity[]) {
+    startBattle(player: IPlayer, enemies: IEnemy[]) {
         this.player = player;
         this.enemies = enemies;
         this.start();
     }
 
-    spawnEnemy(enemyClass: any, position?: number) {
-        const enemy = new enemyClass();
+    spawnEnemy(enemyClass: any, position: number = 200) {
+        const enemy = new enemyClass() as IEnemy;
         if (position !== undefined) {
             this.enemies.splice(position, 0, enemy);
         } else {
@@ -180,7 +181,7 @@ export class BattleEngine implements IBattleEngine {
                     if (relic.onShuffle) relic.onShuffle(this.player, this);
                 });
             }
-            const card: Card = this.player.deck.pop()!;
+            const card: ICard = this.player.deck.pop()!;
             if (!card) continue;
 
             // 混乱 (Confusion) の処理
@@ -307,7 +308,7 @@ export class BattleEngine implements IBattleEngine {
         console.log('BattleEngine: Processing started (isProcessing = true)');
         this.isProcessing = true;
         try {
-            const card: Card = this.player.hand[cardIndex];
+            const card: ICard = this.player.hand[cardIndex];
             if (!card) return;
 
             // レリック: 医療キット (Medical Kit) - 状態異常を使用可能にする
@@ -339,7 +340,7 @@ export class BattleEngine implements IBattleEngine {
 
             const currentCost = card.getCost(this.player);
             if (currentCost === 'X' || isStatusPlayable || isCursePlayable || (typeof currentCost === 'number' && currentCost >= 0 && this.player.energy >= currentCost)) {
-                if (!card.canPlay(this.player, this) && !isStatusPlayable && !isCursePlayable) {
+                if (card.canPlay && !card.canPlay(this.player, this) && !isStatusPlayable && !isCursePlayable) {
                     console.log("使用条件を満たしていません！");
                     return;
                 }
@@ -368,10 +369,11 @@ export class BattleEngine implements IBattleEngine {
                 this.player.hand.splice(cardIndex, 1);
 
                 // ステータスの onCardPlay トリガー
-                this.player.statusEffects.forEach(s => {
-                    const effect = StatusLibrary.get(s.type);
-                    if (effect && effect.onCardPlay) effect.onCardPlay(this.player, s.value, card, this);
-                });
+                for (const statusType in this.player.statusEffects) {
+                    const statusValue = this.player.statusEffects[statusType];
+                    const effect = StatusLibrary.get(statusType);
+                    if (effect && effect.onCardPlay) effect.onCardPlay(this.player, statusValue, card, this);
+                }
 
                 // レリック: onCardPlay
                 (this.player.relics as any[]).forEach((relic: any) => {
@@ -432,16 +434,16 @@ export class BattleEngine implements IBattleEngine {
 
                 // 複製 (Duplication) および ダブルタップ (Double Tap) の処理
                 const statusEffects = this.player.statusEffects;
-                const duplicationStatus = statusEffects.find(s => s.type === 'duplication');
-                const doubleTapStatus = statusEffects.find(s => s.type === 'double_tap');
+                const duplicationValue = statusEffects['duplication'] || 0;
+                const doubleTapValue = statusEffects['double_tap'] || 0;
 
                 let shouldPlayAgain = false;
 
-                if (duplicationStatus && duplicationStatus.value > 0) {
+                if (duplicationValue > 0) {
                     this.player.addStatus('duplication', -1);
                     console.log('Duplication triggered!');
                     shouldPlayAgain = true;
-                } else if (card.type === 'attack' && doubleTapStatus && doubleTapStatus.value > 0) {
+                } else if (card.type === 'attack' && doubleTapValue > 0) {
                     this.player.addStatus('double_tap', -1);
                     console.log('Double Tap triggered!');
                     shouldPlayAgain = true;
@@ -666,7 +668,7 @@ export class BattleEngine implements IBattleEngine {
 
         // ターゲットインデックスを取得
         if (targetIndex === null) {
-            targetIndex = this.enemies.indexOf(target);
+            targetIndex = this.enemies.indexOf(target as any);
         }
 
         // 攻撃SE再生
@@ -726,10 +728,9 @@ export class BattleEngine implements IBattleEngine {
     }
 
     // 生存している敵からランダムに1体取得
-    getRandomAliveEnemy() {
-        const aliveEnemies = this.enemies.filter((e: any) => !e.isDead());
-        if (aliveEnemies.length === 0) return null;
-        return aliveEnemies[Math.floor(Math.random() * aliveEnemies.length)];
+    getRandomAliveEnemy(): IEnemy | null {
+        const aliveEnemies = this.enemies.filter(e => !e.isDead());
+        return aliveEnemies.length > 0 ? aliveEnemies[Math.floor(Math.random() * aliveEnemies.length)] : null;
     }
 
     // ランダムな敵にダメージを与える
@@ -742,7 +743,7 @@ export class BattleEngine implements IBattleEngine {
 
     // ダメージ処理をエフェクト付きで実行（単体攻撃用の簡易ヘルパー）
     async dealDamageWithEffect(source: IEntity, target: IEntity, damage: number): Promise<number> {
-        const targetIndex = this.enemies.indexOf(target);
+        const targetIndex = this.enemies.indexOf(target as any);
         return await this.attackWithEffect(source, target, damage, targetIndex);
     }
 
@@ -838,7 +839,7 @@ export class BattleEngine implements IBattleEngine {
     }
 
     // 敵を削除（逃走など）
-    removeEnemy(enemy: any) {
+    removeEnemy(enemy: IEnemy) {
         const index = this.enemies.indexOf(enemy);
         if (index !== -1) {
             this.enemies.splice(index, 1);
@@ -850,7 +851,7 @@ export class BattleEngine implements IBattleEngine {
 
     // 敵を分裂させる
     splitEnemy(parent: IEntity, childClass1: any, childClass2?: any) {
-        const index = this.enemies.indexOf(parent);
+        const index = this.enemies.indexOf(parent as any);
         if (index !== -1) {
             const hp = parent.hp;
             // 親の残りHPを引き継ぐ2体を生成
@@ -882,7 +883,7 @@ export class BattleEngine implements IBattleEngine {
                 if (!enemy.isDead() && !this.player.isDead()) {
                     (enemy as any).resetBlock ? (enemy as any).resetBlock() : (enemy.block = 0);
                     // ステータス更新（ターン開始時：無形など）
-                    enemy.updateStatusAtTurnStart(this);
+                    enemy.updateStatusAtTurnStart?.(this);
 
                     const enemyObj = enemy as any as IEnemy;
                     const move = enemyObj.nextMove;
@@ -891,7 +892,7 @@ export class BattleEngine implements IBattleEngine {
                     if (move) {
                         // 攻撃処理（ダメージがある場合）
                         if (move.value > 0) {
-                            const damage = enemy.calculateDamage(move.value);
+                            const damage = enemy.calculateDamage ? enemy.calculateDamage(move.value) : move.value;
                             const times = move.times || 1;
                             for (let i = 0; i < times; i++) {
                                 if (this.player.isDead()) break;
@@ -929,7 +930,7 @@ export class BattleEngine implements IBattleEngine {
                         }
                     }
 
-                    enemy.updateStatus(this);
+                    enemy.updateStatus?.(this);
                     await new Promise(resolve => setTimeout(resolve, 500)); // 敵ごとの行動間隔
                 }
             }

@@ -12,7 +12,7 @@ export class WrithingMass extends Enemy {
         if (rand < 0.25) this.setNextMove({ type: IntentType.Attack, value: 38, name: '強攻撃' });
         else if (rand < 0.5) this.setNextMove({ type: IntentType.AttackDebuff, value: 16, name: '攻撃+脆弱化', effect: (self, player) => player.addStatus('vulnerable', 2) });
         else if (rand < 0.75) this.setNextMove({ type: IntentType.Attack, value: 9, times: 3, name: '連続攻撃' });
-        else this.setNextMove({ type: IntentType.Debuff, value: 0, name: '寄生', effect: (e, p, eng) => eng.addCardsToDrawPile({ id: 'parasite', name: '寄生', type: 'curse', description: '消尽。プレイ不可。HP-3。', isExhaust: true, play: () => { } }) });
+        else this.setNextMove({ type: IntentType.Debuff, value: 0, name: '寄生', effect: (e, p, eng) => eng.addCardToDrawPile({ id: 'parasite', name: '寄生', type: 'curse', description: '消尽。プレイ不可。HP-3。', isExhaust: true, play: () => { } } as any) });
     }
     takeDamage(damage: number, source?: any, engine?: any): number {
         const dealt = super.takeDamage(damage, source, engine);

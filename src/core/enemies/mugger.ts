@@ -21,7 +21,7 @@ export class Mugger extends Enemy {
                 this.setNextMove({ type: IntentType.Defend, name: '煙玉', effect: (e) => e.addBlock(11) });
             }
         } else {
-            this.setNextMove({ type: IntentType.Escape, value: 0, name: '逃走', effect: (enemy, player, eng) => eng.removeEnemy(enemy) });
+            this.setNextMove({ type: IntentType.Escape, value: 0, name: '逃走', effect: (enemy: any, player: any, eng: any) => eng.removeEnemy(enemy as any) });
         }
     }
 }

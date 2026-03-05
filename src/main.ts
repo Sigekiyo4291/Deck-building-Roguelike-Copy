@@ -45,8 +45,8 @@ class Game {
   potionDropChance: number = 40; // ポーションドロップ率 (%)
   currentAct: number = 1; // 現在のAct
   currentFloor: number = 0; // 現在の階層
-  currentEvent: any;
-  currentEventState: any;
+  currentEvent: import('./core/types').IEvent | null = null;
+  currentEventState: Record<string, any> = {};
   private currentPotionPopup: HTMLElement | null = null;
   pendingOrreryCards: number = 0; // 太陽系儀用の残り選択枚数
   eventBattleCallback: (() => void) | null = null; // イベント戦闘専用のコールバック
@@ -194,13 +194,14 @@ class Game {
     // スターターデッキの初期化（初回のみ）
     if (this.player.masterDeck.length === 0) {
       // アイアンクラッドのスターターデッキ: ストライク×5, ディフェンド×4, 強打×1
+      const lib = CardLibrary as any;
       for (let i = 0; i < 5; i++) {
-        this.player.masterDeck.push((CardLibrary as any).STRIKE.clone());
+        this.player.masterDeck.push(lib.STRIKE.clone());
       }
       for (let i = 0; i < 4; i++) {
-        this.player.masterDeck.push((CardLibrary as any).DEFEND.clone());
+        this.player.masterDeck.push(lib.DEFEND.clone());
       }
-      this.player.masterDeck.push((CardLibrary as any).BASH.clone());
+      this.player.masterDeck.push(lib.BASH.clone());
     }
 
     // 初期レリックを装備
@@ -265,13 +266,13 @@ class Game {
         }
       }
 
-      this.sceneManager.renderMap(this.map!, (node: any) => this.onNodeSelect(node));
+      this.sceneManager.renderMap(this.map, (node: import('./core/map-data').MapNode) => this.onNodeSelect(node));
       this.updateGlobalStatusUI(); // グローバルステータスを更新（金貨等）
       this.audioManager.playBgm('map'); // マップBGM再生
     }
   }
 
-  onNodeSelect(node: any) {
+  onNodeSelect(node: import('./core/map-data').MapNode) {
     if (this.sceneManager.isTransitioning) return;
 
     // 空飛ぶ靴 (Wing Boots) の判定: 本来繋がっていないノードを選んだ場合
@@ -552,7 +553,7 @@ class Game {
     this.updateEventChoices(event, this.currentEventState);
   }
 
-  updateEventChoices(event: any, state: any) {
+  updateEventChoices(event: import('./core/types').IEvent, state: any) {
     const optionsContainer = document.getElementById('event-options')!;
     optionsContainer.innerHTML = '';
 
@@ -561,7 +562,7 @@ class Game {
 
     // 選択肢がサブ選択肢（phase: 'trap'など、state自体に choices がある場合）
     if (state.choices) {
-      state.choices.forEach((choice: any) => {
+      state.choices.forEach((choice: import('./core/types').IChoice) => {
         const button = document.createElement('button');
         button.className = 'end-turn-btn';
         button.textContent = choice.text;
@@ -575,7 +576,7 @@ class Game {
       });
     } else {
       // 通常の選択肢
-      choices.filter((choice: any) => !choice.phase || choice.phase === state.phase).forEach((choice: any) => {
+      choices.filter((choice: import('./core/types').IChoice) => !choice.phase || choice.phase === state.phase).forEach((choice: import('./core/types').IChoice) => {
         const button = document.createElement('button');
         button.className = 'end-turn-btn';
         button.textContent = choice.text;
@@ -592,7 +593,7 @@ class Game {
 
   async finishEvent() {
     this.currentEvent = null;
-    this.currentEventState = null;
+    this.currentEventState = {};
     this.map!.updateAvailableNodes();
     const transition = this.sceneManager.showMap();
     this.renderMap();
@@ -663,8 +664,7 @@ class Game {
   // --- Phase 2 Boss Relic Helper Methods ---
 
   gainRandomPotion() {
-    const allPotions = Object.values(PotionLibrary);
-    const randomPotion = (allPotions[Math.floor(Math.random() * allPotions.length)] as any).clone();
+    const randomPotion = getRandomPotion();
 
     const result = this.player.obtainPotion(randomPotion);
 
@@ -708,7 +708,7 @@ class Game {
     alert(`${count} 枚の基本カードが変化しました！`);
   }
 
-  showCardRemovalSelection(onComplete: (card: any) => void) {
+  showCardRemovalSelection(onComplete: (card: import('./core/types').ICard | null) => void) {
     const overlay = document.getElementById('deck-selection-overlay');
     const listEl = document.getElementById('deck-selection-list');
     const titleEl = document.getElementById('deck-selection-title');
@@ -758,7 +758,7 @@ class Game {
   }
 
   // 新しいレリック抽選ヘルパー
-  getRelicFromPool(allowedRarities: string[], excludeIds: string[] = []): any {
+  getRelicFromPool(allowedRarities: string[], excludeIds: string[] = []): import('./core/types').IRelic | null {
     const ownedIds = this.player.relics!.map(r => r.id);
     const candidates = Object.values(RelicLibrary).filter(r =>
       (!r.character || r.character === 'ironclad') &&
@@ -824,23 +824,24 @@ class Game {
     const uncommonCards = allCards.filter(c => c.rarity === 'uncommon');
     const rareCards = allCards.filter(c => c.rarity === 'rare');
 
-    const getCardPrice = (card: any) => {
+    const getCardPrice = (card: import('./core/types').ICard) => {
       if (card.rarity === 'common') return getPrice(50);
       if (card.rarity === 'uncommon') return getPrice(75);
       if (card.rarity === 'rare') return getPrice(150);
       return getPrice(50);
     };
 
-    const getRandomItem = (list: any[]) => {
+    const getRandomItem = <T>(list: T[]): T | null => {
       if (!list || list.length === 0) return null;
       return list[Math.floor(Math.random() * list.length)];
     };
 
     // カード描画ヘルパー
-    const renderCardSlot = (container: HTMLElement, sourceList: any[], isSale: boolean = false) => {
+    const renderCardSlot = (container: HTMLElement, sourceList: import('./core/types').ICard[], isSale: boolean = false) => {
       container.innerHTML = '';
-      const card = getRandomItem(sourceList).clone();
-      if (!card) return;
+      const template = getRandomItem(sourceList);
+      if (!template) return;
+      const card = template.clone();
 
       const basePrice = getCardPrice(card);
       const price = isSale ? Math.floor(basePrice / 2) : basePrice;
@@ -902,7 +903,7 @@ class Game {
     });
 
     // 3. レリック
-    const getRelicPrice = (rarity: any) => {
+    const getRelicPrice = (rarity: string) => {
       if (rarity === 'common') return getPrice(150);
       if (rarity === 'uncommon') return getPrice(250);
       if (rarity === 'rare') return getPrice(300);
@@ -960,10 +961,9 @@ class Game {
     }
 
     // 4. ポーション
-    const potionLibrary = (window as any).PotionLibrary || PotionLibrary;
-    const allPotions = Object.values(potionLibrary) as any[];
+    const allPotions = Object.values(PotionLibrary);
 
-    const getPotionPrice = (rarity: any) => {
+    const getPotionPrice = (rarity: string) => {
       if (rarity === 'common') return getPrice(50);
       if (rarity === 'uncommon') return getPrice(75);
       if (rarity === 'rare') return getPrice(100);
@@ -972,8 +972,9 @@ class Game {
 
     const renderPotionSlot = (container: HTMLElement) => {
       container.innerHTML = '';
-      const potion = getRandomItem(allPotions).clone();
-      if (!potion) return;
+      const template = getRandomItem(allPotions);
+      if (!template) return;
+      const potion = template.clone();
 
       const price = getPotionPrice(potion.rarity);
       const wrapper = document.createElement('div');
@@ -1490,6 +1491,7 @@ class Game {
       this.showRewardScene(this.isEliteBattle, this.isBossBattle);
     } catch (e: any) {
       console.error('Error in onBattleWin:', e);
+      alert('Error in onBattleWin: ' + e.message);
     }
   }
 
@@ -1645,8 +1647,7 @@ class Game {
     } else if (reward.type === 'relic') {
       const relic = reward.data;
       this.player.relics.push(relic);
-      if (relic.onObtain) relic.onObtain(this.player, this);
-
+      if (relic.onObtain) relic.onObtain(this.player, this, null); // engine is null outside battle
       alert(`${relic.name} を獲得しました！\n効果: ${relic.description}`);
       reward.taken = true;
       itemEl.style.opacity = '0.5';
@@ -2046,7 +2047,7 @@ class Game {
       `;
       relicEl.onclick = () => {
         this.player.relics.push(relic);
-        if (relic.onObtain) relic.onObtain(this.player, this);
+        (relic as any).onObtain?.(this.player, this, null);
         overlay.style.display = 'none';
         alert(`ボスレリック「${relic.name}」を獲得しました！`);
         this.proceedToNextAct();
@@ -2215,7 +2216,7 @@ class Game {
             const nextMoveStatusEffects = move.statusEffects || [];
 
             if (move.type === IntentType.Attack || move.type === IntentType.AttackDefend || move.type === IntentType.AttackDebuff || move.type === IntentType.AttackBuff || move.type === IntentType.AttackHeal) {
-              const damage = enemy.calculateDamage(move.value);
+              const damage = enemy.calculateDamage ? enemy.calculateDamage(move.value) : move.value;
               const times = move.times ? `x${move.times}` : '';
               icons.push(`<span class="intent-attack">🗡️${damage}${times}</span>`);
               hasAttack = true;
@@ -2231,7 +2232,6 @@ class Game {
             if (move.type === IntentType.Buff || move.type === IntentType.AttackBuff || move.type === IntentType.DefendBuff ||
               nextMoveStatusEffects.some((s: any) => isBuff(s.type, s.value))) {
               icons.push('💪');
-              hasBuff = true;
             }
 
             // デバフ判定: 元のタイプがdebuff系、またはステータス効果にデバフを含む（burn カード追加も含む）
@@ -2253,24 +2253,6 @@ class Game {
 
             if (move.type === IntentType.Heal || move.type === IntentType.AttackHeal || move.type === IntentType.DefendHeal) {
               icons.push('💖');
-            }
-
-            if (move.type === IntentType.Escape) {
-              icons.push('🏃‍♂️');
-            }
-
-            if (move.type === IntentType.Unknown) {
-              icons.push('❓');
-            }
-
-            // 行動内容のテキストを自動判定
-            if (hasSpecial) {
-              intentText = '敵は特殊な行動予定';
-            } else if (move.type === IntentType.Stun) {
-              intentText = '敵は気絶している';
-            } else if (move.type === IntentType.Escape) {
-              intentText = '敵は逃走予定';
-            } else {
               const parts = [];
               if (hasBuff) parts.push('バフ');
               if (hasDebuff) parts.push('デバフ');
@@ -2391,8 +2373,8 @@ class Game {
     if (!container) return;
     container.innerHTML = '';
 
-    entity.statusEffects.forEach((status: any) => {
-      const effect = StatusLibrary.get(status.type);
+    Object.entries(entity.statusEffects).forEach(([type, value]) => {
+      const effect = StatusLibrary.get(type);
       if (!effect) return;
 
       const iconEl = document.createElement('div');
@@ -2404,7 +2386,7 @@ class Game {
 
       const valueEl = document.createElement('div');
       valueEl.className = 'status-value';
-      valueEl.textContent = status.value.toString();
+      valueEl.textContent = value.toString();
 
       iconEl.appendChild(valueEl);
       container.appendChild(iconEl);
@@ -2441,7 +2423,7 @@ class Game {
 
       // ブロック表示の更新
       if (card.type === 'skill' || card.baseBlock > 0) {
-        const finalBlock = card.getBlock(this.player, this.battleEngine);
+        const finalBlock = card.getBlock ? card.getBlock(this.player, this.battleEngine) : (card.baseBlock || 0);
 
         let colorClass = '';
         const baseVal = (card.isUpgraded && card.upgradeData && card.upgradeData.baseBlock !== undefined)
@@ -2600,7 +2582,7 @@ class Game {
     }
 
     // 3. 使用条件チェック (クラッシュなど)
-    if (!card.canPlay(this.player, this.battleEngine as IBattleEngine)) {
+    if (card.canPlay && !card.canPlay(this.player, this.battleEngine)) {
       alert('このカードの使用条件を満たしていません！');
       this.updateBattleUI();
       return;

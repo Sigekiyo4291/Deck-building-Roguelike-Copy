@@ -125,7 +125,7 @@ export class Guardian extends Enemy {
                     name: 'ツインスラム',
                     effect: (self: any) => {
                         // シャープハイド解除 → 攻撃態勢へ
-                        (self as any).changeMode('offense');
+                        (self as any).changeMode('offensive');
                     }
                 });
             }

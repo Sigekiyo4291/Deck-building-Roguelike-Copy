@@ -1,8 +1,9 @@
-import { IEntity, IBattleEngine } from './types';
+import { RoomType } from './map-data';
+import { IEntity, IBattleEngine, ICard, IPlayer } from './types';
 
-export type CardEffect = (source: IEntity, target: IEntity | null, engine: IBattleEngine, card: Card, xValue: number) => Promise<void> | void;
-export type CardCalculator = (source: IEntity, engine: IBattleEngine, card?: Card) => number;
-export type CanPlayCheck = (source: IEntity, engine: IBattleEngine) => boolean;
+export type CardEffect = (source: IEntity, target: IEntity | null, engine: IBattleEngine, card: ICard, xValue: number) => Promise<void> | void;
+export type CardCalculator = (source: IEntity, engine: IBattleEngine, card?: ICard) => number;
+export type CanPlayCheck = (player: IPlayer, engine: IBattleEngine) => boolean;
 
 export interface CardInitParams {
     id: string;
@@ -25,44 +26,44 @@ export interface CardInitParams {
     costCalculator?: any;
     image?: string | null;
     effectType?: string;
-    onExhaust?: (source: IEntity, engine: IBattleEngine) => void;
+    onExhaust?: (player: IPlayer, engine: IBattleEngine) => void;
     isInnate?: boolean;
     isStatus?: boolean;
-    onEndTurnInHand?: (source: IEntity, engine: IBattleEngine) => Promise<void> | void; // ターン終了時に手札にある場合の効果
+    onEndTurnInHand?: (player: IPlayer, engine: IBattleEngine) => Promise<void> | void; // ターン終了時に手札にある場合の効果
     bottledId?: string;
     cardClass?: string; // ironclad, colorless, curse, status
 }
 
-export class Card {
+export class Card implements ICard {
     id: string;
     baseName: string;
     name: string;
     cost: number | string;
-    costCalculator: any;
+    costCalculator?: (player: IPlayer, card: ICard) => number | string;
     type: string;
     rarity: string;
     description: string;
-    effect: CardEffect;
+    effect: (source: IEntity, target: IEntity | null, engine: IBattleEngine, card: ICard, xValue: number) => Promise<void> | void;
     isUpgraded: boolean;
     upgradeData: any;
     targetType: string;
-    canPlayCheck: CanPlayCheck | null;
+    canPlayCheck?: (player: IPlayer, engine: IBattleEngine) => boolean;
     baseDamage: number;
-    damageCalculator: CardCalculator | null;
+    damageCalculator?: CardCalculator;
     baseBlock: number;
-    blockCalculator: CardCalculator | null;
-    isEthereal: boolean;
-    isExhaust: boolean;
-    miscValue: number;
-    image: string | null;
-    effectType: string;
-    onExhaust: ((source: IEntity, engine: IBattleEngine) => void) | null;
-    onEndTurnInHand: ((source: IEntity, engine: IBattleEngine) => Promise<void> | void) | null;
-    temporaryCost: number | null;
-    isStatus: boolean;
-    isInnate: boolean;
+    blockCalculator?: CardCalculator;
+    isEthereal: boolean = false;
+    isExhaust: boolean = false;
+    miscValue: number = 0;
+    image?: string;
+    effectType?: string;
+    onExhaust?: (player: IPlayer, engine: IBattleEngine) => void;
+    onEndTurnInHand?: (player: IPlayer, engine: IBattleEngine) => Promise<void> | void;
+    isInnate: boolean = false;
+    isStatus: boolean = false;
     bottledId?: string;
     cardClass: string;
+    temporaryCost?: number | string | null = null;
 
     constructor(params: CardInitParams) {
         this.id = params.id;
@@ -82,42 +83,41 @@ export class Card {
         } else {
             this.targetType = (params.type === 'attack') ? 'single' : 'self';
         }
-        this.canPlayCheck = params.canPlayCheck || null;
+        this.canPlayCheck = params.canPlayCheck;
         this.baseDamage = params.baseDamage || 0;
-        this.damageCalculator = params.damageCalculator || null;
+        this.damageCalculator = params.damageCalculator;
         this.baseBlock = params.baseBlock || 0;
-        this.blockCalculator = params.blockCalculator || null;
+        this.blockCalculator = params.blockCalculator;
         this.isEthereal = params.isEthereal || false;
         this.isExhaust = params.isExhaust || false;
         this.miscValue = 0;
-        this.image = params.image || null;
+        this.image = params.image || undefined;
         this.effectType = params.effectType || 'slash';
-        this.onExhaust = params.onExhaust || null;
-        this.onEndTurnInHand = params.onEndTurnInHand || null;
-        this.temporaryCost = null;
-        this.isStatus = params.isStatus || false;
+        this.onExhaust = params.onExhaust;
         this.isInnate = params.isInnate || false;
+        this.isStatus = params.isStatus || false;
+        this.onEndTurnInHand = params.onEndTurnInHand;
         this.bottledId = params.bottledId;
         this.cardClass = params.cardClass || (params.type === 'curse' ? 'curse' : (params.isStatus ? 'status' : 'ironclad'));
     }
 
-    getCost(source: any) {
+    getCost(player: IPlayer): number | string {
         // 堕落 (Corruption) の処理: スキルカードのコストを0にする
-        if (source && source.hasStatus && source.hasStatus('corruption') && this.type === 'skill') {
+        if (player && player.hasStatus && player.hasStatus('corruption') && this.type === 'skill') {
             return 0;
         }
 
-        // temporaryCost が設定されている場合は優先
-        if (this.temporaryCost !== null && this.temporaryCost !== undefined) {
-            return this.temporaryCost;
-        }
+        if (typeof this.cost === 'string') return this.cost;
+        if (this.temporaryCost !== null && this.temporaryCost !== undefined) return this.temporaryCost;
+
+        let finalCost = this.cost;
         if (this.costCalculator) {
-            return this.costCalculator(source, this);
+            finalCost = (this.costCalculator(player, this) as any);
         }
-        return this.cost;
+        return finalCost;
     }
 
-    getDamage(source: IEntity, engine: IBattleEngine) {
+    getDamage(source: IEntity, engine: IBattleEngine): number {
         let base = this.baseDamage;
         if (this.damageCalculator) {
             base = this.damageCalculator(source, engine, this);
@@ -125,29 +125,30 @@ export class Card {
         base += (this.miscValue || 0);
 
         if (base === 0 && this.type !== 'attack') return 0;
-        return (source as any).calculateDamage(base);
+        return source.calculateDamage ? source.calculateDamage(base) : base;
     }
 
-    getFinalDamage(source: IEntity, target: IEntity | null, engine: IBattleEngine) {
+    getFinalDamage(source: IEntity, target: IEntity | null, engine: IBattleEngine): number {
         const damage = this.getDamage(source, engine);
-        if (target) {
-            return (target as any).applyTargetModifiers(damage, source);
+        if (target && target.applyTargetModifiers) {
+            return target.applyTargetModifiers(damage, source);
         }
         return damage;
     }
 
-    getBlock(source: IEntity, engine: IBattleEngine) {
+    getBlock(source: IEntity, engine: IBattleEngine): number {
         let base = this.baseBlock;
         if (this.blockCalculator) {
-            base = this.blockCalculator(source, engine);
+            base = this.blockCalculator(source, engine, this);
         }
         if (base === 0) return 0;
-        return (source as any).calculateBlock(base);
+        // EntityにcalculateBlockがない場合はそのまま返す（必要ならtypes.tsでIEntityに追加）
+        return (source as any).calculateBlock ? (source as any).calculateBlock(base) : base;
     }
 
-    canPlay(source: IEntity, engine: IBattleEngine) {
+    canPlay(player: IPlayer, engine: IBattleEngine): boolean {
         if (this.canPlayCheck) {
-            return this.canPlayCheck(source, engine);
+            return this.canPlayCheck(player, engine);
         }
         return true;
     }
@@ -171,44 +172,43 @@ export class Card {
         if (this.upgradeData.onEndTurnInHand) this.onEndTurnInHand = this.upgradeData.onEndTurnInHand;
     }
 
-    async play(source: any, target: IEntity | null, engine: IBattleEngine, freePlay = false) {
+    async play(player: IPlayer, target: IEntity | null, engine: IBattleEngine, isCopy: boolean = false): Promise<boolean> {
         // 呪いチェック（ブルーキャンドル所持時は許可）
         if (this.type === 'curse') {
-            const hasBlueCandle = source.relics && source.relics.some((r: any) => r.id === 'blue_candle');
+            const hasBlueCandle = player.relics && player.relics.some((r: any) => r.id === 'blue_candle');
             if (!hasBlueCandle) return false;
         }
 
-        const currentCost = this.getCost(source);
-
+        const currentCost = this.getCost(player);
         let xValue = 0;
+
         if (currentCost === 'X') {
-            xValue = source.energy;
+            xValue = player.energy;
             // レリック: ケミカルX
-            if (source.relics && source.relics.some((r: any) => r.id === 'chemical_x')) {
+            if (player.relics && player.relics.some((r: any) => r.id === 'chemical_x')) {
                 xValue += 2;
                 console.log('ケミカルX発動！ X = ' + xValue);
             }
-            if (!freePlay) source.energy = 0;
+            if (!isCopy) player.energy = 0;
         } else if (typeof currentCost === 'number' && currentCost >= 0) {
-            if (freePlay) {
+            if (isCopy) {
                 xValue = currentCost;
-            } else if (source.energy >= currentCost) {
-                source.energy -= currentCost;
+            } else if (player.energy >= currentCost) {
+                player.energy -= currentCost;
                 xValue = currentCost;
             } else {
                 return false;
             }
         } else if (typeof currentCost === 'number' && currentCost < 0) {
             // 医療キット所持時はステータスカードをコスト0でプレイ可能
-            const hasMedicalKit = source.relics && source.relics.some((r: any) => r.id === 'medical_kit');
+            const hasMedicalKit = player.relics && player.relics.some((r: any) => r.id === 'medical_kit');
             // ブルーキャンドル所持時は呪いカードをコスト0でプレイ可能
-            const hasBlueCandle = source.relics && source.relics.some((r: any) => r.id === 'blue_candle');
+            const hasBlueCandle = player.relics && player.relics.some((r: any) => r.id === 'blue_candle');
             if (this.isStatus && hasMedicalKit) {
-                xValue = 0; // エネルギー不消費でプレイ
+                xValue = 0;
             } else if (this.type === 'curse' && hasBlueCandle) {
-                xValue = 0; // エネルギー不消費でプレイ
+                xValue = 0;
             } else {
-                // その他の使用不可カード
                 return false;
             }
         } else {
@@ -216,19 +216,18 @@ export class Card {
         }
 
         if (this.targetType === 'all' && engine) {
-            // 生存している全ての敵に効果を適用
             for (const enemy of engine.enemies) {
                 if (!enemy.isDead()) {
-                    await this.effect(source, enemy, engine, this, xValue);
+                    await this.effect(player, enemy, engine, this, xValue);
                 }
             }
         } else {
-            await this.effect(source, target, engine, this, xValue);
+            await this.effect(player, target, engine, this, xValue);
         }
         return true;
     }
 
-    clone() {
+    clone(): ICard {
         const c = new Card({
             id: this.id,
             name: this.baseName,
@@ -240,24 +239,25 @@ export class Card {
             targetType: this.targetType,
             isUpgraded: this.isUpgraded,
             upgradeData: this.upgradeData,
-            canPlayCheck: this.canPlayCheck as CanPlayCheck,
+            canPlayCheck: this.canPlayCheck,
             baseDamage: this.baseDamage,
-            damageCalculator: this.damageCalculator as CardCalculator,
+            damageCalculator: this.damageCalculator,
             baseBlock: this.baseBlock,
-            blockCalculator: this.blockCalculator as CardCalculator,
+            blockCalculator: this.blockCalculator,
             isEthereal: this.isEthereal,
             isExhaust: this.isExhaust,
             costCalculator: this.costCalculator,
             image: this.image,
             effectType: this.effectType,
-            onExhaust: this.onExhaust as (source: IEntity, engine: IBattleEngine) => void,
-            onEndTurnInHand: this.onEndTurnInHand as (source: IEntity, engine: IBattleEngine) => Promise<void> | void,
+            onExhaust: this.onExhaust,
+            onEndTurnInHand: this.onEndTurnInHand,
             isInnate: this.isInnate,
             isStatus: this.isStatus,
             bottledId: this.bottledId,
             cardClass: this.cardClass
         });
         c.miscValue = this.miscValue;
+        c.temporaryCost = this.temporaryCost;
         return c;
     }
 }

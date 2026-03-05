@@ -556,7 +556,10 @@ class Game {
     const optionsContainer = document.getElementById('event-options')!;
     optionsContainer.innerHTML = '';
 
-    // 選択肢がサブ選択肢（phase: 'trap'など）の場合
+    // choices を取得（動的生成メソッド getChoices を優先）
+    const choices = event.getChoices ? event.getChoices(this, state) : (event.choices || []);
+
+    // 選択肢がサブ選択肢（phase: 'trap'など、state自体に choices がある場合）
     if (state.choices) {
       state.choices.forEach((choice: any) => {
         const button = document.createElement('button');
@@ -572,7 +575,7 @@ class Game {
       });
     } else {
       // 通常の選択肢
-      event.choices.filter((choice: any) => !choice.phase || choice.phase === state.phase).forEach((choice: any) => {
+      choices.filter((choice: any) => !choice.phase || choice.phase === state.phase).forEach((choice: any) => {
         const button = document.createElement('button');
         button.className = 'end-turn-btn';
         button.textContent = choice.text;
